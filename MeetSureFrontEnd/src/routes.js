@@ -25,6 +25,8 @@ import AccountManagement from "views/Pages/AccountManagement.js";
 import AdminSignin from "views/Pages/AdminSignin.js";
 import CompanyApply from "views/Pages/CompanyApply.js";
 import ErrorLogs from "views/Pages/ErrorLogs.js";
+import ProjectManagement from "views/Dashboard/ProjectManagement.js";
+
 
 import {
   HomeIcon,
@@ -51,7 +53,7 @@ var dashRoutes = [
   },
   {
     path: "/project",
-    name: "專案管理",
+    name: "建立專案",
     rtlName: "لوحة القيادة",
     icon: <StatsIcon color='inherit' />,
     component: Project,
@@ -140,9 +142,18 @@ var dashRoutes = [
     ],
   },
   {
+    path: "/projectmanagement",
+    name: "專案管理",
+    icon: <RocketIcon color='inherit' />,
+    component: ProjectManagement,
+    layout: "/admin",
+  },
+  {
     path: "/homepage",
     component: HomePage,
+    name: "主頁",
     layout: "/auth",
+    icon: <HomeIcon color='inherit' />,
   },
   {
     path: "/company",
