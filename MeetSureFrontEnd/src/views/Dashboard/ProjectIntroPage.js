@@ -20,7 +20,7 @@ function ProjectIntroPage({ onStart }) {
                     </Text>
 
                     <Text mt="3" color={textColor}>
-                        從初始設置到專案管理，我們提供直觀的引導與工具，讓您輕鬆上手。
+                        從初始設置到專案管理，MeetSure會用直觀的引導與工具，讓您輕鬆上手。
                     </Text>
 
                     <Box textAlign="center" mb="8">

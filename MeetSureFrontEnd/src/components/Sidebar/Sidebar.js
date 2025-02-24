@@ -57,146 +57,156 @@ function Sidebar(props) {
     let activeColor = useColorModeValue("gray.700", "white");
     let inactiveColor = useColorModeValue("gray.400", "gray.400");
     let sidebarActiveShadow = "0px 7px 11px rgba(0, 0, 0, 0.04)";
-    return routes.map((prop, key) => {
-      if (prop.redirect) {
-        return null;
-      }
-      if (prop.category) {
-        var st = {};
-        st[prop["state"]] = !state[prop.state];
+    return routes
+      .filter((prop) => prop.name && prop.icon) // 過濾掉沒有 name 或 icon 的項目
+      .map((prop, key) => {
+        if (prop.category) {
+          return (
+            <React.Fragment key={key}>
+              <Text fontWeight={boldText}>{prop.name}</Text>
+              <Box ps={nestedPadding}>{createLinks(prop.views)}</Box>
+            </React.Fragment>
+          );
+        }
+        if (prop.redirect) {
+          return null;
+        }
+        if (prop.category) {
+          var st = {};
+          st[prop["state"]] = !state[prop.state];
+          return (
+            <React.Fragment key={key}>
+              <Text
+                color={activeColor}
+                fontWeight="bold"
+                mb={{
+                  xl: "6px",
+                }}
+                mx="auto"
+                ps={{
+                  sm: "10px",
+                  xl: "16px",
+                }}
+                py="12px"
+              >
+                {document.documentElement.dir === "rtl"
+                  ? prop.rtlName
+                  : prop.name}
+              </Text>
+              {createLinks(prop.views, key)}
+            </React.Fragment>
+          );
+        }
         return (
-          <React.Fragment key={key}>
-            <Text
-              color={activeColor}
-              fontWeight="bold"
-              mb={{
-                xl: "6px",
-              }}
-              mx="auto"
-              ps={{
-                sm: "10px",
-                xl: "16px",
-              }}
-              py="12px"
-            >
-              {document.documentElement.dir === "rtl"
-                ? prop.rtlName
-                : prop.name}
-            </Text>
-            {createLinks(prop.views, key)}
-          </React.Fragment>
+          <NavLink to={prop.layout + prop.path} key={key}>
+            {activeRoute(prop.layout + prop.path) === "active" ? (
+              <Button
+                boxSize="initial"
+                justifyContent="flex-start"
+                alignItems="center"
+                boxShadow={sidebarActiveShadow}
+                bg={activeBg}
+                transition={variantChange}
+                mb={{
+                  xl: "6px",
+                }}
+                mx={{
+                  xl: "auto",
+                }}
+                ps={{
+                  sm: "10px",
+                  xl: "16px",
+                }}
+                py="12px"
+                borderRadius="15px"
+                _hover="none"
+                w="100%"
+                _active={{
+                  bg: "inherit",
+                  transform: "none",
+                  borderColor: "transparent",
+                }}
+                _focus={{
+                  boxShadow: "0px 7px 11px rgba(0, 0, 0, 0.04)",
+                }}
+              >
+                <Flex>
+                  {typeof prop.icon === "string" ? (
+                    <Icon>{prop.icon}</Icon>
+                  ) : (
+                    <IconBox
+                      bg="teal.500"
+                      color="white"
+                      h="30px"
+                      w="30px"
+                      me="12px"
+                      transition={variantChange}
+                    >
+                      {prop.icon}
+                    </IconBox>
+                  )}
+                  <Text color={activeColor} my="auto" fontSize="sm">
+                    {document.documentElement.dir === "rtl"
+                      ? prop.rtlName
+                      : prop.name}
+                  </Text>
+                </Flex>
+              </Button>
+            ) : (
+              <Button
+                boxSize="initial"
+                justifyContent="flex-start"
+                alignItems="center"
+                bg="transparent"
+                mb={{
+                  xl: "6px",
+                }}
+                mx={{
+                  xl: "auto",
+                }}
+                py="12px"
+                ps={{
+                  sm: "10px",
+                  xl: "16px",
+                }}
+                borderRadius="15px"
+                _hover="none"
+                w="100%"
+                _active={{
+                  bg: "inherit",
+                  transform: "none",
+                  borderColor: "transparent",
+                }}
+                _focus={{
+                  boxShadow: "none",
+                }}
+              >
+                <Flex>
+                  {typeof prop.icon === "string" ? (
+                    <Icon>{prop.icon}</Icon>
+                  ) : (
+                    <IconBox
+                      bg={inactiveBg}
+                      color="teal.500"
+                      h="30px"
+                      w="30px"
+                      me="12px"
+                      transition={variantChange}
+                    >
+                      {prop.icon}
+                    </IconBox>
+                  )}
+                  <Text color={inactiveColor} my="auto" fontSize="sm">
+                    {document.documentElement.dir === "rtl"
+                      ? prop.rtlName
+                      : prop.name}
+                  </Text>
+                </Flex>
+              </Button>
+            )}
+          </NavLink>
         );
-      }
-      return (
-        <NavLink to={prop.layout + prop.path} key={key}>
-          {activeRoute(prop.layout + prop.path) === "active" ? (
-            <Button
-              boxSize="initial"
-              justifyContent="flex-start"
-              alignItems="center"
-              boxShadow={sidebarActiveShadow}
-              bg={activeBg}
-              transition={variantChange}
-              mb={{
-                xl: "6px",
-              }}
-              mx={{
-                xl: "auto",
-              }}
-              ps={{
-                sm: "10px",
-                xl: "16px",
-              }}
-              py="12px"
-              borderRadius="15px"
-              _hover="none"
-              w="100%"
-              _active={{
-                bg: "inherit",
-                transform: "none",
-                borderColor: "transparent",
-              }}
-              _focus={{
-                boxShadow: "0px 7px 11px rgba(0, 0, 0, 0.04)",
-              }}
-            >
-              <Flex>
-                {typeof prop.icon === "string" ? (
-                  <Icon>{prop.icon}</Icon>
-                ) : (
-                  <IconBox
-                    bg="teal.500"
-                    color="white"
-                    h="30px"
-                    w="30px"
-                    me="12px"
-                    transition={variantChange}
-                  >
-                    {prop.icon}
-                  </IconBox>
-                )}
-                <Text color={activeColor} my="auto" fontSize="sm">
-                  {document.documentElement.dir === "rtl"
-                    ? prop.rtlName
-                    : prop.name}
-                </Text>
-              </Flex>
-            </Button>
-          ) : (
-            <Button
-              boxSize="initial"
-              justifyContent="flex-start"
-              alignItems="center"
-              bg="transparent"
-              mb={{
-                xl: "6px",
-              }}
-              mx={{
-                xl: "auto",
-              }}
-              py="12px"
-              ps={{
-                sm: "10px",
-                xl: "16px",
-              }}
-              borderRadius="15px"
-              _hover="none"
-              w="100%"
-              _active={{
-                bg: "inherit",
-                transform: "none",
-                borderColor: "transparent",
-              }}
-              _focus={{
-                boxShadow: "none",
-              }}
-            >
-              <Flex>
-                {typeof prop.icon === "string" ? (
-                  <Icon>{prop.icon}</Icon>
-                ) : (
-                  <IconBox
-                    bg={inactiveBg}
-                    color="teal.500"
-                    h="30px"
-                    w="30px"
-                    me="12px"
-                    transition={variantChange}
-                  >
-                    {prop.icon}
-                  </IconBox>
-                )}
-                <Text color={inactiveColor} my="auto" fontSize="sm">
-                  {document.documentElement.dir === "rtl"
-                    ? prop.rtlName
-                    : prop.name}
-                </Text>
-              </Flex>
-            </Button>
-          )}
-        </NavLink>
-      );
-    });
+      });
   };
   const { logo, routes } = props;
 
