@@ -170,7 +170,8 @@ function MeetSure() {
                         >
                             {transcript.length > 0 ? (
                                 <Text>
-                                    {transcript.map((entry) => entry.text).join("")}
+                                    {transcript.map((entry) => entry.text).join("\n")} 
+
                                 </Text>
                             ) : (
                                 <Text>目前沒有轉錄內容</Text>
@@ -185,4 +186,3 @@ function MeetSure() {
 }
 
 export default MeetSure;
-

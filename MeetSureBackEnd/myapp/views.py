@@ -15,6 +15,8 @@ from django.contrib.auth import authenticate
 import soundfile as sf
 import io
 import numpy as np
+from django.contrib.auth.hashers import check_password
+
 
 #顯示用戶列表
 def user_list(request):
@@ -117,10 +119,22 @@ def user_list(request):
     users = User.objects.all().values()
     return JsonResponse(list(users), safe=False)
 
-# 加載 Whisper 模型
-print("Loading Whisper model...")
-whisper = pipeline("automatic-speech-recognition", model="openai/whisper-base")
-print("Model loaded.")
+
+# 使用 `try-except` 確保不強制要求 TensorFlow 或 PyTorch
+try:
+    import torch
+except ImportError:
+    torch = None
+
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None
+
+# 使用 Hugging Face API 而不依賴 TensorFlow/PyTorch
+print("🔄 Loading Whisper model...")
+whisper = pipeline("automatic-speech-recognition", model="openai/whisper-base", device=-1)  # 強制使用 CPU
+print("✅ Whisper model loaded successfully!")
 
 def split_audio(audio_data, samplerate, segment_length=30):
     """
@@ -155,7 +169,7 @@ def transcribe_audio(request):
         for i, segment in enumerate(segments):
             # 對每個片段使用 Whisper 模型進行轉錄
             transcription = whisper(segment)
-            transcription_result.append(f"Segment {i + 1}:\n{transcription['text']}")
+            transcription_result.append(transcription["text"])  # ✅ 只加入內容，沒有 "Segment X"
 
         # 合併所有片段的結果，並以換行符分隔每個段落
         full_transcription = "\n\n".join(transcription_result)
@@ -164,46 +178,50 @@ def transcribe_audio(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+
 @csrf_exempt
 def login_user(request):
-   if request.method != "POST":
-       return JsonResponse({"error": "Invalid request method"}, status=405)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
 
+    try:
+        # 獲取請求數據
+        data = json.loads(request.body)
+        email = data.get("email")
+        password = data.get("password")
 
-   try:
-       # 獲取請求數據
-       data = json.loads(request.body)
-       email = data.get("email")
-       password = data.get("password")
+        # 查詢使用者
+        user = Users.objects.filter(email=email).first()
 
+        # 確保用戶存在並且密碼匹配
+        if user and check_password(password, user.password):  # ✅ 使用 check_password 解密比較
+            if user.acco_level == "adminS":
+                role = "system_admin"
+                redirect_url = "/#/backstage/admindashboard"
+            elif user.acco_level == "adminC":
+                role = "company_admin"
+                redirect_url = "/#/backstage/admindashboard"
+            elif user.acco_level == "user":
+                role = "user"
+                redirect_url = "/#/admin/dashboard"
+            else:
+                return JsonResponse({"error": "Unauthorized role"}, status=403)
 
-       # 驗證用戶
-       user = Users.objects.filter(email=email).first()
-       if user and user.password == password:  # 假設密碼為明文存儲
-           # 判斷用戶權限
-           if user.acco_level == "adminS":
-               role = "system_admin"
-           elif user.acco_level == "adminC":
-               role = "company_admin"
-           else:
-               return JsonResponse({"error": "Unauthorized role"}, status=403)
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Login successful",
+                    "user_id": user.ID,  # 確保主鍵名稱正確
+                    "email": user.email,
+                    "role": role,
+                    "redirect_url": redirect_url,
+                },
+                status=200,
+            )
+        else:
+            return JsonResponse({"error": "Invalid credentials"}, status=401)
 
-
-           # 返回成功響應
-           return JsonResponse(
-               {
-                   "message": "Login successful",
-                   "user_id": user.ID,  # 確保主鍵名稱正確
-                   "role": role,
-                   "redirect_url": "/#/backstage/admindashboard",
-               },
-               status=200,
-           )
-       else:
-           return JsonResponse({"error": "Invalid credentials"}, status=401)
-
-
-   except json.JSONDecodeError:
-       return JsonResponse({"error": "Invalid JSON format"}, status=400)
-   except Exception as e:
-       return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
