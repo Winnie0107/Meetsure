@@ -15,7 +15,7 @@ urlpatterns = [
     path('api/meetings/add', add_meeting, name='add_meeting'),  # 新增會議
     path('api/meetings', get_meetings, name='get_meetings'),  # 獲取會議列表
     path('api/transcribe', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
-    path('api/login', login_user, name='login_user'),  # 新增此行
+    path('api/login/', login_user, name='login_user'),  # 新增此行
 ]
 
 # 靜態文件設置（開發模式下）
