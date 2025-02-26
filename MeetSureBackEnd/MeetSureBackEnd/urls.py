@@ -4,7 +4,9 @@ from django.views.generic import TemplateView
 from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio
 from django.conf import settings
 from django.conf.urls.static import static
-from myapp.views import login_user  # 新增此行
+from myapp.views import login_user  
+from myapp.gptApiview import chatgpt_response  
+
 
 # API 路由
 urlpatterns = [
@@ -16,6 +18,7 @@ urlpatterns = [
     path('api/meetings', get_meetings, name='get_meetings'),  # 獲取會議列表
     path('api/transcribe', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
+    path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
 ]
 
 # 靜態文件設置（開發模式下）
