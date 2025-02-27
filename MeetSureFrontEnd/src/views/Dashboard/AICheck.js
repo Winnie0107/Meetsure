@@ -1,13 +1,12 @@
 import {
     Flex,
-    Box,
+    Grid,
     Text,
     Textarea,
     Button,
     Stack,
     Icon,
     useColorModeValue,
-    Grid,
     Menu,
     MenuButton,
     MenuList,
@@ -15,10 +14,11 @@ import {
     Tooltip,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { FiFileText, FiChevronDown } from "react-icons/fi";
+import { FiFile, FiChevronDown } from "react-icons/fi";
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody.js";
 import CardHeader from "components/Card/CardHeader.js";
+import axios from "axios";
 
 function AICheck() {
     const textColor = useColorModeValue("gray.700", "white");
@@ -27,23 +27,40 @@ function AICheck() {
     const [inputText, setInputText] = useState("");
     const [suggestions, setSuggestions] = useState("");
     const [copyStatus, setCopyStatus] = useState("複製文本");
-    const [detectedLanguage, setDetectedLanguage] = useState("中文");
     const [targetLanguage, setTargetLanguage] = useState("英文");
-    const [mode, setMode] = useState("電子郵件"); // 預設模式
+    const [mode, setMode] = useState("標準"); // 預設檢查模式
+    const [loading, setLoading] = useState(false);
 
-    const checkGrammar = () => {
-        let errors = [];
-        if (inputText.includes("teh")) {
-            errors.push("Did you mean 'the'?");
+    // 檢查模式選項
+    const modeOptions = [
+        { label: "簡易", tooltip: "檢查基礎文法及拼字，不更動文本內容" },
+        { label: "標準", tooltip: "基本語法檢查並適當調整詞彙更換語氣" },
+        { label: "進階", tooltip: "將重組句意、調整文本結構" },
+    ];
+
+    // 目標語言選擇
+    const languageOptions = ["日文", "韓文", "西班牙文", "法文", "德文"];
+
+    // 發送 API 請求
+    const checkGrammar = async () => {
+        if (!inputText.trim()) return;
+        setLoading(true);
+
+        try {
+            const response = await axios.post("http://127.0.0.1:8000/chatgpt/", {
+                message: `請幫我檢查這段文本的語法，並根據"${mode}"模式提供建議：「${inputText}」`
+            });
+
+            setSuggestions(response.data.response);
+        } catch (error) {
+            console.error("檢查失敗", error);
+            setSuggestions("檢查失敗，請稍後再試。");
+        } finally {
+            setLoading(false);
         }
-        if (inputText.includes("recieve")) {
-            errors.push("Did you mean 'receive'?");
-        }
-        // If no errors are found, show the default message
-        setSuggestions(errors.length > 0 ? errors.join("\n") : "No grammar issues found.");
     };
-    
 
+    // 複製結果
     const handleCopyToClipboard = () => {
         navigator.clipboard.writeText(suggestions).then(() => {
             setCopyStatus("已複製！");
@@ -53,17 +70,10 @@ function AICheck() {
         });
     };
 
-    const languageOptions = ["日文", "韓文", "西班牙文", "法文", "德文"];
-    const modeOptions = [
-        { label: "簡易", tooltip: "檢查基礎文法及拼字，不更動文本內容" },
-        { label: "標準", tooltip: "基本語法檢查並適當調整詞彙更換語氣" },
-        { label: "進階", tooltip: "將重組句意、調整文本結構" },
-    ];
-
     return (
-        <Flex direction="column" pt={{ base: "120px", md: "75px" }}>
+        <Flex direction="column" pt={{ base: "120px", md: "75px" }} mt="6">
             <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap="6">
-                {/* 輸入卡片 */}
+                {/* 輸入區域 */}
                 <Card>
                     <CardHeader p="6px 0px 22px 0px">
                         <Text fontSize="xl" color={textColor} fontWeight="bold">
@@ -103,25 +113,15 @@ function AICheck() {
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             borderColor={borderColor}
-                            minH="200px"
+                            minH="280px"
                             mb="4"
                         />
 
-                        {/* 模式選擇按鈕組 */}
+                        {/* 檢查模式選擇 */}
                         <Text fontWeight="bold" mb="2">選擇檢查模式</Text>
                         <Stack direction="row" spacing="3" mb="4">
                             {modeOptions.map((option) => (
-                                <Tooltip
-                                    label={option.tooltip}
-                                    fontSize="md"
-                                    key={option.label}
-                                    //hasArrow
-                                    bg="teal.500" // teal background to match the button
-                                    color="white" // White text color
-                                    borderRadius="md"
-                                    boxShadow="lg"
-                                    placement="bottom" // Place tooltip below
-                                >
+                                <Tooltip label={option.tooltip} fontSize="md" key={option.label} bg="teal.500" color="white" borderRadius="md" boxShadow="lg" placement="bottom" p="2">
                                     <Button
                                         variant={mode === option.label ? "solid" : "outline"}
                                         colorScheme="teal"
@@ -135,32 +135,30 @@ function AICheck() {
 
                         {/* 檢查語法按鈕 */}
                         <Flex justifyContent="flex-end">
-                            <Button colorScheme="teal" onClick={checkGrammar}>
+                            <Button colorScheme="teal" onClick={checkGrammar} isLoading={loading}>
                                 檢查語法
                             </Button>
                         </Flex>
                     </CardBody>
                 </Card>
 
-                {/* 結果卡片 */}
+                {/* 結果區域 */}
                 <Card>
                     <CardHeader p="6px 0px 22px 0px" display="flex" justifyContent="space-between" alignItems="center">
                         <Text fontSize="xl" color={textColor} fontWeight="bold">
                             語法檢查 - 結果
                         </Text>
-                        <Button colorScheme="gray" onClick={handleCopyToClipboard} leftIcon={<Icon as={FiFileText} />}>
+                        <Button colorScheme="gray" onClick={handleCopyToClipboard} leftIcon={<Icon as={FiFile} />}>
                             {copyStatus}
                         </Button>
                     </CardHeader>
                     <CardBody>
-                    <Textarea
-                     value={suggestions}  
-                    readOnly
-                     borderColor={borderColor}
-                     minH="300px"  // Increase minimum height
-                     overflowY="auto"
-                    />
-
+                        <Textarea
+                            value={suggestions}
+                            borderColor={borderColor}
+                            minH="350px"
+                            overflowY="auto"
+                        />
                     </CardBody>
                 </Card>
             </Grid>

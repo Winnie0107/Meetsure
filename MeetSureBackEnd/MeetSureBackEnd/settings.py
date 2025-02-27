@@ -16,19 +16,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-try:
-    import torch
-    print("✅ PyTorch is available!")
-except ImportError:
-    torch = None
-    print("❌ PyTorch is not installed.")
 
-try:
-    import tensorflow as tf
-    print("✅ TensorFlow is available!")
-except ImportError:
-    tf = None
-    print("❌ TensorFlow is not installed.")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 

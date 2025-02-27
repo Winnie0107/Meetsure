@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio
+from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
@@ -19,6 +19,10 @@ urlpatterns = [
     path('api/transcribe', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
     path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
+    path('register_company/', register_company, name='register_company'),
+    path('register_representative/', register_representative, name='register_representative'),
+    path('get_companies/', get_companies, name='get_companies'),
+    path('get_representatives/', get_representatives, name='get_representatives'),
 ]
 
 # 靜態文件設置（開發模式下）
