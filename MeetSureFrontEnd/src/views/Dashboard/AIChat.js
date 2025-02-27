@@ -81,7 +81,7 @@ function AIChat() {
     };
 
     return (
-        <Flex direction="row" pt={{ base: "120px", md: "75px" }} gap="24px">
+        <Flex direction="row" pt={{ base: "120px", md: "75px" }} gap="24px" mt="6">
             <Card w="20%" overflowX={{ sm: "scroll", xl: "hidden" }}>
                 <CardHeader p="6px 0px 22px 0px">
                     <Text fontSize="xl" color={textColor} fontWeight="bold">
