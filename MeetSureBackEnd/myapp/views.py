@@ -5,18 +5,26 @@ from django.contrib.auth.hashers import make_password
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import User, Users, Meeting
+from .models import User, Users, Meeting, Company,CompanyRepresentative
 from .serializers import UserSerializer
 from datetime import datetime
 from pytz import timezone
 from django.views.decorators.csrf import csrf_exempt
-from transformers import pipeline
 from django.contrib.auth import authenticate
 import soundfile as sf
 import io
 import numpy as np
 from django.contrib.auth.hashers import check_password
+from transformers import pipeline
 
+print("🔄 Loading Whisper model...")
+whisper = pipeline(
+    "automatic-speech-recognition", 
+    model="openai/whisper-base",
+    framework="pt",  # 這裡指定 PyTorch (即使沒有安裝)
+    device=-1
+)
+print("✅ Whisper model loaded successfully!")
 
 #顯示用戶列表
 def user_list(request):
@@ -225,3 +233,72 @@ def login_user(request):
         return JsonResponse({"error": "Invalid JSON format"}, status=400)
     except Exception as e:
         return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+    
+
+
+@csrf_exempt
+def register_company(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        name = data.get("name")
+        owner = data.get("owner")
+        description = data.get("description")
+        plan = data.get("plan")
+
+        if not name or not owner or not plan:
+            return JsonResponse({"error": "Missing required fields"}, status=400)
+
+        company = Company(name=name, owner=owner, description=description, plan=plan)
+        company.save()
+
+        return JsonResponse({"message": "Company registered successfully", "company_id": company.ID}, status=201)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+@csrf_exempt
+def register_representative(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        email = data.get("email")
+        password = data.get("password")
+        account_name = data.get("account_name")  
+        company_id = data.get("company_id")
+
+        if not email or not password or not account_name or not company_id:
+            return JsonResponse({"error": "請完整填寫所有欄位"}, status=400)
+
+        try:
+            company = Company.objects.get(ID=company_id)
+        except Company.DoesNotExist:
+            return JsonResponse({"error": "找不到對應的公司"}, status=404)
+
+        if Users.objects.filter(email=email).exists():
+            return JsonResponse({"error": "此 Email 已被使用"}, status=400)
+
+        user = Users.objects.create(
+            email=email,
+            password=password,  
+            acco_level="representative",
+            company=company
+        )
+
+        representative = CompanyRepresentative.objects.create(
+            user=user,
+            company=company
+        )
+
+        return JsonResponse({"message": "公司代表帳號註冊成功", "user_id": user.ID}, status=201)
+
+    return JsonResponse({"error": "無效的請求方式"}, status=400)
+
+   
+@csrf_exempt
+def get_companies(request):
+    companies = list(Company.objects.values())
+    return JsonResponse({"companies": companies}, safe=False)
+
+@csrf_exempt
+def get_representatives(request):
+    representatives = list(CompanyRepresentative.objects.values())
+    return JsonResponse({"representatives": representatives}, safe=False)

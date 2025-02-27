@@ -32,29 +32,23 @@ function AIChat() {
     // 发送消息到 OpenAI API
     const sendMessageToAPI = async (message) => {
         try {
-            console.log("Sending message to API:", message); // 日誌消息
-            console.log("Using API key:", process.env.REACT_APP_OPENAI_API_KEY); // 確認 API 密鑰是否被加載
+            console.log("Sending message to API:", message);
 
             const response = await axios.post(
-                "https://api.openai.com/v1/chat/completions",
+                "http://127.0.0.1:8000/chatgpt/",  // 改為 Django API
+                { message },
                 {
-                    model: "gpt-3.5-turbo",
-                    messages: [{ role: "user", content: message }],
-                },
-                {
-                    headers: {
-                        "Authorization": `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                 }
             );
 
-            return response.data.choices[0].message.content;
+            return response.data.response;
         } catch (error) {
             console.error("Error while calling the API:", error.response ? error.response.data : error.message);
-            return "抱歉，无法获取回应。";
+            return "抱歉，無法獲取回應。";
         }
     };
+
 
 
     const handleSendMessage = async () => {
@@ -87,7 +81,7 @@ function AIChat() {
     };
 
     return (
-        <Flex direction="row" pt={{ base: "120px", md: "75px" }} gap="24px">
+        <Flex direction="row" pt={{ base: "120px", md: "75px" }} gap="24px" mt="6">
             <Card w="20%" overflowX={{ sm: "scroll", xl: "hidden" }}>
                 <CardHeader p="6px 0px 22px 0px">
                     <Text fontSize="xl" color={textColor} fontWeight="bold">

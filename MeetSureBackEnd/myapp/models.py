@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.hashers import make_password
 
 # Create your models here.
 
@@ -30,3 +31,32 @@ class Meeting(models.Model):
 
     class Meta:
         db_table = 'meetings'
+
+
+class Company(models.Model):
+    ID = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, unique=True)
+    owner = models.CharField(max_length=255)
+    description = models.TextField()
+    plan = models.CharField(max_length=50)
+    approval_status = models.CharField(max_length=20, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'companies'
+
+# 公司代表模型
+class CompanyRepresentative(models.Model):
+    ID = models.AutoField(primary_key=True)
+    user = models.OneToOneField('Users', on_delete=models.CASCADE, unique=True)  # 維持與 Users 的關聯
+    company = models.ForeignKey('Company', on_delete=models.CASCADE, db_column='company')
+    approval_status = models.CharField(max_length=20, default='pending')  # 批准狀態
+
+    class Meta:
+        db_table = 'company_representatives'  # 確保資料表名稱正確
+
+
+    def save(self, *args, **kwargs):
+        if not self.user.password.startswith('pbkdf2_sha256$'):
+            self.user.password = make_password(self.user.password)
+        super().save(*args, **kwargs)

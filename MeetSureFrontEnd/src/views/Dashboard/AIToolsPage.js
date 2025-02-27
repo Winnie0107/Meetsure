@@ -30,7 +30,6 @@ export default function AIToolsTabs() {
         <Flex
             direction="column"
             pt={{ base: "90px", md: "60px" }}
-            px={{ base: "20px", md: "50px" }}
         >
             <Tabs variant="unstyled" isLazy align="start">
                 {/* 標籤列 */}
@@ -38,7 +37,7 @@ export default function AIToolsTabs() {
                     display="flex"
                     mb="10px"
                     gap="8px"
-                    ml={{ base: "20px", md: "20px" }} // 向右調整位置
+
                 >
                     <Tab
                         bg={defaultTabBg}
@@ -148,20 +147,21 @@ export default function AIToolsTabs() {
 
 
                 {/* 標籤對應內容 */}
-                <TabPanels mt="-80px">
-                    <TabPanel>
+                <TabPanels p={0} mt="-80px">
+                    <TabPanel p={0}>
                         <AIWrite />
                     </TabPanel>
-                    <TabPanel>
+                    <TabPanel p={0}>
                         <AIChat />
                     </TabPanel>
-                    <TabPanel>
+                    <TabPanel p={0}>
                         <AITranslate />
                     </TabPanel>
-                    <TabPanel>
+                    <TabPanel p={0}>
                         <AICheck />
                     </TabPanel>
                 </TabPanels>
+
             </Tabs>
         </Flex>
     );
