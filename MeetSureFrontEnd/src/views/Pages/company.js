@@ -38,18 +38,47 @@ function CompanyAccountApplication() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [companyId, setCompanyId] = useState(null);
 
-  const handleSubmitCompanyAccount = () => {
+  const handleSubmitCompanyAccount = async () => {
     if (!companyName || !responsiblePerson || !companyDescription || !plan) {
       alert("請完整填寫所有欄位");
       return;
     }
-    setCurrentStep("representativeAccount");
+  
+    const companyData = {
+      name: companyName,
+      owner: responsiblePerson,
+      description: companyDescription,
+      plan: plan,
+    };
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/register_company/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(companyData),
+      });
+  
+      const data = await response.json();
+      if (response.ok) {
+        alert("公司帳號註冊成功！");
+        setCompanyId(data.company_id);  // 確保 company_id 有被儲存
+        setCurrentStep("representativeAccount"); // 進入下一步
+      } else {
+        alert("註冊失敗：" + (data.error || "未知錯誤"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("發生錯誤，請稍後再試");
+    }
   };
+  
 
-
-  const handleSubmitRepresentativeAccount = () => {
-    if (!accountName || !password || !confirmPassword || !companyEmail) {
+  const handleSubmitRepresentativeAccount = async () => {
+    if (!accountName || !password || !confirmPassword || !companyEmail || !companyId) {
       alert("請完整填寫所有欄位");
       return;
     }
@@ -57,11 +86,35 @@ function CompanyAccountApplication() {
       alert("密碼不一致，請重新輸入");
       return;
     }
-    alert("申請完成！");
-    // 提交資料邏輯
+    const representativeData = {
+      account_name: accountName,  
+      email: companyEmail,  
+      password: password,  
+      company_id: companyId,  
+    };
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/register_representative/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(representativeData),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("公司代表帳號註冊成功！");
+      } else {
+        alert("註冊失敗：" + (data.error || "未知錯誤"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("發生錯誤，請稍後再試");
+    }
   };
-
-
+  
   const handleBackToCompanyAccount = () => {
     setCurrentStep("companyAccount");
   };
@@ -87,7 +140,6 @@ function CompanyAccountApplication() {
       mb="20px"
     />
   );
-
 
   const bgStyle = {
     backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url(${BgSignUp})`,
@@ -173,6 +225,7 @@ function CompanyAccountApplication() {
                 value={plan}
                 onChange={(e) => setPlan(e.target.value)}
               >
+                <option value="normal">MeetSureFree</option>
                 <option value="basic">MeetSurePlus</option>
                 <option value="premium">MeetSurePro</option>
               </Select>
