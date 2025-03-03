@@ -79,6 +79,7 @@ import {
 import { IoDocumentsSharp } from "react-icons/io5";
 import RightPanelWithCalendar from './RightPanelWithCalendar';
 import axios from "axios";
+import { FaClipboardList, FaCalendarAlt, FaBell, FaCheckCircle } from "react-icons/fa";
 
 
 
@@ -93,11 +94,20 @@ export default function Dashboard() {
 
   const { colorMode } = useColorMode();
 
+  const cards = [
+    { title: "待辦事項", icon: FaClipboardList, content: "查看並管理你的待辦事項。" },
+    { title: "重要會議", icon: FaCalendarAlt, content: "查看即將到來的會議安排。" },
+    { title: "通知提醒", icon: FaBell, content: "查看最新的通知與消息。" },
+    { title: "目標追蹤", icon: FaCheckCircle, content: "檢視你的長期目標進度。" },
+  ];
 
   // 新增的邏輯狀態和處理函數
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const infoModal = useDisclosure();  // 管理資訊 Modal
+  const meetingModal = useDisclosure();  // 管理新增會議 Modal
+  const [selectedModalContent, setSelectedModalContent] = useState("");
   const [newMeeting, setNewMeeting] = useState({ date: "", time: "", description: "" });
 
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewMeeting({ ...newMeeting, [name]: value });
@@ -131,163 +141,80 @@ export default function Dashboard() {
 
   return (
     <Flex flexDirection='column' pt={{ base: "120px", md: "75px" }}>
-      <SimpleGrid columns={{ sm: 1, md: 2, xl: 4 }} spacing='24px' mb='20px'>
-        <Card
-          as='a'
-          href='http://localhost:3000/argon-dashboard-chakra#/admin/aiwrite' // 點擊後跳轉的 URL
-          minH='125px'
-          _hover={{ bg: "teal.100", transform: "scale(1.05)", transition: "0.3s" }} // 鼠標懸停樣式
-          cursor='pointer' // 鼠標懸停時變成手形
-        >
-          <Flex direction='column'>
-            <Flex
-              flexDirection='row'
-              align='center'
-              justify='center'
-              w='100%'
-              mb='25px'>
-              <Stat me='auto'>
-                <Flex>
-                  <StatNumber fontSize='2xl' color={textColor} fontWeight='900'>
-                    智能寫作
-                  </StatNumber>
+      <SimpleGrid columns={{ sm: 1, md: 2, xl: 4 }} spacing="24px" mb="20px">
+        {cards.map((card, index) => (
+          <Card
+            key={index}
+            bg="white"
+            color="gray.800"
+            p={6}
+            borderRadius="2xl"
+            overflow="hidden"
+            boxShadow="lg"
+            transition="all 0.3s ease-in-out"
+            _hover={{
+              transform: "translateY(-5px)",
+              boxShadow: "2xl",
+              transition: "all 0.3s ease-in-out",
+            }}
+            onClick={() => {
+              setSelectedModalContent(card.content);
+              infoModal.onOpen();
+            }}
+          >
+            <CardHeader pb={3}>
+              <Flex align="center">
+                {/* Icon 保持獨立 */}
+                <Flex
+                  w={12}
+                  h={12}
+                  borderRadius="full"
+                  bg="teal.500"
+                  align="center"
+                  justify="center"
+                  mr={4}
+                  boxShadow="sm"
+                  transition="0.2s ease-in-out"
+                  _hover={{ bg: "teal.600" }}
+                >
+                  <Icon as={card.icon} w={6} h={6} color="white" />
                 </Flex>
-              </Stat>
-              <IconBox
-                borderRadius='50%'
-                as='box'
-                h={"45px"}
-                w={"45px"}
-                bg={iconteal}>
-                <PenIcon h={"24px"} w={"24px"} color={iconBoxInside} />
-              </IconBox>
-            </Flex>
-            <Text color='gray.400' fontSize='sm'>自動撰寫信件</Text>
-          </Flex>
-        </Card>
-
-        <Card
-          as='a'
-          href='http://localhost:3000/argon-dashboard-chakra#/admin/aichat' // 點擊後跳轉的 URL
-          minH='125px'
-          _hover={{ bg: "teal.100", transform: "scale(1.05)", transition: "0.3s" }} // 鼠標懸停樣式
-          cursor='pointer' // 鼠標懸停時變成手形
-        >
-          <Flex direction='column'>
-            <Flex
-              flexDirection='row'
-              align='center'
-              justify='center'
-              w='100%'
-              mb='25px'>
-              <Stat me='auto'>
-                <Flex>
-                  <StatNumber fontSize='2xl' color={textColor} fontWeight='900'>
-                    ChatRoom
-                  </StatNumber>
-                </Flex>
-              </Stat>
-              <IconBox
-                borderRadius="50%"
-                as="box"
-                h="45px"
-                w="45px"
-                bg={iconteal}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                position="relative">
-                <ChatIcon
-                  h="24px"
-                  w="24px"
-                  color={iconBoxInside}
-                  position="absolute"
-                  top="50%"
-                  left="50%"
-                  transform="translate(-50%, -50%)"
-                />
-              </IconBox>
-
-
-            </Flex>
-            <Text color='gray.400' fontSize='sm'>
-              ChatGPT
-            </Text>
-          </Flex>
-        </Card>
-
-
-        <Card
-          as='a'
-          href='http://localhost:3000/argon-dashboard-chakra#/admin/aitranslate' // 點擊後跳轉的 URL
-          minH='125px'
-          _hover={{ bg: "teal.100", transform: "scale(1.05)", transition: "0.3s" }} // 鼠標懸停樣式
-          cursor='pointer' // 鼠標懸停時變成手形
-        >
-          <Flex direction='column'>
-            <Flex
-              flexDirection='row'
-              align='center'
-              justify='center'
-              w='100%'
-              mb='25px'>
-              <Stat me='auto'>
-                <Flex>
-                  <StatNumber fontSize='2xl' color={textColor} fontWeight='900'>
-                    自動翻譯
-                  </StatNumber>
-                </Flex>
-              </Stat>
-              <IconBox
-                borderRadius='50%'
-                as='box'
-                h={"45px"}
-                w={"45px"}
-                bg={iconteal}>
-                <GlobeIcon h={"24px"} w={"24px"} color={iconBoxInside} />
-              </IconBox>
-            </Flex>
-            <Text color='gray.400' fontSize='sm'>多國語言翻譯</Text>
-          </Flex>
-        </Card>
-
-        <Card
-          as='a'
-          href='http://localhost:3000/argon-dashboard-chakra#/admin/aicheck' // 點擊後跳轉的 URL
-          minH='125px'
-          _hover={{ bg: "teal.100", transform: "scale(1.05)", transition: "0.3s" }} // 鼠標懸停樣式
-          cursor='pointer' // 鼠標懸停時變成手形
-        >  <Flex direction='column'>
-            <Flex
-              flexDirection='row'
-              align='center'
-              justify='center'
-              w='100%'
-              mb='25px'>
-              <Stat me='auto'>
-                <Flex>
-                  <StatNumber fontSize='2xl' color={textColor} fontWeight='900'>
-                    語法檢查
-                  </StatNumber>
-                </Flex>
-
-              </Stat>
-              <IconBox
-                borderRadius='50%'
-                as='box'
-                h={"45px"}
-                w={"45px"}
-                bg={iconteal}>
-                <CheckIcon h={"24px"} w={"24px"} color={iconBoxInside} />
-              </IconBox>
-            </Flex>
-            <Text color='gray.400' fontSize='sm'>
-              <Text color='gray.400' fontSize='sm'>擺脫語法錯誤
+                {/* 標題保持左對齊 */}
+                <Text fontSize="xl" fontWeight="bold" letterSpacing="wide">
+                  {card.title}
+                </Text>
+              </Flex>
+            </CardHeader>
+            <CardBody>
+              <Text 
+                fontSize="sm" 
+                color="gray.500"
+                ml={4} // ⭐ 讓內文稍微向左
+                whiteSpace="nowrap" // ⭐ 確保內容不換行
+                overflow="hidden" // ⭐ 避免超出卡片
+                textOverflow="clip" // ⭐ 溢出時直接截斷 (可改為 ellipsis 顯示 "...")
+                display="block"
+              >
+                {card.content}
               </Text>
-            </Text>
-          </Flex>
-        </Card>
+            </CardBody>
+          </Card>
+        ))}
       </SimpleGrid>
+
+      <Modal isOpen={infoModal.isOpen} onClose={infoModal.onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>詳細資訊</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>{selectedModalContent}</Text> {/* 顯示動態內容 */}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="teal" onClick={infoModal.onClose}>關閉</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
 
 
@@ -413,7 +340,7 @@ export default function Dashboard() {
                   您的會議安排行事曆
                 </Text>
               </Box>
-              <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9"   onClick={onOpen}>
+              <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9"   onClick={meetingModal.onOpen}>
                 + New Meeting
               </Button>
             </Flex>
@@ -425,7 +352,7 @@ export default function Dashboard() {
             </Flex>
           </CardBody>
           {/* 新增會議的模態框 */}
-          <Modal isOpen={isOpen} onClose={onClose} isCentered>
+          <Modal isOpen={meetingModal.isOpen} onClose={meetingModal.onClose} isCentered>
             <ModalOverlay />
             <ModalContent>
               <ModalHeader>新增會議</ModalHeader>
@@ -460,7 +387,7 @@ export default function Dashboard() {
                 <Button colorScheme="teal" mr={3} onClick={handleSubmit}>
                   提交
                 </Button>
-                <Button onClick={onClose}>取消</Button>
+                <Button onClick={meetingModal.onClose}>取消</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>
