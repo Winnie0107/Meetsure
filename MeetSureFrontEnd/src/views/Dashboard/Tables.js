@@ -10,44 +10,65 @@ import {
   Button,
   Icon,
   useColorModeValue,
-  Avatar,
-  AvatarGroup
+  Input,
+  InputGroup,
+  InputLeftElement,
 } from "@chakra-ui/react";
-// React icons import for the plus icon
-import { FiPlus } from "react-icons/fi";
-// Custom components
+import { FiPlus, FiSearch } from "react-icons/fi";
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody.js";
 import CardHeader from "components/Card/CardHeader.js";
-import TablesProjectRow from "components/Tables/TablesProjectRow";  // 確保這裡導入的是 TablesProjectRow
-import React from "react";
+import TablesProjectRow from "components/Tables/TablesProjectRow";
+import React, { useState } from "react";
 import { tablesProjectData, tablesTableData } from "variables/general";
-// dayjs 用來處理日期格式
-import dayjs from "dayjs";
 
 function Tables() {
   const textColor = useColorModeValue("gray.700", "white");
   const borderColor = useColorModeValue("gray.200", "gray.600");
 
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // 過濾後的專案資料
+  const filteredProjects = tablesProjectData.filter(
+    (row) =>
+      row.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (row.status && row.status.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   return (
     <Flex direction="column" pt={{ base: "120px", md: "75px" }}>
-      {/* 第一個卡片，顯示專案資料表 */}
       <Card my="22px" overflowX={{ sm: "scroll", xl: "hidden" }} pb="0px">
         <CardHeader p="6px 0px 22px 16px">
-          <Flex justify="space-between" alignItems="center">
+          <Flex justify="space-between" alignItems="center" w="100%">
             <Text fontSize="xl" color={textColor} fontWeight="bold">
               用戶媒體庫
             </Text>
-            {/* +號按鈕 */}
-            <Button colorScheme="teal" leftIcon={<Icon as={FiPlus} />}>
-              新增檔案
-            </Button>
+            <Flex alignItems="center" gap="12px">
+              {/* 搜尋框，設定固定寬度，不影響 +按鈕 */}
+              <InputGroup width="240px">
+                <InputLeftElement pointerEvents="none">
+                  <Icon as={FiSearch} color="gray.400" />
+                </InputLeftElement>
+                <Input
+                  placeholder="搜尋專案名稱或關鍵字..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  size="sm"
+                  borderColor="gray.300"
+                  _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                />
+              </InputGroup>
+              {/* 新增檔案按鈕 保持原來的大小和樣式 */}
+              <Button colorScheme="teal" leftIcon={<Icon as={FiPlus} />} size="md">
+                新增檔案
+              </Button>
+            </Flex>
           </Flex>
         </CardHeader>
         <CardBody>
           <Table variant="simple" color={textColor}>
             <Thead>
-              <Tr my=".8rem" pl="0px">
+              <Tr>
                 <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
                   專案名稱
                 </Th>
@@ -66,33 +87,24 @@ function Tables() {
               </Tr>
             </Thead>
             <Tbody>
-              {tablesProjectData.map((row, index, arr) => {
-                // 這裡傳遞每個專案的參與者資料
-                const participants = [
-                  { name: "Ryan Florence", src: "avatar1" },
-                  { name: "Segun Adebayo", src: "avatar2" },
-                  { name: "Kent Dodds", src: "avatar3" },
-                ];
-
-                return (
-                  <TablesProjectRow
-                    name={row.name}
-                    logo={row.logo}
-                    status={row.status}
-                    budget={row.budget}
-                    progression={row.progression}
-                    isLast={index === arr.length - 1 ? true : false}
-                    participants={row.participants} // 傳遞參與者資料
-                    key={index}
-                  />
-                );
-              })}
+              {filteredProjects.map((row, index, arr) => (
+                <TablesProjectRow
+                  name={row.name}
+                  logo={row.logo}
+                  status={row.status}
+                  budget={row.budget}
+                  progression={row.progression}
+                  participants={row.participants}
+                  isLast={index === arr.length - 1}
+                  key={index}
+                />
+              ))}
             </Tbody>
           </Table>
         </CardBody>
       </Card>
 
-      {/* 另一個表格展示 Authors */}
+      {/* Authors Table  */}
       <Card overflowX={{ sm: "scroll", xl: "hidden" }} pb="0px">
         <CardHeader p="6px 0px 22px 0px">
           <Text fontSize="xl" color={textColor} fontWeight="bold">
@@ -119,21 +131,19 @@ function Tables() {
               </Tr>
             </Thead>
             <Tbody>
-              {tablesTableData.map((row, index, arr) => {
-                return (
-                  <TablesProjectRow
-                    name={row.name}
-                    logo={row.logo}
-                    email={row.email}
-                    subdomain={row.subdomain}
-                    domain={row.domain}
-                    status={row.status}
-                    date={row.date}
-                    isLast={index === arr.length - 1 ? true : false}
-                    key={index}
-                  />
-                );
-              })}
+              {tablesTableData.map((row, index, arr) => (
+                <TablesProjectRow
+                  name={row.name}
+                  logo={row.logo}
+                  email={row.email}
+                  subdomain={row.subdomain}
+                  domain={row.domain}
+                  status={row.status}
+                  date={row.date}
+                  isLast={index === arr.length - 1}
+                  key={index}
+                />
+              ))}
             </Tbody>
           </Table>
         </CardBody>

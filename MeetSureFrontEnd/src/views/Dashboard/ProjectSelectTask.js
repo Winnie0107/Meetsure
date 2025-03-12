@@ -33,8 +33,9 @@ function ProjectSelectTask({ onSetProgressBar }) {
         {
             title: "專案事前準備",
             tasks: [
-                "確認人員",
-                "建立目標",
+                "設定專案目標",
+                "完成需求分析",
+                "技術架構確認",
                 "專案初版計畫書",
                 "專案計畫介紹PPT",
             ],
@@ -43,7 +44,8 @@ function ProjectSelectTask({ onSetProgressBar }) {
         {
             title: "專案進行過程",
             tasks: [
-                "繳交進度文件",
+                "介面設計 (UI/UX)",
+                "完成後端連接",
                 "專案完整計畫書",
                 "系統測試",
             ],
@@ -52,9 +54,10 @@ function ProjectSelectTask({ onSetProgressBar }) {
         {
             title: "專案完成後",
             tasks: [
+                "客戶驗收",
                 "專案摘要與總體分析報告",
                 "AI 支援建議",
-                "專案風險管理",
+                "正式上線",
             ],
             image: ProjectImage,
         },
@@ -74,22 +77,6 @@ function ProjectSelectTask({ onSetProgressBar }) {
         );
     };
 
-    // 更新會議次數
-    const handleMeetingCountChange = (e) => {
-        const value = e.target.value;
-        if (/^\d*$/.test(value)) {
-            setMeetingCount(value); // 只允許數字
-        }
-    };
-
-    const handleAddMeetingCount = () => {
-        if (meetingCount && !selectedTasks.includes(`此專案預計開會次數: ${meetingCount}`)) {
-            setSelectedTasks((prev) => [
-                `此專案預計開會次數: ${meetingCount}`,
-                ...prev.filter((task) => !task.startsWith("此專案預計開會次數")),
-            ]);
-        }
-    };
 
     // 定義浮動動畫
     const floatAnimation = keyframes`
@@ -177,27 +164,6 @@ function ProjectSelectTask({ onSetProgressBar }) {
                                 <Flex direction="row" align="start" justify="space-between">
                                     {/* CheckboxGroup 占左邊 */}
                                     <Box flex="1" pl="2" pt="3">
-                                        {/* 新增會議次數輸入框和按鈕 */}
-                                        {steps[step].title === "專案進行過程" && (
-                                            <Flex mb="6" align="center">
-                                                <Text fontSize="lg" mr="2">專案預計開會次數</Text>
-                                                <Input
-                                                    value={meetingCount}
-                                                    onChange={handleMeetingCountChange}
-                                                    placeholder="請輸入數字"
-                                                    size="md"
-                                                    mr="4"
-                                                    maxWidth="120px"
-                                                    isRequired
-                                                />
-                                                <Button
-                                                    colorScheme="teal"
-                                                    onClick={handleAddMeetingCount}
-                                                >
-                                                    確定
-                                                </Button>
-                                            </Flex>
-                                        )}
                                         <CheckboxGroup>
                                             <VStack spacing="6" align="start">
                                                 {steps[step].tasks.map((task, index) => (
