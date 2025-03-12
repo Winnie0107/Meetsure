@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import {
   Box,
-  Flex,
   Button,
+  Flex,
   FormControl,
   FormLabel,
   Input,
@@ -10,6 +10,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import axios from "axios";
+import BgSignUp from "assets/img/BgSignUp.png";
 
 function SignIn() {
   const textColor = useColorModeValue("gray.700", "white");
@@ -19,7 +20,6 @@ function SignIn() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // 🚀 發送 API 請求到 Django 伺服器
   const handleLogin = async () => {
     setErrorMessage("");
 
@@ -30,12 +30,8 @@ function SignIn() {
       });
 
       if (response.data.success) {
-        
-        // 🔥 存儲 email
-        localStorage.setItem("user_email", response.data.email); 
+        localStorage.setItem("user_email", response.data.email);
         localStorage.setItem("user_id", response.data.user_id);
-
-        // ✅ 直接使用 window.location.href 進行跳轉
         window.location.href = response.data.redirect_url;
       } else {
         setErrorMessage(response.data.message);
@@ -46,14 +42,48 @@ function SignIn() {
   };
 
   return (
-    <Flex position="relative" minH="100vh" overflow="hidden">
-      <Flex h="100vh" w="100%" maxW="1044px" mx="auto" justifyContent="center" align="center">
-        <Box w="400px" bg={bgForm} borderRadius="15px" p="30px" boxShadow="lg">
-          <Text fontSize="xl" color={textColor} fontWeight="bold" textAlign="center" mb="22px">
-            登入您的 MeetSure 帳號
+    <Flex direction="column" alignSelf="center" justifySelf="center" overflow="hidden">
+      <Box
+        position="absolute"
+        minH={{ base: "70vh", md: "50vh" }}
+        maxH={{ base: "70vh", md: "50vh" }}
+        w={{ md: "calc(100vw - 50px)" }}
+        maxW={{ md: "calc(100vw - 50px)" }}
+        left="0"
+        right="0"
+        bgRepeat="no-repeat"
+        overflow="hidden"
+        zIndex="-1"
+        top="0"
+        bgImage={BgSignUp}
+        bgSize="cover"
+        mx={{ md: "auto" }}
+        mt={{ md: "14px" }}
+        borderRadius={{ base: "0px", md: "20px" }}>
+        <Box w="100vw" h="100vh" opacity="0.8"></Box>
+      </Box>
+
+      <Flex direction="column" textAlign="center" justifyContent="center" align="center" mt="125px" mb="30px">
+        <Text fontSize="4xl" color="white" fontWeight="bold">
+          請登入您的 MeetSure 帳號
+        </Text>
+      </Flex>
+
+      <Flex alignItems="center" justifyContent="center" mb="60px">
+        <Flex
+          direction="column"
+          w="445px"
+          background="transparent"
+          borderRadius="15px"
+          p="40px"
+          mx={{ base: "100px" }}
+          bg={bgForm}
+          boxShadow="0px 5px 14px rgba(0, 0, 0, 0.05)">
+          <Text fontSize="2xl" color="black" fontWeight="bold" textAlign="center" mb="22px">
+            請輸入以下資料
           </Text>
 
-          <FormControl>
+          <FormControl mb="24px">
             <FormLabel>Gmail</FormLabel>
             <Input
               type="text"
@@ -63,7 +93,7 @@ function SignIn() {
             />
           </FormControl>
 
-          <FormControl mt="4">
+          <FormControl mb="24px">
             <FormLabel>密碼</FormLabel>
             <Input
               type="password"
@@ -82,7 +112,7 @@ function SignIn() {
           <Button colorScheme="blue" w="100%" mt="6" onClick={handleLogin}>
             登入
           </Button>
-        </Box>
+        </Flex>
       </Flex>
     </Flex>
   );

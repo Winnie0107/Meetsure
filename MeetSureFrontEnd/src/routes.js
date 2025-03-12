@@ -26,23 +26,28 @@ import AdminSignin from "views/Pages/AdminSignin.js";
 import CompanyApply from "views/Pages/CompanyApply.js";
 import ErrorLogs from "views/Pages/ErrorLogs.js";
 import ProjectManagement from "views/Dashboard/ProjectManagement.js";
+import GanttChart from "views/Dashboard/GanttChart.js";
 
 
 import {
   HomeIcon,
   StatsIcon,
-  CreditIcon,
   PersonIcon,
   DocumentIcon,
   RocketIcon,
-  SupportIcon,
-  ChatIcon,
   PenIcon,
-  GlobeIcon,
 } from "components/Icons/Icons";
-import { CheckIcon } from '@chakra-ui/icons';
 
 var dashRoutes = [
+  {
+    path: "/profile",
+    name: "個人檔案",
+    rtlName: "Profile",
+    icon: <PersonIcon color='inherit' />,
+    secondaryNavbar: true,
+    component: Profile,
+    layout: "/admin",
+  },
   {
     path: "/dashboard",
     name: "主控版",
@@ -84,27 +89,22 @@ var dashRoutes = [
     layout: "/admin",
   },
   {
-    path: "/profile",
-    name: "個人檔案",
-    rtlName: "Profile",
-    icon: <PersonIcon color='inherit' />,
-    secondaryNavbar: true,
-    component: Profile,
+    path: "/GanttChart",
+    name: "甘特圖",
+    rtlName: "لوحة القيادة",
+    icon: <StatsIcon color='inherit' />,
+    component: GanttChart,
     layout: "/admin",
   },
   {
     path: "/signin",
     name: "登入",
-    rtlName: "لوحة القيادة",
-    icon: <RocketIcon color='inherit' />,
     component: SignIn,
     layout: "/auth",
   },
   {
     path: "/signup",
     name: "註冊",
-    rtlName: "لوحة القيادة",
-    icon: <RocketIcon color='inherit' />,
     component: SignUp,
     layout: "/auth",
   },
