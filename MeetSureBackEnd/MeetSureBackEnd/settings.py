@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
+import requests
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',  # ✅ 確保啟用 Token 認證
     'myapp',
     'corsheaders',
     'transcriber'
@@ -67,7 +70,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 ROOT_URLCONF = 'MeetSureBackEnd.urls'
 
 TEMPLATES = [
@@ -115,6 +122,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:8000',
 ]
 CORS_ALLOW_CREDENTIALS = True  # 允許傳遞 cookie
+
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',  # 前端地址
@@ -178,3 +186,25 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+def get_ngrok_url():
+    try:
+        response = requests.get("http://localhost:4040/api/tunnels")
+        response.raise_for_status()
+        tunnels = response.json().get("tunnels", [])  # 避免 tunnels 為 None
+        for tunnel in tunnels:
+            if tunnel.get("proto") == "https":  # 只取 HTTPS
+                return tunnel.get("public_url")
+    except requests.exceptions.RequestException:
+        return None
+
+NGROK_URL = get_ngrok_url()
+if NGROK_URL:
+    CORS_ALLOWED_ORIGINS.append(NGROK_URL)  # ✅ 自動加入 ngrok 網址
+if NGROK_URL:
+    CSRF_TRUSTED_ORIGINS.append(NGROK_URL)  # ✅ ngrok URL 需要完整格式
+    print(f"更新 CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
+    
+print(f"CORS 允許的來源: {CORS_ALLOWED_ORIGINS}")  # ✅ 確保終端機能看到允許的網址
+print(f"🔍 取得的 NGROK_URL: {NGROK_URL}")  # 🛑 在啟動時顯示 NGROK_URL
