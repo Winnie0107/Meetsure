@@ -1,9 +1,18 @@
 import React, { useEffect, useRef } from "react";
-import Gantt from "frappe-gantt"; // 匯入 frappe-gantt
-import "../../assets/css/frappe-gantt.css"; // 匯入 CSS
+import Gantt from "frappe-gantt"; // 引入 frappe-gantt
+import "../../assets/css/frappe-gantt.css"; // 引入 CSS
+import {
+    useColorModeValue,
+    Box,
+    Text,
+    Divider,
+} from "@chakra-ui/react";
+import Card from "components/Card/Card.js";
+import CardHeader from "components/Card/CardHeader.js";
 
 const GanttChart = () => {
     const ganttRef = useRef(null);
+    const cardBg = useColorModeValue("white", "gray.800");
 
     useEffect(() => {
         if (ganttRef.current) {
@@ -13,7 +22,7 @@ const GanttChart = () => {
                     name: "設計階段",
                     start: "2025-03-01",
                     end: "2025-03-07",
-                    progress: 100, // 進度條
+                    progress: 100,
                     dependencies: "",
                 },
                 {
@@ -22,7 +31,7 @@ const GanttChart = () => {
                     start: "2025-03-08",
                     end: "2025-03-15",
                     progress: 50,
-                    dependencies: "Task 1", // 這個任務依賴 Task 1
+                    dependencies: "Task 1",
                 },
                 {
                     id: "Task 3",
@@ -42,40 +51,61 @@ const GanttChart = () => {
                 },
             ];
 
-            // 定義進度條顏色
+            // 進度條顏色
             const getProgressColor = (progress) => {
                 if (progress <= 49) return "#f9d6d5"; // 紅色
                 if (progress <= 70) return "#fde6c6"; // 橙色
                 return "#d4f7dc"; // 綠色
             };
 
-            new Gantt(ganttRef.current, tasks, {
-                on_click: (task) => {
-                    console.log("點擊任務:", task);
-                },
-                on_date_change: (task, start, end) => {
-                    console.log("任務時間變更:", task, start, end);
-                },
+            const gantt = new Gantt(ganttRef.current, tasks, {
+                on_click: (task) => console.log("點擊任務:", task),
+                on_date_change: (task, start, end) => console.log("任務時間變更:", task, start, end),
                 on_progress_change: (task, progress) => {
                     console.log("任務進度變更:", task, progress);
+                    applyProgressColors();
                 },
-                view_mode: "Day", // 也可以改成 "Week" 或 "Month"
-                language: "zh", // 設定語言
+                view_mode: "Day",
+                language: "zh",
             });
 
-            // **動態改變 progress 顏色**
-            setTimeout(() => {
-                document.querySelectorAll(".bar-progress").forEach((bar, index) => {
-                    bar.style.fill = getProgressColor(tasks[index].progress);
-                });
-            }, 500);
+            // **函式：應用進度條顏色**
+            const applyProgressColors = () => {
+                setTimeout(() => {
+                    document.querySelectorAll(".bar-progress").forEach((bar, index) => {
+                        bar.style.fill = getProgressColor(tasks[index].progress);
+                    });
+                }, 500);
+            };
+
+            // **初次載入應用顏色**
+            applyProgressColors();
+
+            // **監聽 DOM 變化，防止滑動時顏色消失**
+            const observer = new MutationObserver(() => {
+                applyProgressColors();
+            });
+
+            observer.observe(ganttRef.current, { childList: true, subtree: true });
+
+            // **清除監聽**
+            return () => observer.disconnect();
         }
     }, []);
 
     return (
-        <div>
-            <div ref={ganttRef}></div> {/* frappe-gantt 會渲染在這個 div */}
-        </div>
+        <Card bg={cardBg} p="6" boxShadow="lg">
+            {/* Header */}
+            <CardHeader pb="4">
+                <Text fontSize="lg" fontWeight="bold">專案甘特圖</Text>
+                <Divider my="2" />
+            </CardHeader>
+
+            {/* 甘特圖區域 */}
+            <Box height="400px" overflowX="auto">
+                <div ref={ganttRef}></div>
+            </Box>
+        </Card>
     );
 };
 
