@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import User, Users, Meeting,UserToken
+from .models import User, Users, Meeting,UserToken,Company,CompanyRepresentative
 from .serializers import UserSerializer
 from datetime import datetime
 from pytz import timezone
