@@ -14,7 +14,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
     const [meetingDate, setMeetingDate] = useState(new Date());
 
     return (
-        <Card flex="1" p="6" bg="white" boxShadow="lg">
+        <Card flex="1" p="6" bg="white" boxShadow="lg" height="535px">
             <CardHeader pb="4">
                 <Flex justify="space-between" align="center">
                     <Text fontSize="lg" fontWeight="bold">會議排程</Text>

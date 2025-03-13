@@ -133,7 +133,7 @@ function MeetSure() {
     }, [transcript]);
 
     return (
-        <Flex direction="column" pt={{ base: "120px", md: "75px" }}>
+        <Flex direction="column" pt={{ base: "120px", md: "35px" }}>
             {/* Add Meeting Link Card */}
             <Grid templateColumns="1fr" gap="24px" mb="24px">
                 <Card>
