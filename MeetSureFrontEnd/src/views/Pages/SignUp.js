@@ -26,6 +26,8 @@ function SignUp() {
   const colorIcons = useColorModeValue("gray.700", "white");
   const bgIcons = useColorModeValue("transparent", "navy.700");
   const bgIconsHover = useColorModeValue("gray.50", "whiteAlpha.100");
+
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -70,6 +72,7 @@ function SignUp() {
         password,
         acco_level: "user", // 默認為 user
         company: userType === "company" ? company : null,
+        name,
       },
         {
           withCredentials: true,  // 确保允许跨域携带凭证
@@ -225,6 +228,20 @@ function SignUp() {
                   </Select>
                 </>
               )}
+                 <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
+                使用者名稱
+              </FormLabel>
+              <Input
+                variant="auth"
+                fontSize="16px"
+                ms="4px"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="請輸入使用者名稱"
+                mb="24px"
+                size="lg"
+              />
               <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
                 Email
               </FormLabel>
