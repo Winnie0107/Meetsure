@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password,check_password
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -14,6 +14,9 @@ from django.contrib.auth import authenticate
 import soundfile as sf
 import io
 import numpy as np
+from transformers import pipeline
+from rest_framework.authtoken.models import Token
+
 
 #顯示用戶列表
 def user_list(request):
