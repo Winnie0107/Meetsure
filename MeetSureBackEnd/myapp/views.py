@@ -16,7 +16,9 @@ import io
 import numpy as np
 from transformers import pipeline
 from rest_framework.authtoken.models import Token
-
+from django.contrib.auth import get_user_model  # ✅ 確保使用 Django 內建 User
+User = get_user_model()  # ✅ 正確獲取 User
+import traceback  # 🔥 這行讓我們能夠捕捉完整錯誤訊息
 
 #顯示用戶列表
 def user_list(request):
