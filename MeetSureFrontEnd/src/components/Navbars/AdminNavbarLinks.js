@@ -92,102 +92,37 @@ if (!isFriend) {
       w={{ sm: "100%", md: "auto" }}
       alignItems='center'
       flexDirection='row'>
-      <SearchBar me='18px' />
-      <NavLink to='/auth/signin'>
-        <Button
-          ms='0px'
-          px='0px'
-          me={{ sm: "2px", md: "16px" }}
-          color={navbarIcon}
-          variant='no-effects'
-          rightIcon={
-            document.documentElement.dir ? (
-              ""
-            ) : (
-              <ProfileIcon color={navbarIcon} w='22px' h='22px' me='0px' />
-            )
-          }
-          leftIcon={
-            document.documentElement.dir ? (
-              <ProfileIcon color={navbarIcon} w='22px' h='22px' me='0px' />
-            ) : (
-              ""
-            )
-          }>
-          <Text display={{ sm: "none", md: "flex" }}>Sign In</Text>
-        </Button>
-      </NavLink>
-      <SidebarResponsive
-        hamburgerColor={"white"}
-        logo={
-          <Stack direction='row' spacing='12px' align='center' justify='center'>
-            {colorMode === "dark" ? (
-              <ArgonLogoLight w='74px' h='27px' />
-            ) : (
-              <ArgonLogoDark w='74px' h='27px' />
-            )}
-            <Box
-              w='1px'
-              h='20px'
-              bg={colorMode === "dark" ? "white" : "gray.700"}
-            />
-            {colorMode === "dark" ? (
-              <ChakraLogoLight w='82px' h='21px' />
-            ) : (
-              <ChakraLogoDark w='82px' h='21px' />
-            )}
-          </Stack>
-        }
-        colorMode={colorMode}
-        secondary={props.secondary}
-        routes={routes}
-        {...rest}
-      />
-      <SettingsIcon
-        cursor='pointer'
-        ms={{ base: "16px", xl: "0px" }}
-        me='16px'
-        onClick={props.onOpen}
-        color={navbarIcon}
-        w='18px'
-        h='18px'
-      />
-      <Menu>
-        <MenuButton>
-          <BellIcon color={navbarIcon} w='18px' h='18px' />
-        </MenuButton>
-        <MenuList p='16px 8px' bg={menuBg}>
-          <Flex flexDirection='column'>
-            <MenuItem borderRadius='8px' mb='10px'>
-              <ItemContent
-                time='13 minutes ago'
-                info='from Alicia'
-                boldInfo='New Message'
-                aName='Alicia'
-                aSrc={avatar1}
-              />
-            </MenuItem>
-            <MenuItem borderRadius='8px' mb='10px'>
-              <ItemContent
-                time='2 days ago'
-                info='by Josh Henry'
-                boldInfo='New Album'
-                aName='Josh Henry'
-                aSrc={avatar2}
-              />
-            </MenuItem>
-            <MenuItem borderRadius='8px'>
-              <ItemContent
-                time='3 days ago'
-                info='Payment succesfully completed!'
-                boldInfo=''
-                aName='Kara'
-                aSrc={avatar3}
-              />
-            </MenuItem>
-          </Flex>
-        </MenuList>
-      </Menu>
+      
+      {userEmail ? (
+        // ✅ 如果已登入，顯示 "用戶帳號 + 您好！"
+        <Menu>
+          <MenuButton as={Button} variant="ghost" color="white"  bg="transparent" _hover={{ bg: "gray.600" }}>
+            <Flex align="center">
+              <ProfileIcon w="22px" h="22px" me="10px" />
+              <Text color="white">{userEmail}，您好！</Text>
+            </Flex>
+          </MenuButton>
+          <MenuList p="16px 8px" bg={menuBg}>
+          <MenuItem onClick={bindLineAccount}>綁定 LINE 帳號</MenuItem>  {/* ✅ 新增綁定 LINE 選項 */}
+          <MenuItem onClick={handleLogout}>登出</MenuItem>
+          </MenuList>
+        </Menu>
+      ) : (
+        // ✅ 未登入時，顯示 Sign In 按鈕
+        <NavLink to="/auth/signin">
+          <Button
+            ms="0px"
+            px="0px"
+            me={{ sm: "2px", md: "16px" }}
+            color={navbarIcon}
+            variant="no-effects"
+            rightIcon={<ProfileIcon color={navbarIcon} w="22px" h="22px" me="0px" />}
+          >
+            <Text display={{ sm: "none", md: "flex" }}>Sign In</Text>
+          </Button>
+        </NavLink>
+      )}
+
     </Flex>
   );
 }
