@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import User, Users, Meeting, Company,CompanyRepresentative
+from .models import User, Users, Meeting,UserToken,Company,CompanyRepresentative
 from .serializers import UserSerializer
 from datetime import datetime
 from pytz import timezone
@@ -14,17 +14,6 @@ from django.contrib.auth import authenticate
 import soundfile as sf
 import io
 import numpy as np
-from django.contrib.auth.hashers import check_password
-from transformers import pipeline
-
-print("🔄 Loading Whisper model...")
-whisper = pipeline(
-    "automatic-speech-recognition", 
-    model="openai/whisper-base",
-    framework="pt",  # 這裡指定 PyTorch (即使沒有安裝)
-    device=-1
-)
-print("✅ Whisper model loaded successfully!")
 
 #顯示用戶列表
 def user_list(request):
@@ -32,31 +21,80 @@ def user_list(request):
     return JsonResponse(list(users), safe=False)
 
 @csrf_exempt
-#個人帳號註冊
 def register_user(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-        email = data.get("email")
-        password = data.get("password")
-        acco_level = data.get("acco_level")
-        company = data.get("company")
+        try:
+            data = json.loads(request.body)
+            email = data.get("email")
+            password = data.get("password")
+            acco_level = data.get("acco_level")
+            company = data.get("company", None)
+            name = data.get("name")
+            img = data.get("img", None)
 
-        # 檢查電子郵件是否已存在
-        if Users.objects.filter(email=email).exists():
-            return JsonResponse({"error": "Email is already taken"}, status=400)
-        
-        # 創建新用戶
-        user = Users(
-            email=email,
-            password=make_password(password),  # 密碼進行加密
-            acco_level=acco_level,
-            company=company,
-        )
-        user.save()
+            if not email or not password or not name:
+                return JsonResponse({"error": "缺少必要欄位"}, status=400)
 
-        return JsonResponse({"message": "User registered successfully"}, status=201)
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
+            existing_user = Users.objects.filter(email=email).first()
+            if existing_user:
+                if existing_user.auth_user:
+                    return JsonResponse({"error": "Email is already taken"}, status=400)
+                else:
+                    print(f"⚠️ 用戶 {email} 已存在，但 `auth_user` 為 None，修正中...")
+
+            base_username = name if name else email.split("@")[0]
+            username = base_username
+            count = 1
+
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}_{count}"
+                count += 1
+
+            print(f"🔍 嘗試建立 `auth_user`：username={username}, email={email}")
+            auth_user = User.objects.create_user(username=username, email=email, password=password)
+
+            # ✅ **確保 `auth_user` 來自資料庫**
+            auth_user = User.objects.get(pk=auth_user.pk)  
+            print(f"✅ `auth_user` 建立成功！ID={auth_user.id}")
+
+            if existing_user:
+                existing_user.auth_user = auth_user
+                existing_user.save()
+                print(f"✅ 已補齊 `Users.auth_user_id`，ID={existing_user.ID}")
+                return JsonResponse({"message": "User linked successfully"}, status=200)
+
+            print(f"🔍 嘗試建立 `Users`")
+            user = Users(
+                email=email,
+                password=make_password(password),
+                acco_level=acco_level,
+                company=company,
+                name=name,
+                img=img
+            )
+
+            user.auth_user = auth_user  # ✅ **確保 `auth_user` 是正確的 `User`**
+            user.save()
+
+            print(f"✅ `Users` 建立成功！ID={user.ID}")
+            print(f"🔍 `auth_user` 類型: {type(auth_user)}")
+            print(f"🔍 `auth_user` 來自 {auth_user.__class__.__module__}.{auth_user.__class__.__name__}")
+            print(f"🔍 `Users.auth_user` 預期的類型: {Users._meta.get_field('auth_user').related_model}")
+
+
+            return JsonResponse({"message": "User registered successfully"}, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+
+        except Exception as e:
+            print(f"❌ 發生錯誤: {str(e)}")
+            traceback.print_exc()
+            return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
 
 
 #新增行事曆
@@ -193,48 +231,77 @@ def login_user(request):
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
     try:
-        # 獲取請求數據
         data = json.loads(request.body)
         email = data.get("email")
         password = data.get("password")
 
-        # 查詢使用者
+        print(f"🔍 收到登入請求：email={email}, password={'*' * len(password)}")
+
+        # 🔎 查詢 `Users` 表
         user = Users.objects.filter(email=email).first()
-
-        # 確保用戶存在並且密碼匹配
-        if user and check_password(password, user.password):  # ✅ 使用 check_password 解密比較
-            if user.acco_level == "adminS":
-                role = "system_admin"
-                redirect_url = "/#/backstage/admindashboard"
-            elif user.acco_level == "adminC":
-                role = "company_admin"
-                redirect_url = "/#/backstage/admindashboard"
-            elif user.acco_level == "user":
-                role = "user"
-                redirect_url = "/#/admin/dashboard"
-            else:
-                return JsonResponse({"error": "Unauthorized role"}, status=403)
-
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "Login successful",
-                    "user_id": user.ID,  # 確保主鍵名稱正確
-                    "email": user.email,
-                    "role": role,
-                    "redirect_url": redirect_url,
-                },
-                status=200,
-            )
-        else:
+        if not user:
+            print("❌ 使用者不存在")
             return JsonResponse({"error": "Invalid credentials"}, status=401)
 
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON format"}, status=400)
-    except Exception as e:
-        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
-    
+        # 🔐 檢查密碼
+        if not check_password(password, user.password):
+            print("❌ 密碼錯誤")
+            return JsonResponse({"error": "Invalid credentials"}, status=401)
 
+        # ✅ **確認 `auth_user` 是否存在，沒有則創建**
+        if user.auth_user is None:
+            username = user.name if user.name else email  # 🔥 `Users.name` -> `auth_user.username`
+            print(f"⚠️ `auth_user` 不存在，創建帳號：username={username}, email={email}")
+
+            # ✅ **確保 `username` 唯一**
+            auth_user, created = User.objects.get_or_create(
+            email=email, 
+            defaults={"username": username[:150]}
+)
+
+
+            # ✅ **如果新建帳號，設定密碼**
+            if created:
+                auth_user.set_password(password)  
+                auth_user.save()
+
+            # ✅ **將 `auth_user` 綁定到 `Users`**
+            user.auth_user = auth_user
+            user.save()
+
+        print(f"✅ `auth_user` 確認成功：{user.auth_user}")
+
+        # ✅ **確認 Token 是否已經存在，沒有的話就創建**
+        token, _ = Token.objects.get_or_create(user=user.auth_user)
+
+        # ✅ **設置用戶角色 & 跳轉 URL**
+        role_map = {
+            "adminS": ("system_admin", "/#/backstage/admindashboard"),
+            "adminC": ("company_admin", "/#/backstage/admindashboard"),
+            "user": ("user", "/#/admin/dashboard")
+        }
+        role, redirect_url = role_map.get(user.acco_level, ("unknown", "/#/admin/dashboard"))
+
+        print(f"✅ 登入成功：user_id={user.ID}, username={user.auth_user.username}, role={role}")
+
+        return JsonResponse({
+            "success": True,
+            "message": "Login successful",
+            "user_id": user.ID,
+            "email": user.email,
+            "username": user.auth_user.username,  # ✅ 回傳 `auth_user.username`
+            "role": role,
+            "redirect_url": redirect_url,
+            "token": token.key,  # ✅ 回傳 Token
+        }, status=200)
+
+    except json.JSONDecodeError:
+        print("❌ JSON 格式錯誤")
+        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+
+    except Exception as e:
+        print(f"❌ 發生未預期的錯誤: {str(e)}")
+        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
 
 @csrf_exempt
 def register_company(request):
@@ -254,6 +321,8 @@ def register_company(request):
         return JsonResponse({"message": "Company registered successfully", "company_id": company.ID}, status=201)
     
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
 
 
 @csrf_exempt
