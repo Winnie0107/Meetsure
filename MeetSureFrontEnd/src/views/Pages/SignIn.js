@@ -30,8 +30,14 @@ function SignIn() {
       });
 
       if (response.data.success) {
-        localStorage.setItem("user_email", response.data.email);
+        
+        // 🔥 存儲 email
+        localStorage.setItem("token", response.data.token);  
+
+        localStorage.setItem("user_email", response.data.email); 
         localStorage.setItem("user_id", response.data.user_id);
+ 
+        // ✅ 直接使用 window.location.href 進行跳轉
         window.location.href = response.data.redirect_url;
       } else {
         setErrorMessage(response.data.message);
