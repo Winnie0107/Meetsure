@@ -7,7 +7,7 @@ from django.conf.urls.static import static
 from myapp.views import login_user  
 from myapp.gptApiview import chatgpt_response  
 from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
-
+from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
 
 
 # API 路由
@@ -30,8 +30,13 @@ urlpatterns = [
     path("api/line-webhook/", line_webhook, name="line-webhook-alt"),  # 另一個 Webhook 處理
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),
-
-
+    #friends
+    # 送出好友邀請 (POST)
+    path("api/friend_requests/", send_friend_request, name="send_friend_request"),
+    path("api/friend_requests/<int:request_id>/", respond_to_friend_request, name="respond_to_friend_request"),
+    path("api/friend_requests/list/", get_friend_requests, name="get_friend_requests"),  # ✅ 確保這個路徑正確
+    path("api/friends/", get_friends_list, name="get_friends_list"),
+    #
 ]
 
 # 靜態文件設置（開發模式下）
