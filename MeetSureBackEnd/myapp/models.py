@@ -1,16 +1,11 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
+import uuid
+from django.utils.crypto import get_random_string
+from django.conf import settings
 
 # Create your models here.
-
-#用戶列表
-class User(models.Model):
-    mail = models.CharField(max_length=150)
-    password = models.CharField(max_length=128)
-    level = models.IntegerField()
-
-    class Meta:
-        db_table = 'user'  # 指定數據庫中的表名
 
 #註冊表
 class Users(models.Model):
@@ -18,8 +13,11 @@ class Users(models.Model):
     email = models.CharField(max_length=255, unique=True)  # 使用 CharField，並設為唯一
     password = models.CharField(max_length=128)
     acco_level = models.CharField(max_length=100)
-    company = models.CharField(max_length=255, null=True, blank=True)
-
+    company = models.CharField(max_length=255, null=True, blank=True) 
+    name = models.CharField(max_length=100)
+    img = models.CharField(max_length=255)
+    auth_user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    
     class Meta:
         db_table = 'users'  # 確保資料表名稱為 'user'
 
@@ -60,3 +58,52 @@ class CompanyRepresentative(models.Model):
         if not self.user.password.startswith('pbkdf2_sha256$'):
             self.user.password = make_password(self.user.password)
         super().save(*args, **kwargs)
+        
+class LineUser(models.Model):
+        user = models.OneToOneField(User, on_delete=models.CASCADE)
+        line_user_id = models.CharField(max_length=50, unique=True)
+        line_display_name = models.CharField(max_length=100, blank=True, null=True)
+        class Meta:
+            db_table = 'lineuser' 
+
+def __str__(self):
+        return f"{self.user.username} - {self.line_display_name}"
+
+class LineBinding(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    verification_code = models.CharField(max_length=6, unique=True, default=str(uuid.uuid4())[:6])
+    class Meta:
+        db_table = 'linebinding' 
+class UserToken(models.Model):
+        user = models.OneToOneField("Users", on_delete=models.CASCADE)  # ✅ 讓 Token 直接綁定 `Users`
+        key = models.CharField(max_length=40, unique=True)
+class Meta:
+        db_table = 'usertoken' 
+@staticmethod
+def generate_token():
+    return get_random_string(40)
+
+# 📌 好友邀請表 (管理好友邀請)
+class FriendRequest(models.Model):
+    sender = models.ForeignKey("Users", on_delete=models.CASCADE, related_name="sent_requests")
+    receiver = models.ForeignKey("Users", on_delete=models.CASCADE, related_name="received_requests")
+    status = models.CharField(
+        max_length=20,
+        choices=[("pending", "Pending"), ("accepted", "Accepted"), ("rejected", "Rejected")],
+        default="pending"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)  # ✅ 自動填充時間
+
+    def __str__(self):
+        return f"{self.sender.email} -> {self.receiver.email} ({self.status})"
+# 📌 好友表 (管理真正的好友關係)
+class Friend(models.Model):
+    user1 = models.ForeignKey(Users, related_name="friends_1", on_delete=models.CASCADE)
+    user2 = models.ForeignKey(Users, related_name="friends_2", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user1", "user2")  # 避免重複的好友關係
+
+    def __str__(self):
+        return f"{self.user1} <-> {self.user2}"

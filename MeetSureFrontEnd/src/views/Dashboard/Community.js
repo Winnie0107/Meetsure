@@ -10,24 +10,16 @@ import {
     IconButton,
     Avatar,
     Badge,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    useDisclosure,
-    Checkbox,
-
 } from "@chakra-ui/react";
-import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, CheckIcon, AddIcon, } from "@chakra-ui/icons";
-import React, { useState } from "react";
+import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, } from "@chakra-ui/icons";
+import React, { useState, useEffect } from "react";
 import MeetSureLogo from "assets/img/MeetSureLogo.jpg"; // 匯入你的圖片
+import axios from "axios";
 
 
 
 function SocialPage() {
-    const backgroundColor = useColorModeValue("gray.50", "gray.900");
+    const backgroundColor = useColorModeValue("white");
     const borderColor = useColorModeValue("gray.200", "gray.700");
     const textColor = useColorModeValue("gray.800", "white");
     const sidebarBg = useColorModeValue("gray.100", "gray.800");
@@ -43,19 +35,132 @@ function SocialPage() {
         ], // 新增一個MeetSure機器人的訊息數組
 
     });
-    const [friendsList, setFriendsList] = useState([
-        { name: "Meetsure機器人", status: "auto-reply" }, // 將MeetSure機器人加入
-        { name: "Charlie", status: "online" },
-        { name: "Dana", status: "offline" },
-        { name: "Eve", status: "online" },
-    ]);
-    const [inputValue, setInputValue] = useState("");
-    const [newFriendName, setNewFriendName] = useState("");
 
-    const { isOpen, onOpen, onClose } = useDisclosure();
-    const [groupName, setGroupName] = useState("");
-    const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
-    const { isOpen: isAddFriendModalOpen, onOpen: onOpenAddFriendModal, onClose: onCloseAddFriendModal } = useDisclosure();
+    const [friendsList, setFriendsList] = useState([{ name: "Meetsure機器人", status: "auto-reply" }]);
+    const [friendRequests, setFriendRequests] = useState([]);
+    const [newFriendEmail, setNewFriendEmail] = useState("");
+    const userEmail = localStorage.getItem("user_email");
+    const [sentFriendRequests, setSentFriendRequests] = useState([]);
+    const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
+
+
+    // ✅ **獲取好友列表**
+    const fetchFriends = async () => {
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/friends/?user_email=${userEmail}`);
+            console.log("🔥 來自 API 的好友列表:", response.data);
+
+            if (response.data.friends) {
+                setFriendsList([{ name: "Meetsure機器人", status: "auto-reply" }, ...response.data.friends]);
+            }
+        } catch (error) {
+            console.error("❌ 獲取好友列表失敗:", error);
+        }
+    };
+
+    // ✅ **獲取待確認的好友邀請**
+    const fetchFriendRequests = async () => {
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/friend_requests/list/?user_email=${userEmail}`);
+            console.log("🔥 來自 API 的好友邀請:", response.data);
+
+            const { sent_requests, received_requests } = response.data;
+
+            // ✅ 確保只顯示 `pending` 狀態的請求
+            setSentFriendRequests(
+                (sent_requests || []).filter(req => req.status === "pending").map(req => ({
+                    id: req.id,
+                    receiver_email: req.receiver__email || "未知接收者",
+                    receiver_name: req.receiver__name || req.receiver__email || "未知接收者",
+                    status: req.status
+                }))
+            );
+
+            setReceivedFriendRequests(
+                (received_requests || []).filter(req => req.status === "pending").map(req => ({
+                    id: req.id,
+                    sender_email: req.sender__email || "未知發送者",
+                    sender_name: req.sender__name || req.sender__email || "未知發送者",
+                    status: req.status
+                }))
+            );
+
+        } catch (error) {
+            console.error("❌ 獲取好友邀請失敗", error);
+        }
+    };
+
+
+    // ✅ **發送好友邀請**
+    const handleSendFriendRequest = async () => {
+        if (!newFriendEmail.trim()) {
+            alert("請輸入好友 Email");
+            return;
+        }
+
+        try {
+            await axios.post("http://127.0.0.1:8000/api/friend_requests/", {
+                sender_email: userEmail,
+                receiver_email: newFriendEmail
+            });
+
+            alert("好友邀請已發送！");
+            setNewFriendEmail("");
+
+            // ✅ 立即更新 UI
+            await fetchFriendRequests();
+        } catch (error) {
+            console.error("❌ 發送好友邀請失敗:", error.response?.data);
+            alert(error.response?.data?.error || "發送好友邀請失敗");
+        }
+    };
+
+    // ✅ **接受/拒絕好友邀請**
+    const handleRespondToRequest = async (requestId, status) => {
+        try {
+            await axios.patch(`http://127.0.0.1:8000/api/friend_requests/${requestId}/`, { status });
+
+            // ✅ **手動更新 UI，立即移除已處理的請求**
+            setReceivedFriendRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
+            setSentFriendRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
+
+            // ✅ **確保更新好友列表**
+            await fetchFriends();
+
+            // ✅ **重新拉取好友邀請，確保已接受的邀請不會再顯示**
+            await fetchFriendRequests();
+
+        } catch (error) {
+            console.error("❌ 處理好友請求失敗:", error);
+        }
+    };
+
+
+
+    // ✅ **刪除好友**
+    const handleDeleteFriend = async (friendEmail) => {
+        try {
+            await axios.delete(`http://127.0.0.1:8000/api/friends/`, {
+                data: { user_email: userEmail, friend_email: friendEmail }
+            });
+
+            // ✅ 立即更新 UI
+            await fetchFriends();
+        } catch (error) {
+            console.error("❌ 刪除好友失敗:", error);
+        }
+    };
+
+    // ✅ **確保 `fetchFriends` 和 `fetchFriendRequests` 會在 `userEmail` 變更時觸發**
+    useEffect(() => {
+        fetchFriends();
+        fetchFriendRequests();
+    }, [userEmail]);
+
+
+
+
+    const [inputValue, setInputValue] = useState("");
 
     const handleSendMessage = () => {
         if (inputValue.trim() === "") return;
@@ -68,186 +173,6 @@ function SocialPage() {
             ],
         }));
         setInputValue("");
-    };
-
-    const handleDeleteFriend = (friendName) => {
-        setFriendsList((prevList) =>
-            prevList.filter((friend) => friend.name !== friendName)
-        );
-        if (selectedFriend === friendName) setSelectedFriend(null);
-    };
-
-    const handleAddFriend = () => {
-        if (!newFriendName.trim()) return;
-
-        if (friendsList.some((friend) => friend.name === newFriendName.trim())) {
-            alert("該好友已存在！");
-            return;
-        }
-
-        setFriendsList((prevList) => [
-            ...prevList,
-            { name: newFriendName.trim(), status: "offline" },
-        ]);
-
-        setNewFriendName("");
-    };
-
-    const handleCreateGroup = () => {
-        if (!groupName.trim()) {
-            alert("請輸入群組名稱！");
-            return;
-        }
-
-        if (selectedGroupMembers.length === 0) {
-            alert("請選擇至少一位成員！");
-            return;
-        }
-
-        console.log("群組名稱:", groupName);
-        console.log("群組成員:", selectedGroupMembers);
-        setGroupName("");
-        setSelectedGroupMembers([]);
-        onClose();
-    };
-
-    const toggleGroupMember = (friendName) => {
-        setSelectedGroupMembers((prev) => {
-            if (prev.includes(friendName)) {
-                return prev.filter((name) => name !== friendName);
-            } else {
-                return [...prev, friendName];
-            }
-        });
-    };
-
-    //創建群組彈跳視窗
-    const renderAddFriendField = () => {
-        return (
-            <VStack spacing={6} align="stretch" p={4} bg="gray.50" borderRadius="lg" shadow="lg">
-                <Box textAlign="center" mb={4}>
-                    <Text fontSize="2xl" fontWeight="bold" color="blue.600">
-                        新增好友或創建群組
-                    </Text>
-                    <Text fontSize="sm" color="gray.500">
-                        快速擴充你的社交圈
-                    </Text>
-                </Box>
-
-                <HStack
-                    spacing={4}
-                    p={4}
-                    bg="white"
-                    borderRadius="lg"
-                    shadow="sm"
-                    border="1px solid"
-                    borderColor="gray.200"
-                >
-                    <Input
-                        placeholder="輸入好友名稱"
-                        value={newFriendName}
-                        onChange={(e) => setNewFriendName(e.target.value)}
-                        borderRadius="lg"
-                        _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px blue.400" }}
-                    />
-                    <Button
-                        colorScheme="blue"
-                        borderRadius="lg"
-                        leftIcon={<AddIcon />}
-                        onClick={handleAddFriend}
-                    >
-                        新增
-                    </Button>
-                </HStack>
-
-                <HStack
-                    spacing={4}
-                    p={4}
-                    bg="white"
-                    borderRadius="lg"
-                    shadow="sm"
-                    border="1px solid"
-                    borderColor="gray.200"
-                >
-                    <Input
-                        placeholder="輸入群組名稱"
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
-                        borderRadius="lg"
-                        _focus={{ borderColor: "green.400", boxShadow: "0 0 0 1px green.400" }}
-                    />
-                    <Button
-                        colorScheme="green"
-                        borderRadius="lg"
-                        leftIcon={<CheckIcon />}
-                        onClick={onOpen}
-                    >
-                        創建
-                    </Button>
-                </HStack>
-
-                <Box
-                    p={4}
-                    bg="white"
-                    borderRadius="lg"
-                    shadow="sm"
-                    border="1px solid"
-                    borderColor="gray.200"
-                >
-                    <Text fontWeight="bold" fontSize="lg" color="gray.700" mb={4}>
-                        你可能認識的好友
-                    </Text>
-                    <VStack spacing={3} align="stretch">
-                        <HStack
-                            p={3}
-                            bg="gray.100"
-                            borderRadius="lg"
-                            _hover={{ bg: "gray.200" }}
-                            transition="background-color 0.2s"
-                        >
-                            <Avatar size="sm" name="推薦好友" />
-                            <Text fontSize="sm" color="gray.700">
-                                推薦好友名稱
-                            </Text>
-                        </HStack>
-                    </VStack>
-                </Box>
-            </VStack>
-        );
-    };
-
-    //創建群組彈跳視窗內容
-    const renderCreateGroupModal = () => {
-        return (
-            <Modal isOpen={isOpen} onClose={onClose} size="lg">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>創建群組</ModalHeader>
-                    <ModalBody>
-                        <Text mb="4">選擇成員：</Text>
-                        <VStack align="start">
-                            {friendsList.map((friend) => (
-                                <Checkbox
-                                    key={friend.name}
-                                    isChecked={selectedGroupMembers.includes(friend.name)}
-                                    onChange={() => toggleGroupMember(friend.name)}
-                                >
-                                    {friend.name}
-                                </Checkbox>
-                            ))}
-                        </VStack>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button colorScheme="blue" mr={3} onClick={handleCreateGroup}>
-                            確認創建
-                        </Button>
-                        <Button variant="ghost" onClick={onClose}>
-                            取消
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        );
     };
 
     //左側好友聊天室顯示
@@ -317,65 +242,123 @@ function SocialPage() {
     };
 
 
-
-    //好友清單
+    //好友頁面
     const renderFriendsList = () => {
         return (
             <Box flex="1" p="20px" overflowY="auto">
                 <VStack spacing={4} align="stretch">
-                    {friendsList.map((friend) => (
-                        <HStack
-                            key={friend.name}
-                            p="10px"
-                            bg="gray.100"
-                            borderRadius="lg"
-                            justify="space-between"
-                            alignItems="center"
-                        >
-                            <HStack>
-                                <Avatar name={friend.name} />
-                                <Box>
-                                    <Text fontWeight="bold" color={textColor}>
-                                        {friend.name}
-                                    </Text>
-                                    <Badge
-                                        colorScheme={
-                                            friend.status === "online" ? "green" : "gray"
-                                        }
+                    {/* 🔹 搜尋好友輸入框 */}
+                    <HStack p="10px" bg="gray.100" borderRadius="lg">
+                        <Input placeholder="輸入好友 Email" value={newFriendEmail}
+                            onChange={(e) => setNewFriendEmail(e.target.value)} />
+                        <Button colorScheme="blue" onClick={handleSendFriendRequest}>發送邀請</Button>
+                    </HStack>
+
+                    {/* 📌 好友區塊 (左右並排) */}
+                    <HStack spacing={6} align="start">
+                        {/* 🔹 左側 - 好友列表 */}
+                        <Box flex="1" bg="white" p="4" borderRadius="lg" boxShadow="md" h="75vh">
+                            <Text fontSize="lg" fontWeight="bold" mb="4">我的好友 👥</Text>
+                            {friendsList.length === 0 ? (
+                                <Text color="gray.500">目前沒有好友</Text>
+                            ) : (
+                                friendsList.map((friend, index) => (
+                                    <HStack
+                                        key={friend.email || index}
+                                        p="10px"
+                                        bg="gray.100"
+                                        borderRadius="lg"
+                                        justify="space-between"
+                                        alignItems="center"
                                     >
-                                        {friend.status === "online" ? "在線" : "離線"}
-                                    </Badge>
-                                </Box>
-                            </HStack>
-                            <HStack>
-                                <IconButton
-                                    size="md"
-                                    colorScheme="blue"
-                                    icon={<ChatIcon />}
-                                    aria-label="聊天"
-                                    onClick={() => {
-                                        setSelectedTab("chat");
-                                        setSelectedFriend(friend.name);
-                                    }}
-                                />
-                                <IconButton
-                                    size="md"
-                                    colorScheme="red"
-                                    icon={<DeleteIcon />}
-                                    aria-label="刪除好友"
-                                    onClick={() => handleDeleteFriend(friend.name)}
-                                />
-                            </HStack>
-                        </HStack>
-                    ))}
+                                        <HStack>
+                                            <Avatar name={friend.name} />
+                                            <Box>
+                                                <Text fontWeight="bold">{friend.name}</Text>
+                                                <Badge colorScheme={friend.status === "online" ? "green" : "gray"}>
+                                                    {friend.status === "online" ? "在線" : "離線"}
+                                                </Badge>
+                                            </Box>
+                                        </HStack>
+                                        <HStack>
+                                            <IconButton
+                                                size="md"
+                                                colorScheme="blue"
+                                                icon={<ChatIcon />}
+                                                aria-label="聊天"
+                                                onClick={() => {
+                                                    setSelectedTab("chat");
+                                                    setSelectedFriend(friend.name);
+                                                }}
+                                            />
+                                            <IconButton
+                                                size="md"
+                                                colorScheme="red"
+                                                icon={<DeleteIcon />}
+                                                aria-label="刪除好友"
+                                                onClick={() => {
+                                                    setSelectedTab("chat");
+                                                    setSelectedFriend(friend.email);  // ✅ 確保 Key 正確
+                                                }}
+                                            />
+                                        </HStack>
+                                    </HStack>
+                                ))
+                            )}
+                        </Box>
+
+                        {/* 🔹 右側 - 好友邀請 (已送出 / 收到) */}
+                        <Box flex="1" bg="white" p="4" borderRadius="lg" boxShadow="md" minW="250px" h="75vh">
+                            <Text fontSize="lg" fontWeight="bold" mb="4">好友邀請 📩</Text>
+
+                            {/* 已送出邀請 */}
+                            <Text fontSize="md" fontWeight="bold" mt="2">已送出邀請</Text>
+                            {sentFriendRequests.length === 0 ? (
+                                <Text color="gray.500">目前沒有送出的邀請</Text>
+                            ) : (
+                                sentFriendRequests.map((req) => (
+                                    <HStack key={req.id} p="10px" bg="gray.100" borderRadius="lg">
+                                        <Text>已送出給 {req.receiver_name || req.receiver_email}</Text>
+                                        <Button colorScheme="red" size="sm"
+                                            onClick={() => handleCancelFriendRequest(req.id)}>
+                                            取消邀請
+                                        </Button>
+                                    </HStack>
+                                ))
+                            )}
+
+                            <Box mt="4" /> {/* 分隔區域 */}
+
+                            {/* 收到的邀請 */}
+                            <Text fontSize="md" fontWeight="bold" mt="2">收到的邀請</Text>
+                            {receivedFriendRequests.length === 0 ? (
+                                <Text color="gray.500">目前沒有新的好友邀請</Text>
+                            ) : (
+                                receivedFriendRequests.map((req) => (
+                                    <HStack key={req.id} p="10px" bg="gray.100" borderRadius="lg">
+                                        <Text>{req.sender_email} 想加你為好友</Text>
+                                        <Button colorScheme="green" size="sm"
+                                            onClick={() => handleRespondToRequest(req.id, "accepted")}>
+                                            接受
+                                        </Button>
+                                        <Button colorScheme="red" size="sm"
+                                            onClick={() => handleRespondToRequest(req.id, "rejected")}>
+                                            拒絕
+                                        </Button>
+                                    </HStack>
+                                ))
+                            )}
+                        </Box>
+                    </HStack>
                 </VStack>
             </Box>
         );
     };
 
+
     //聊天室內容
     const renderChatContent = () => {
-        const currentMessages = chatMessages[selectedFriend || "general"];
+        const currentMessages = chatMessages[selectedFriend] || []; // ✅ 避免 undefined
 
         return (
             <Box flex="1" p="20px" overflowY="auto">
@@ -451,10 +434,10 @@ function SocialPage() {
     };
 
 
-    //最上方按鈕
+
     return (
         <Flex h="100vh" bg={backgroundColor} paddingTop="0px" overflow="hidden" position="relative"
-            zIndex="10" borderRadius="lg">
+            zIndex="10" borderRadius="20px" >
             {renderFriendsSidebar()}
 
             <Flex flex="1" direction="column" zIndex="1">
@@ -532,32 +515,9 @@ function SocialPage() {
                 ) : (
                     renderFriendsList()
                 )}
-                {/* 右下角Add按鈕 */}
-                <IconButton
-                    size="lg"
-                    colorScheme="teal"
-                    icon={<AddIcon />}
-                    aria-label="新增"
-                    position="fixed"
-                    bottom="20px"
-                    right="20px"
-                    onClick={onOpenAddFriendModal}
-                />
+
             </Flex>
 
-
-
-            {/* Add Friend Modal */}
-            <Modal isOpen={isAddFriendModalOpen} onClose={onCloseAddFriendModal}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalBody>
-                        {renderAddFriendField()}
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
-
-            {renderCreateGroupModal()}
         </Flex>
     );
 }

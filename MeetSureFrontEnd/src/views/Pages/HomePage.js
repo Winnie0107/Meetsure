@@ -233,17 +233,6 @@ const HomePage = () => {
                 </Flex>
               ))}
             </Flex>
-            <Button
-              color="#ffffff"
-              bg="#FF4081"
-              size="lg"
-              px={8}
-              borderRadius="16px"
-              _hover={{ bg: "#FF80AB" }}
-              onClick={() => window.location.href = "/project-setup"}
-            >
-              立即建立專案流程
-            </Button>
           </Stack>
         </Box>
 
@@ -307,53 +296,38 @@ const HomePage = () => {
                 </Flex>
               ))}
             </Flex>
-
-            <Button
-              color="#ffffff"
-              bg="#1A237E"
-              size="lg"
-              px={8}
-              borderRadius="16px" // 圓角
-
-              _hover={{ bg: "#303F9F" }}
-              onClick={() => window.location.href = "/calendar-setup"}
-            >
-              立即設置行事曆
-            </Button>
           </Stack>
         </Box>
-
-
         <Box bg="#ffffff" py={12} px={{ base: 6, md: 12 }} w="100%">
           <Stack spacing={8} align="center" textAlign="center">
             <Text fontSize="3xl" fontWeight="bold" color="#333333" animation="fadeIn 1s ease-in">
-              需要幫助嗎？
+              公司帳號申請指南
             </Text>
             <Text fontSize="lg" color="#4A4A4A" maxW="800px" animation="fadeIn 1.5s ease-in">
-              如果您需要註冊公司帳號，請參考以下步驟：
+              跟著以下步驟，輕鬆完成MeetSure公司帳號申請，快速加入我們的智慧會議管理平台。
             </Text>
 
             <Stack spacing={6} align="flex-start" w="100%" maxW="800px">
               {[
                 {
                   step: "1",
-                  content: "訪問「公司帳號申請」頁面。",
-                  icon: AiOutlineGlobal,
-                },
-                {
-                  step: "2",
-                  content: "提供基本公司資訊，包括名稱、聯繫方式和公司註冊編號。",
+                  content: "填寫公司基本資訊，包括公司名稱、負責人姓名及公司簡介。",
                   icon: AiOutlineProfile,
                 },
                 {
+                  step: "2",
+                  content: "選擇適合貴公司的MeetSure方案，了解功能與服務。",
+                  icon: AiOutlineDollarCircle,
+                },
+                {
                   step: "3",
-                  content: "上傳相關文件以完成身份驗證。",
-                  icon: AiOutlineUpload,
+                  content: "設定公司代表帳號及登入密碼，確保日後登入順暢。",
+                  icon: AiOutlineCheckCircle,
                 },
                 {
                   step: "4",
-                  content: "提交申請並等待審核結果。",
-                  icon: AiOutlineCheckCircle,
+                  content: "確認所有資訊無誤後提交申請，等待MeetSure審核通知。",
+                  icon: AiOutlineUpload,
                 },
               ].map((item, index) => (
                 <Flex
@@ -365,7 +339,7 @@ const HomePage = () => {
                   _hover={{
                     transform: "scale(1.05)",
                     boxShadow: "lg",
-                    background: "#f0f0f0", // 改為純色背景
+                    background: "#f0f0f0",
                   }}
                 >
                   <Box
@@ -406,149 +380,104 @@ const HomePage = () => {
               px={8}
               borderRadius="16px"
               _hover={{ bg: "#303F9F", transform: "scale(1.05)" }}
-              onClick={() => window.location.href = "/company-signup"}
+              onClick={() => window.location.href = "http://localhost:3000/#/auth/company"}
               rightIcon={<AiOutlineArrowRight />}
             >
-              前往申請頁面
+              前往公司帳號申請
             </Button>
+
           </Stack>
-
-          {/* CSS 動畫 */}
-          <style>
-            {`
-      @keyframes pulse {
-        0%, 100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.1);
-        }
-      }
-
-      @keyframes fadeIn {
-        0% {
-          opacity: 0;
-        }
-        100% {
-          opacity: 1;
-        }
-      }
-
-      @keyframes bounce {
-        0%, 100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-10px);
-        }
-      }
-    `}
-          </style>
         </Box>
+
 
 
         <Box bg="#F4F6F9" py={12} px={{ base: 6, md: 12 }} w="100%">
           <Stack spacing={6} align="center" textAlign="center">
-            <Text fontSize="3xl" fontWeight="bold" color="#1A237E">
-              方案說明
-            </Text>
-            <Text fontSize="lg" color="#4A4A4A" maxW="800px">
-              我們提供兩種方案，根據您的需求選擇最適合您的計劃。
-            </Text>
+            <Text fontSize="3xl" fontWeight="bold" color="#1A237E">方案說明</Text>
+            <Text fontSize="lg" color="#4A4A4A">我們提供個人與公司方案，根據您的需求選擇最適合的計劃。</Text>
           </Stack>
 
+          {/* 個人方案 */}
+          <Box mt={8} w="100%">
+            <Text textAlign="center" fontSize="2xl" fontWeight="bold" color="#1A237E" mb={4}>個人方案</Text>
+            <Flex wrap="wrap" justify="center" gap={{ base: 4, md: 8 }} maxW="1200px" mx="auto">
+              {[
+                ["一般用戶", "100分鐘/月", "免費用量", "#1A237E", "/register", AiOutlineProfile],
+                ["付費用戶", "600元/月", "用量12小時", "#FF4081", "/register", AiOutlineDollarCircle]
+              ].map(([title, price, time, color, link, IconComp], index) => (
+                <Box
+                  key={index}
+                  bg="#ffffff"
+                  borderRadius="lg"
+                  boxShadow="md"
+                  p={8}
+                  textAlign="center"
+                  w={{ base: "100%", md: "30%" }}
+                  transition="all 0.3s ease"
+                  _hover={{ transform: "scale(1.05)", boxShadow: "xl" }}
+                >
+                  <Flex justify="center" align="center" mb={2}>
+                    <Icon as={IconComp} color={color} w={6} h={6} mr={2} />
+                    <Text fontSize="xl" fontWeight="bold" color={color}>{title}</Text>
+                  </Flex>
+                  <Text fontSize="lg" color="#4A4A4A" mt={2}>{price}</Text>
+                  <Text fontSize="md" color="#4A4A4A">{time}</Text>
+                  <Button
+                    mt={6}
+                    color="#ffffff"
+                    bg={color}
+                    borderRadius="full"
+                    _hover={{ bg: `${color} CC` }}
+                    onClick={() => window.location.href = "http://localhost:3000/#/auth/signup"}
+                  >
+                    {index === 0 ? "註冊個人" : "升級方案"}
+                  </Button>
 
-          {/* 卡片區塊 */}
-          <Flex
-            wrap="wrap"
-            justify="center"
-            gap={{ base: 4, md: 8 }} // 控制卡片間距
-            maxW="1200px"
-            mx="auto"
-            mt={8} // 與標題之間的距離
-          >
-            {/* 第一個卡片：一般用戶 */}
-            <Box
-              bg="#ffffff"
-              borderRadius="lg"
-              boxShadow="md"
-              p={8}
-              textAlign="center"
-              w={{ base: "100%", md: "30%" }}
-              transition="all 0.3s ease"
-              _hover={{
-                transform: "scale(1.05)",
-                boxShadow: "xl",
-              }}
-            >
-              <Icon as={AiOutlineProfile} color="#1A237E" w={12} h={12} mb={4} />
-              <Text fontSize="xl" fontWeight="bold" color="#333333">
-                一般用戶
-              </Text>
-              <Text fontSize="lg" color="#4A4A4A" mt={2}>
-                100分鐘/月
-              </Text>
-              <Text fontSize="md" color="#4A4A4A" mt={1}>
-                免費用量
-              </Text>
-              <Button
-                color="#ffffff"
-                bg="#1A237E"
-                size="md"
-                borderRadius="full"
-                _hover={{ bg: "#303F9F" }}
-                mt={6}
-                onClick={() => window.location.href = "/register"}
-              >
-                立即註冊
-              </Button>
-            </Box>
+                </Box>
+              ))}
+            </Flex>
+          </Box>
 
+          {/* 公司方案 */}
+          <Box mt={12} w="100%">
+            <Text textAlign="center" fontSize="2xl" fontWeight="bold" color="#1A237E" mb={4}>公司方案</Text>
+            <Flex wrap="wrap" justify="center" gap={{ base: 4, md: 8 }} maxW="1200px" mx="auto">
+              {[
+                ["MeetSurePlus", "1500元/5個帳號", "40小時/月", "#1A237E", "/register"],
+                ["MeetSurePro", "4500元/15個帳號", "120小時/月", "#FF4081", "/register"]
+              ].map(([title, price, time, color, link], index) => (
+                <Box
+                  key={index}
+                  bg="#ffffff"
+                  borderRadius="lg"
+                  boxShadow="md"
+                  p={8}
+                  textAlign="center"
+                  w={{ base: "100%", md: "30%" }}
+                  transition="all 0.3s ease"
+                  _hover={{ transform: "scale(1.05)", boxShadow: "xl" }}
+                >
+                  <Text fontSize="xl" fontWeight="bold" color={color}>{title}</Text>
+                  <Text fontSize="lg" color="#4A4A4A" mt={2}>{price}</Text>
+                  <Text fontSize="md" color="#4A4A4A">{time}</Text>
+                  <Button
+                    mt={6}
+                    color="#ffffff"
+                    bg={color}
+                    borderRadius="full"
+                    _hover={{ bg: `${color} CC` }}
+                    onClick={() => window.location.href = "http://localhost:3000/#/auth/company"}
+                  >
+                    {index === 0 ? "註冊公司" : "升級方案"}
+                  </Button>
 
-            {/* 第二個卡片：付費用戶 */}
-            <Box
-              bg="#ffffff"
-              borderRadius="lg"
-              boxShadow="md"
-              p={8}
-              textAlign="center"
-              w={{ base: "100%", md: "30%" }}
-              transition="all 0.3s ease"
-              _hover={{
-                transform: "scale(1.05)",
-                boxShadow: "xl",
-              }}
-            >
-              <Icon as={AiOutlineDollarCircle} color="#FF4081" w={12} h={12} mb={4} />
-              <Text fontSize="xl" fontWeight="bold" color="#333333">
-                付費用戶
-              </Text>
-              <Text fontSize="lg" color="#4A4A4A" mt={2}>
-                600元/月
-              </Text>
-              <Text fontSize="md" color="#4A4A4A" mt={1}>
-                用量12小時
-              </Text>
-              <Button
-                color="#ffffff"
-                bg="#FF4081"
-                size="md"
-                borderRadius="full"
-                _hover={{ bg: "#FF80AB" }}
-                mt={6}
-                onClick={() => window.location.href = "/register"}
-              >
-                升級方案
-              </Button>
-            </Box>
-          </Flex>
-        </Box>
-
-
-
-
-      </Flex>
-    </Flex>
+                </Box>
+              ))}
+            </Flex >
+          </Box >
+        </Box >
+      </Flex >
+    </Flex >
   );
 };
 

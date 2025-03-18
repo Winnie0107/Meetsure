@@ -29,7 +29,6 @@ function SignUp() {
 
   // 新增：使用者名稱必填
   const [name, setName] = useState("");
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -62,9 +61,15 @@ function SignUp() {
     }
 
     try {
-      // 改用 JSON 格式傳遞資料
-      const response = await axios.post(
-        "http://localhost:8000/api/register",
+
+      // 向 Django 後端發送註冊請求
+      const response = await axios.post("http://localhost:8000/api/register", {
+        email,
+        password,
+        acco_level: "user", // 默認為 user
+        company: userType === "company" ? company : null,
+        name,
+      },
         {
           email,
           password,
@@ -232,7 +237,6 @@ function SignUp() {
                   </Select>
                 </>
               )}
-              {/* 使用者名稱 */}
               <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
                 使用者名稱
               </FormLabel>
@@ -247,7 +251,6 @@ function SignUp() {
                 mb="24px"
                 size="lg"
               />
-
               <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
                 Email
               </FormLabel>

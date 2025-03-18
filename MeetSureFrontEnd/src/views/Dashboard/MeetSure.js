@@ -13,7 +13,7 @@ import { FiPlus, FiMessageSquare, FiCopy, FiDownload } from "react-icons/fi";
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody.js";
 import CardHeader from "components/Card/CardHeader.js";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Spinner } from "@chakra-ui/react"; // 引入 Spinner 元件
 
@@ -26,6 +26,8 @@ function MeetSure() {
     const [copyText, setCopyText] = useState("複製文本");
     const [selectedFile, setSelectedFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false); // 新增加載狀態
+    const [aiAnalysis, setAiAnalysis] = useState(""); // 存放 AI 分析結果
+    const [isAnalyzing, setIsAnalyzing] = useState(false); // AI 分析的載入狀態
 
     // Handle file selection
     const handleFileChange = (event) => {
@@ -85,8 +87,53 @@ function MeetSure() {
         link.click();
     };
 
+    // AI 內容分析
+    const handleAIAnalysis = async () => {
+        if (transcript.length === 0) {
+            console.error("❌ AI 分析失敗：逐字稿內容為空");
+            setAiAnalysis("AI 分析失敗：逐字稿內容為空");
+            return;
+        }
+
+        setIsAnalyzing(true);
+        const allText = transcript.map(entry => entry.text).join("\n");
+
+        try {
+            console.log("📤 發送至 AI API:", allText); // 🛠️ 確保有內容送出
+
+            const response = await axios.post("http://127.0.0.1:8000/chatgpt/", {
+                message: `請幫我分析這段文字，並用中文分別回應這段文字的大綱跟重點：
+            
+            「${allText}」`
+            });
+
+            console.log("✅ AI API 回應:", response.data);
+
+            if (response.data.response) {
+                setAiAnalysis(response.data.response);
+            } else if (response.data.error) {
+                setAiAnalysis("AI 回應錯誤：" + response.data.error);
+            } else {
+                setAiAnalysis("AI 無回應，請稍後重試。");
+            }
+        } catch (error) {
+            console.error("❌ AI 分析請求失敗:", error);
+            setAiAnalysis("AI 分析失敗：" + (error.response?.data?.error || error.message));
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+
+    // 監聽 transcript 變化，自動觸發 AI 分析
+    useEffect(() => {
+        if (transcript.length > 0) {
+            handleAIAnalysis();
+        }
+    }, [transcript]);
+
     return (
-        <Flex direction="column" pt={{ base: "120px", md: "75px" }}>
+        <Flex direction="column" pt={{ base: "120px", md: "35px" }}>
             {/* Add Meeting Link Card */}
             <Grid templateColumns="1fr" gap="24px" mb="24px">
                 <Card>
@@ -129,57 +176,81 @@ function MeetSure() {
 
             {/* Transcript Card */}
             <Grid templateColumns="1fr" gap="24px">
-                <Card>
-                    <CardHeader p="6px 0px 22px 0px">
-                        <Flex justify="space-between" alignItems="center">
-                            <Text fontSize="xl" color={textColor} fontWeight="bold">
-                                逐字稿
-                            </Text>
-                            <Stack direction="row" spacing={4}>
-                                <Button
-                                    onClick={handleCopy}
-                                    leftIcon={<Icon as={FiCopy} />}
-                                    backgroundColor="gray.200"
-                                    color="black"
-                                    _hover={{ bg: "gray.300" }}
-                                    variant="solid"
-                                >
-                                    {copyText}
-                                </Button>
-                                <Button
-                                    onClick={handleDownload}
-                                    leftIcon={<Icon as={FiDownload} />}
-                                    backgroundColor="gray.200"
-                                    color="black"
-                                    _hover={{ bg: "gray.300" }}
-                                    variant="solid"
-                                >
-                                    下載.txt
-                                </Button>
-                            </Stack>
-                        </Flex>
-                    </CardHeader>
-                    <CardBody>
-                        <Box
-                            maxH="500px"
-                            overflowY="auto"
-                            border="1px solid"
-                            borderColor={borderColor}
-                            p="4"
-                            whiteSpace="pre-wrap" // 確保換行符生效
-                        >
-                            {transcript.length > 0 ? (
-                                <Text>
-                                    {transcript.map((entry) => entry.text).join("\n")} 
-
+                <Flex direction="row" gap="24px">
+                    <Card w="50%">
+                        <CardHeader p="6px 0px 22px 0px">
+                            <Flex justify="space-between" alignItems="center">
+                                <Text fontSize="xl" color={textColor} fontWeight="bold">
+                                    逐字稿
                                 </Text>
-                            ) : (
-                                <Text>目前沒有轉錄內容</Text>
-                            )}
-                        </Box>
-                    </CardBody>
+                                <Stack direction="row" spacing={4}>
+                                    <Button
+                                        onClick={handleCopy}
+                                        leftIcon={<Icon as={FiCopy} />}
+                                        backgroundColor="gray.200"
+                                        color="black"
+                                        _hover={{ bg: "gray.300" }}
+                                        variant="solid"
+                                    >
+                                        {copyText}
+                                    </Button>
+                                    <Button
+                                        onClick={handleDownload}
+                                        leftIcon={<Icon as={FiDownload} />}
+                                        backgroundColor="gray.200"
+                                        color="black"
+                                        _hover={{ bg: "gray.300" }}
+                                        variant="solid"
+                                    >
+                                        下載.txt
+                                    </Button>
+                                </Stack>
+                            </Flex>
+                        </CardHeader>
+                        <CardBody>
+                            <Box
+                                maxH="500px"
+                                overflowY="auto"
+                                border="1px solid"
+                                borderColor={borderColor}
+                                p="4"
+                                whiteSpace="pre-wrap" // 確保換行符生效
+                            >
+                                {transcript.length > 0 ? (
+                                    <Text>
+                                        {transcript.map((entry) => entry.text).join("\n")}
 
-                </Card>
+                                    </Text>
+                                ) : (
+                                    <Text>目前沒有轉錄內容</Text>
+                                )}
+                            </Box>
+                        </CardBody>
+
+                    </Card>
+                    {/* AI Analysis Card */}
+                    <Card w="50%">
+                        <CardHeader p="6px 0px 28px 0px">
+                            <Flex justify="space-between" alignItems="center">
+                                <Text fontSize="xl" color={textColor} fontWeight="bold">
+                                    AI分析
+                                </Text>
+                            </Flex>
+                        </CardHeader>
+                        <CardBody>
+                            <Box maxH="500px" overflowY="auto" border="1px solid" borderColor={borderColor} p="4" whiteSpace="pre-wrap">
+                                {isAnalyzing ? (
+                                    <Flex alignItems="center">
+                                        <Spinner size="sm" mr="2" />
+                                        <Text>AI 分析中，請稍候...</Text>
+                                    </Flex>
+                                ) : (
+                                    <Text>{aiAnalysis || "尚無 AI 分析結果"}</Text>
+                                )}
+                            </Box>
+                        </CardBody>
+                    </Card>
+                </Flex>
             </Grid>
         </Flex>
     );

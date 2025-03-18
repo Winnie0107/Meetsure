@@ -13,8 +13,8 @@ import Footer from "components/Footer/Footer.js";
 // Layout components
 import AdminNavbar from "components/Navbars/AdminNavbar.js";
 import Sidebar from "components/Sidebar/Sidebar.js";
-import React, { useState } from "react";
-import { Redirect, Route, Switch } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Redirect, Route, Switch,useHistory  } from "react-router-dom";
 import routes from "routes.js";
 // Custom Chakra theme
 import FixedPlugin from "../components/FixedPlugin/FixedPlugin";
@@ -27,11 +27,21 @@ import MeetSureLogo from 'assets/img/MeetSureLogo.jpg';
 import MeetSureText from 'assets/img/MeetSureText.jpg';
 
 export default function Dashboard(props) {
+  const history = useHistory();
+
   const { ...rest } = props;
   // states and functions
   const [fixed, setFixed] = useState(false);
   const { colorMode } = useColorMode();
   // functions for changing the states from components
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+  
+    // 確保當前 URL 不是 "/#/auth/homepage"，避免無限重新導向
+    if (!token && window.location.pathname !== "/auth/homepage") {
+      history.replace("/auth/homepage"); 
+    }
+  }, [history]);
   const getRoute = () => {
     return window.location.pathname !== "/admin/full-screen-maps";
   };
