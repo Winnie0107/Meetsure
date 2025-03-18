@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives
+from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
@@ -36,9 +36,18 @@ urlpatterns = [
     path("api/friend_requests/<int:request_id>/", respond_to_friend_request, name="respond_to_friend_request"),
     path("api/friend_requests/list/", get_friend_requests, name="get_friend_requests"),  # ✅ 確保這個路徑正確
     path("api/friends/", get_friends_list, name="get_friends_list"),
+    path('api/profile', get_profile, name='get_profile'),
+    path('api/profile/update', update_profile, name='update_profile'),
+    path('api/generate_avatar/', generate_avatar, name='generate_avatar'),  # ✅ 註冊 AI 生成頭貼 API
+    path('api/update_avatar/', update_avatar, name='update_avatar'),
+    path("api/update_name/", update_name, name="update_name"),
+    path("api/update_password/", update_password, name="update_password"),
     #
 ]
 
 # 靜態文件設置（開發模式下）
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
