@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Flex, Menu, MenuButton, MenuItem, MenuList, Text, useColorMode, useColorModeValue } from "@chakra-ui/react";
+import { Box, Button, Flex, Menu, MenuButton, MenuItem, MenuList, Text, useColorMode, useColorModeValue, Avatar } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 import { ProfileIcon, SettingsIcon } from "components/Icons/Icons";
+import axios from "axios";
 
 export default function HeaderLinks(props) {
   const { colorMode } = useColorMode();
@@ -13,12 +14,26 @@ export default function HeaderLinks(props) {
 
   // 🔥 新增 state 來存儲用戶帳號
   const [userEmail, setUserEmail] = useState(null);
+  const [userName, setUserName] = useState(null);
+  const [userImg, setUserImg] = useState(null);
 
   useEffect(() => {
     // 檢查 localStorage 是否有存儲的 email
     const email = localStorage.getItem("user_email");
     if (email) {
       setUserEmail(email);
+    }
+    
+    const userId = localStorage.getItem("user_id");
+    if (userId) {
+      axios.get(`http://localhost:8000/api/profile?user_id=${userId}`)
+        .then((res) => {
+          setUserName(res.data.name || "使用者");
+          setUserImg(res.data.img || "black.png");
+        })
+        .catch((err) => {
+          console.error("獲取用戶資料失敗:", err);
+        });
     }
   }, []);
 
@@ -36,14 +51,17 @@ export default function HeaderLinks(props) {
       alignItems="center"
       flexDirection="row"
     >
-      
-      {userEmail ? (
-        // ✅ 如果已登入，顯示 "用戶帳號 + 您好！"
+      {userName ? (
+        // ✅ 如果已登入，顯示 "用戶名稱 + 您好！" 和頭像
         <Menu>
-          <MenuButton as={Button} variant="ghost" color="white"  bg="transparent" _hover={{ bg: "gray.600" }}>
+          <MenuButton as={Button} variant="ghost" color="white" bg="transparent" _hover={{ bg: "gray.600" }}>
             <Flex align="center">
-              <ProfileIcon w="22px" h="22px" me="10px" />
-              <Text color="white">{userEmail}，您好！</Text>
+              {userImg === "black.png" ? (
+                <ProfileIcon w="22px" h="22px" me="10px" />
+              ) : (
+                <Avatar src={`http://localhost:8000/media/${userImg}`} w="40px" h="40px" me="10px" />
+              )}
+              <Text color="white">{userName}，您好！</Text>
             </Flex>
           </MenuButton>
           <MenuList p="16px 8px" bg={menuBg}>
@@ -65,8 +83,6 @@ export default function HeaderLinks(props) {
           </Button>
         </NavLink>
       )}
-
-
     </Flex>
   );
 }

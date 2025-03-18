@@ -13,26 +13,28 @@ import {
   useColorModeValue,
   FormErrorMessage,
 } from "@chakra-ui/react";
-import { FaUser, FaBuilding, FaArrowLeft } from "react-icons/fa"; // 使用 FaUser, FaBuilding 和 FaArrowLeft
+import { FaUser, FaBuilding, FaArrowLeft } from "react-icons/fa";
 import React, { useState } from "react";
-import BgSignUp from "assets/img/BgSignUp.png"; // 背景圖片
-import axios from "axios"; // 用於發送請求
+import BgSignUp from "assets/img/BgSignUp.png";
+import axios from "axios";
 
 function SignUp() {
-  const [userType, setUserType] = useState(null); // 用來控制選擇的用戶類型
-  const [company, setCompany] = useState(""); // 用來控制選擇的公司
+  const [userType, setUserType] = useState(null);
+  const [company, setCompany] = useState("");
   const bgForm = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("gray.700", "white");
   const colorIcons = useColorModeValue("gray.700", "white");
   const bgIcons = useColorModeValue("transparent", "navy.700");
   const bgIconsHover = useColorModeValue("gray.50", "whiteAlpha.100");
+
+  // 新增：使用者名稱必填
+  const [name, setName] = useState("");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-
-  // 重設用戶類型的函數
   const resetUserType = () => setUserType(null);
 
   const handleSubmit = async (e) => {
@@ -44,39 +46,37 @@ function SignUp() {
       setErrorMessage("請輸入有效的電子郵件地址");
       return;
     }
-
-    // 表單驗證
-    if (!email || !password || !confirmPassword) {
-      setErrorMessage("請填寫所有欄位");
+    // 檢查必填欄位：email, password, 確認密碼, 使用者名稱
+    if (!email || !password || !confirmPassword || !name.trim()) {
+      setErrorMessage("請填寫所有必填欄位");
       return;
     }
-
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,16}$/;
     if (!passwordRegex.test(password)) {
       setErrorMessage("密碼格式不符合要求");
       return;
     }
-
-    // 密碼和確認密碼是否相同
     if (password !== confirmPassword) {
       setErrorMessage("密碼與確認密碼不一致");
       return;
     }
 
     try {
-      // 向 Django 後端發送註冊請求
-      const response = await axios.post("http://localhost:8000/api/register", {
-        email,
-        password,
-        acco_level: "user", // 默認為 user
-        company: userType === "company" ? company : null,
-      },
+      // 改用 JSON 格式傳遞資料
+      const response = await axios.post(
+        "http://localhost:8000/api/register",
         {
-          withCredentials: true,  // 确保允许跨域携带凭证
+          email,
+          password,
+          acco_level: "user",
+          company: userType === "company" ? company : "",
+          name,
+        },
+        {
+          withCredentials: true,
         }
       );
       if (response.status === 201) {
-        // 註冊成功，跳轉或顯示成功訊息
         alert("註冊成功！");
       }
     } catch (error) {
@@ -84,14 +84,11 @@ function SignUp() {
     }
   };
 
-  // 公司選項列表（可以從 API 或數據庫獲取）
   const companyOptions = [
     { value: "company1", label: "Tech Corp" },
     { value: "company2", label: "Innovate Inc" },
     { value: "company3", label: "Green Energy" },
   ];
-
-
 
   return (
     <Flex direction="column" alignSelf="center" justifySelf="center" overflow="hidden">
@@ -111,7 +108,8 @@ function SignUp() {
         bgSize="cover"
         mx={{ md: "auto" }}
         mt={{ md: "14px" }}
-        borderRadius={{ base: "0px", md: "20px" }}>
+        borderRadius={{ base: "0px", md: "20px" }}
+      >
         <Box w="100vw" h="100vh" opacity="0.8"></Box>
       </Box>
 
@@ -131,7 +129,8 @@ function SignUp() {
             background="transparent"
             bg={bgForm}
             boxShadow="0px 5px 14px rgba(0, 0, 0, 0.05)"
-            textAlign="center">
+            textAlign="center"
+          >
             <Text fontSize="2xl" color="black" fontWeight="bold" mb="15px">
               我想要在MeetSure
             </Text>
@@ -142,7 +141,7 @@ function SignUp() {
               請正確選擇您的身分，註冊公司帳號需經過管理員審核
             </Text>
             <HStack spacing="80px" justify="center" mb="50px">
-              {/* 個人用戶選擇按鈕 */}
+              {/* 個人用戶按鈕 */}
               <Flex
                 direction="column"
                 justify="center"
@@ -155,12 +154,15 @@ function SignUp() {
                 cursor="pointer"
                 bg={bgIcons}
                 _hover={{ bg: bgIconsHover }}
-                onClick={() => setUserType("personal")}>
+                onClick={() => setUserType("personal")}
+              >
                 <Icon as={FaUser} color={colorIcons} w="40px" h="40px" />
-                <Text fontSize="xl" color="black" mt="8px">個人用戶</Text>
+                <Text fontSize="xl" color="black" mt="8px">
+                  個人用戶
+                </Text>
               </Flex>
 
-              {/* 公司用戶選擇按鈕 */}
+              {/* 公司用戶按鈕 */}
               <Flex
                 direction="column"
                 justify="center"
@@ -173,9 +175,12 @@ function SignUp() {
                 cursor="pointer"
                 bg={bgIcons}
                 _hover={{ bg: bgIconsHover }}
-                onClick={() => setUserType("company")}>
+                onClick={() => setUserType("company")}
+              >
                 <Icon as={FaBuilding} color={colorIcons} w="40px" h="40px" />
-                <Text fontSize="xl" color="black" mt="8px">公司用戶</Text>
+                <Text fontSize="xl" color="black" mt="8px">
+                  公司用戶
+                </Text>
               </Flex>
             </HStack>
           </Box>
@@ -193,8 +198,9 @@ function SignUp() {
             p="40px"
             mx={{ base: "100px" }}
             bg={bgForm}
-            boxShadow="0px 5px 14px rgba(0, 0, 0, 0.05)">
-            {/* 返回鍵區域 */}
+            boxShadow="0px 5px 14px rgba(0, 0, 0, 0.05)"
+          >
+            {/* 返回鍵 */}
             <Flex alignItems="center" mb="20px" cursor="pointer" onClick={resetUserType}>
               <Icon as={FaArrowLeft} color={textColor} w="20px" h="20px" />
               <Text fontSize="md" color={textColor} ml="5px">
@@ -216,7 +222,8 @@ function SignUp() {
                     onChange={(e) => setCompany(e.target.value)}
                     mb="24px"
                     size="lg"
-                    fontSize="16px">
+                    fontSize="16px"
+                  >
                     {companyOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
@@ -225,6 +232,22 @@ function SignUp() {
                   </Select>
                 </>
               )}
+              {/* 使用者名稱 */}
+              <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
+                使用者名稱
+              </FormLabel>
+              <Input
+                variant="auth"
+                fontSize="16px"
+                ms="4px"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="請輸入使用者名稱"
+                mb="24px"
+                size="lg"
+              />
+
               <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
                 Email
               </FormLabel>
@@ -242,7 +265,8 @@ function SignUp() {
               <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
                 密碼
               </FormLabel>
-              <Input variant="auth"
+              <Input
+                variant="auth"
                 fontSize="sm"
                 ms="4px"
                 type="password"
@@ -250,7 +274,8 @@ function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="密碼長度須為8到16之間, 而且必須包含字母,數字"
                 mb="24px"
-                size="lg" />
+                size="lg"
+              />
               <FormLabel ms="4px" fontSize="sm" fontWeight="normal">
                 確認密碼
               </FormLabel>
@@ -261,7 +286,8 @@ function SignUp() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Please enter password again" size="lg"
+                placeholder="Please enter password again"
+                size="lg"
               />
               {errorMessage && (
                 <Flex justify="flex-end">
@@ -272,7 +298,8 @@ function SignUp() {
                 fontSize="10px"
                 variant="dark"
                 fontWeight="bold"
-                w="100%" h="45"
+                w="100%"
+                h="45"
                 mt="30px"
                 mb="24px"
                 onClick={handleSubmit}
