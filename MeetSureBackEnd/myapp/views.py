@@ -446,7 +446,7 @@ def update_profile(request):
     return JsonResponse({"message": "Profile updated successfully"}, status=200)
 
 
-openai_client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+openai_client = openai.OpenAI(api_key="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")
 
 @csrf_exempt
 def generate_avatar(request):
