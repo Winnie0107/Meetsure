@@ -8,6 +8,7 @@ from myapp.views import login_user
 from myapp.gptApiview import chatgpt_response  
 from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
+from myapp.views_project import create_project,get_user_by_email
 
 
 # API 路由
@@ -36,6 +37,11 @@ urlpatterns = [
     path("api/friend_requests/<int:request_id>/", respond_to_friend_request, name="respond_to_friend_request"),
     path("api/friend_requests/list/", get_friend_requests, name="get_friend_requests"),  # ✅ 確保這個路徑正確
     path("api/friends/", get_friends_list, name="get_friends_list"),
+    #
+
+    #project
+    path("api/projects/", create_project, name="create_project"),
+    path("api/user/", get_user_by_email, name="get_user_by_email"),  
     #
 ]
 
