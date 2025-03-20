@@ -91,8 +91,6 @@ var dashRoutes = [
   {
     path: "/GanttChart",
     name: "甘特圖",
-    rtlName: "لوحة القيادة",
-    icon: <StatsIcon color='inherit' />,
     component: GanttChart,
     layout: "/admin",
   },

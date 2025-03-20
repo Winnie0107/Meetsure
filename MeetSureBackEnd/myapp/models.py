@@ -7,15 +7,6 @@ from django.conf import settings
 
 # Create your models here.
 
-#用戶列表
-class User(models.Model):
-    mail = models.CharField(max_length=150)
-    password = models.CharField(max_length=128)
-    level = models.IntegerField()
-
-    class Meta:
-        db_table = 'user'  # 指定數據庫中的表名
-
 #註冊表
 class Users(models.Model):
     ID = models.AutoField(primary_key=True)  # 手動指定主鍵名稱為 ID
@@ -93,3 +84,28 @@ class Meta:
 @staticmethod
 def generate_token():
     return get_random_string(40)
+
+# 📌 好友邀請表 (管理好友邀請)
+class FriendRequest(models.Model):
+    sender = models.ForeignKey("Users", on_delete=models.CASCADE, related_name="sent_requests")
+    receiver = models.ForeignKey("Users", on_delete=models.CASCADE, related_name="received_requests")
+    status = models.CharField(
+        max_length=20,
+        choices=[("pending", "Pending"), ("accepted", "Accepted"), ("rejected", "Rejected")],
+        default="pending"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)  # ✅ 自動填充時間
+
+    def __str__(self):
+        return f"{self.sender.email} -> {self.receiver.email} ({self.status})"
+# 📌 好友表 (管理真正的好友關係)
+class Friend(models.Model):
+    user1 = models.ForeignKey(Users, related_name="friends_1", on_delete=models.CASCADE)
+    user2 = models.ForeignKey(Users, related_name="friends_2", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user1", "user2")  # 避免重複的好友關係
+
+    def __str__(self):
+        return f"{self.user1} <-> {self.user2}"
