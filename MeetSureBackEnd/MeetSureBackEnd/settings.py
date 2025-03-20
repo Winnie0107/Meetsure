@@ -210,3 +210,6 @@ if NGROK_URL:
     
 print(f"CORS 允許的來源: {CORS_ALLOWED_ORIGINS}")  # ✅ 確保終端機能看到允許的網址
 print(f"🔍 取得的 NGROK_URL: {NGROK_URL}")  # 🛑 在啟動時顯示 NGROK_URL
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
