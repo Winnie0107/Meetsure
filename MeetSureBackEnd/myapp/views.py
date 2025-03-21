@@ -224,9 +224,13 @@ def transcribe_audio(request):
         transcription_result = []
 
         for i, segment in enumerate(segments):
-            # 對每個片段使用 Whisper 模型進行轉錄
-            transcription = whisper(segment)
-            transcription_result.append(transcription["text"])  # ✅ 只加入內容，沒有 "Segment X"
+            print(f"🌀 正在處理第 {i+1}/{len(segments)} 段...")
+            transcription = whisper({
+                "raw": segment,
+                "sampling_rate": samplerate
+            })
+            transcription_result.append(transcription["text"])
+
 
         # 合併所有片段的結果，並以換行符分隔每個段落
         full_transcription = "\n\n".join(transcription_result)
@@ -234,7 +238,6 @@ def transcribe_audio(request):
         return JsonResponse({"text": full_transcription}, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
 
 @csrf_exempt
 def login_user(request):

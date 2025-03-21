@@ -6,6 +6,13 @@ from .serializers import ProjectSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
+@api_view(["GET"])
+def get_projects(request):
+    """ 獲取所有專案的 API，包含成員與任務 """
+    projects = Project.objects.all()
+    serializer = ProjectSerializer(projects, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 @api_view(["POST"])
 def create_project(request):
     data = request.data
@@ -27,6 +34,7 @@ def create_project(request):
         ProjectTask.objects.get_or_create(project=project, name=task_data["name"], defaults=task_data)
 
     return Response({"message": "專案已成功儲存！"}, status=status.HTTP_201_CREATED)
+
 
 @csrf_exempt
 def get_user_by_email(request):
