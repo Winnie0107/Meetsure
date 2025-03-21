@@ -132,3 +132,15 @@ class ProjectTask(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.project.name}"
+
+# 會議列表
+class MeetingSchedule(models.Model):  # ✅ 修改這行
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="meetings")  # 會議所屬專案
+    name = models.CharField(max_length=255)  # 會議名稱
+    datetime = models.DateTimeField()  # 會議時間
+    location = models.CharField(max_length=255, blank=True, null=True)  # 會議地點
+    details = models.TextField(blank=True, null=True)  # 其他資訊
+    created_by = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)  # 會議創建者
+
+    def __str__(self):
+        return f"{self.name} ({self.datetime})"
