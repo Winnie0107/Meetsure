@@ -1,6 +1,6 @@
 # myapp/serializers.py
 from rest_framework import serializers
-from .models import Users, Project, ProjectMember, ProjectTask
+from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule  
 
 class ProjectTaskSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +41,10 @@ class ProjectSerializer(serializers.ModelSerializer):
 
         return project
 
+class MeetingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MeetingSchedule  
+        fields = ["id", "project", "name", "datetime", "location", "details", "created_by"]
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

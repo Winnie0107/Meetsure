@@ -8,8 +8,8 @@ from myapp.views import login_user
 from myapp.gptApiview import chatgpt_response  
 from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
-from myapp.views_project import create_project,get_user_by_email,get_projects
-
+from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail
+from myapp.views_meetings import get_meetings, create_meeting
 
 # API 路由
 urlpatterns = [
@@ -31,14 +31,16 @@ urlpatterns = [
     path("api/line-webhook/", line_webhook, name="line-webhook-alt"),  # 另一個 Webhook 處理
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),
+
     #friends
-    # 送出好友邀請 (POST)
     path("api/friend_requests/", send_friend_request, name="send_friend_request"),
     path("api/friend_requests/<int:request_id>/", respond_to_friend_request, name="respond_to_friend_request"),
     path("api/friend_requests/list/", get_friend_requests, name="get_friend_requests"),  # ✅ 確保這個路徑正確
     path("api/friends/", get_friends_list, name="get_friends_list"),
     path('api/profile', get_profile, name='get_profile'),
     path('api/profile/update', update_profile, name='update_profile'),
+
+    #user profile
     path('api/generate_avatar/', generate_avatar, name='generate_avatar'),  # ✅ 註冊 AI 生成頭貼 API
     path('api/update_avatar/', update_avatar, name='update_avatar'),
     path("api/update_name/", update_name, name="update_name"),
@@ -49,6 +51,12 @@ urlpatterns = [
     path("api/projects/", create_project, name="create_project"),
     path("api/user/", get_user_by_email, name="get_user_by_email"),  
     path("api/projects/get/", get_projects, name="get_projects"),
+    path("api/projects/<int:id>/", get_project_detail, name="get_project_detail"),
+    #
+
+    #meetings
+    path("api/meetings/<int:project_id>/", get_meetings, name="get_meetings"),
+    path("api/meetings/create/", create_meeting, name="create_meeting"),  
     #
 ]
 

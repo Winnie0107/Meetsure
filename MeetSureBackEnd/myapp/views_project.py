@@ -7,6 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
 @api_view(["GET"])
+def get_project_detail(request, id):  # ✅ 確保這裡是 `id`
+    try:
+        project = Project.objects.get(id=id)
+        serializer = ProjectSerializer(project)
+        return Response(serializer.data, status=200)
+    except Project.DoesNotExist:
+        return Response({"error": "Project not found"}, status=404)
+
+@api_view(["GET"])
 def get_projects(request):
     """ 獲取所有專案的 API，包含成員與任務 """
     projects = Project.objects.all()
