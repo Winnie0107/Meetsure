@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     useColorModeValue,
     Box,
@@ -15,24 +15,46 @@ import {
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import "react-datepicker/dist/react-datepicker.css";
-import { FaTasks, FaCalendarAlt, FaUsers } from "react-icons/fa"; // 匯入 Icon
+import { FaTasks, FaCalendarAlt, FaUsers } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import MeetingSchedule from "./MeetingSchedule";
 import MilestoneProgress from "./MilestoneProgress";
 import ToDoList from "./ToDoList";
 import GanttChart from "./GanttChart";
 import MeetingDataList from "./MeetingDataList";
+import { useParams } from "react-router-dom";
+import axios from "axios"; // 🆕 引入 axios
 
 function ProjectManagement() {
     const textColor = useColorModeValue("gray.700", "white");
-    const cardBg = useColorModeValue("white", "gray.800");
-    const [tabIndex, setTabIndex] = useState(0); // 控制 Tab 切換
+    const [tabIndex, setTabIndex] = useState(0);
+    const { id } = useParams();
+    const [project, setProject] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        console.log("目前進入的專案 ID 是：", id);
+    }, [id]);
+
+    useEffect(() => {
+        const fetchProject = async () => {
+            try {
+                const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`);
+                console.log("🔥 API 回應:", response.data);
+                setProject(response.data);
+            } catch (error) {
+                console.error("❌ 專案資料抓取失敗:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProject();
+    }, [id]);
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
-            {/* 外部大框架 */}
             <Card w="100%" bg="#F9FAFC" boxShadow="lg" height="780px">
-                {/* Tabs (頁籤功能) */}
                 <Tabs index={tabIndex} onChange={(index) => setTabIndex(index)} variant="soft-rounded" colorScheme="teal">
                     <TabList pl="4">
                         <Tab><MdDashboard size={27} /></Tab>
@@ -46,25 +68,19 @@ function ProjectManagement() {
                             <CardHeader pb="4" pl="2">
                                 <Flex justify="space-between" align="center">
                                     <Text fontSize="28px" fontWeight="bold" color={textColor}>
-                                        Project / 輔仁大學第四十二屆專題 - 會議MeetSure
+                                        Project / {loading ? "載入中..." : project?.name || "未命名專案"}
                                     </Text>
                                     <Button colorScheme="teal">編輯專案</Button>
                                 </Flex>
                             </CardHeader>
                             <Box pl="2">
                                 <Text fontSize="md" color="gray.600">
-                                    此專案為輔仁大學第四十二屆專題，系統核心是 speech-to-text 技術在會議管理上的應用。
+                                    {loading ? "正在載入專案說明..." : project?.description || "無描述"}
                                 </Text>
                             </Box>
-                            {/* 🔹 主要區塊 */}
                             <HStack align="start" spacing="6" mt="6">
-                                {/* 📅 會議排程 (共用元件) */}
                                 <MeetingSchedule setTabIndex={setTabIndex} />
-
-                                {/* 📌 專案進度追蹤*/}
                                 <MilestoneProgress />
-
-                                {/* 📌 代辦事項 (共用元件)*/}
                                 <ToDoList />
                             </HStack>
                         </TabPanel>
@@ -72,10 +88,7 @@ function ProjectManagement() {
                         {/* 📅 會議紀錄頁面 */}
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch">
-                                {/* 📅 會議排程 (共用元件) */}
                                 <MeetingSchedule setTabIndex={setTabIndex} />
-
-                                {/* 📝 會議記錄逐字稿 (Table) */}
                                 <MeetingDataList />
                             </HStack>
                         </TabPanel>
@@ -83,12 +96,9 @@ function ProjectManagement() {
                         {/* ✅ 任務管理頁面 */}
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch" width="100%" maxWidth="1200px" mx="auto">
-                                {/* 📌 代辦事項(共用元件) */}
                                 <Box flex="3" maxW="25%" minW="250px">
                                     <ToDoList />
                                 </Box>
-
-                                {/* 📊 甘特圖*/}
                                 <Box flex="7" maxW="75%" overflow="hidden">
                                     <GanttChart />
                                 </Box>
@@ -96,9 +106,7 @@ function ProjectManagement() {
                         </TabPanel>
 
                         {/* 🚀 組員管理頁面 */}
-                        <TabPanel>
-
-                        </TabPanel>
+                        <TabPanel></TabPanel>
                     </TabPanels>
                 </Tabs>
             </Card>

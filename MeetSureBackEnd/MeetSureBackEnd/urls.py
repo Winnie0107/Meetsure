@@ -10,7 +10,8 @@ from myapp.views_line import LineWebhookView,line_webhook,generate_verification_
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
-
+from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail
+from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
 
 # API 路由
 urlpatterns = [
@@ -20,7 +21,7 @@ urlpatterns = [
     path('api/users/', user_list, name='user_list'),  # 用戶列表
     path('api/meetings/add', add_meeting, name='add_meeting'),  # 新增會議
     path('api/meetings', get_meetings, name='get_meetings'),  # 獲取會議列表
-    path('api/transcribe', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
+    path('api/transcribe/', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
     path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
     path('register_company/', register_company, name='register_company'),
@@ -32,18 +33,34 @@ urlpatterns = [
     path("api/line-webhook/", line_webhook, name="line-webhook-alt"),  # 另一個 Webhook 處理
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),
+
     #friends
-    # 送出好友邀請 (POST)
     path("api/friend_requests/", send_friend_request, name="send_friend_request"),
     path("api/friend_requests/<int:request_id>/", respond_to_friend_request, name="respond_to_friend_request"),
     path("api/friend_requests/list/", get_friend_requests, name="get_friend_requests"),  # ✅ 確保這個路徑正確
     path("api/friends/", get_friends_list, name="get_friends_list"),
     path('api/profile', get_profile, name='get_profile'),
     path('api/profile/update', update_profile, name='update_profile'),
+
+    #user profile
     path('api/generate_avatar/', generate_avatar, name='generate_avatar'),  # ✅ 註冊 AI 生成頭貼 API
     path('api/update_avatar/', update_avatar, name='update_avatar'),
     path("api/update_name/", update_name, name="update_name"),
     path("api/update_password/", update_password, name="update_password"),
+    #
+
+    #project
+    path("api/projects/", create_project, name="create_project"),
+    path("api/user/", get_user_by_email, name="get_user_by_email"),  
+    path("api/projects/get/", get_projects, name="get_projects"),
+    path("api/projects/<int:id>/", get_project_detail, name="get_project_detail"),
+    #
+
+    #meetings
+    path("api/meetings/<int:project_id>/", get_meetings, name="get_meetings"),
+    path("api/meetings/create/", create_meeting, name="create_meeting"),  
+    path("api/meetings/<int:meeting_id>/update/", update_meeting, name="update_meeting"),
+    path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
     #
 ]
 
