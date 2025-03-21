@@ -109,11 +109,13 @@ def get_friends_list(request):
     if not user:
         return JsonResponse({"error": "用戶不存在"}, status=404)
 
+    # 找到 user 的朋友
     friends = Users.objects.filter(
         Q(ID__in=FriendRequest.objects.filter(receiver=user, status="accepted").values_list("sender", flat=True)) |
         Q(ID__in=FriendRequest.objects.filter(sender=user, status="accepted").values_list("receiver", flat=True))
     )
 
-    friends_data = [{"email": friend.email, "name": friend.name} for friend in friends]
+    # **✅ 回傳 id, name, email**
+    friends_data = [{"id": friend.ID, "email": friend.email, "name": friend.name} for friend in friends]
 
     return JsonResponse({"friends": friends_data}, status=200)

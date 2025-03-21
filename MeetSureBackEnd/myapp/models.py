@@ -109,3 +109,41 @@ class Friend(models.Model):
 
     def __str__(self):
         return f"{self.user1} <-> {self.user2}"
+    
+# 📌 專案管理基本資訊
+class Project(models.Model):
+    name = models.CharField(max_length=255, unique=True)  # 專案名稱
+    description = models.TextField(blank=True, null=True)  # 專案描述
+    created_at = models.DateTimeField(auto_now_add=True)  # 建立時間
+
+    def __str__(self):
+        return self.name
+
+class ProjectMember(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="members")
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)  # ✅ 參考 Users 表的 ID
+
+    def __str__(self):
+        return f"{self.user.email} - {self.project.name}"  # ✅ 使用 user.mail 來顯示正確的用戶資訊
+
+
+class ProjectTask(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
+    name = models.CharField(max_length=255)  # 任務名稱
+    completed = models.BooleanField(default=False)  # 是否已完成
+
+    def __str__(self):
+        return f"{self.name} - {self.project.name}"
+
+# 會議列表
+class MeetingSchedule(models.Model):  # ✅ 修改這行
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="meetings")  # 會議所屬專案
+    name = models.CharField(max_length=255)  # 會議名稱
+    datetime = models.DateTimeField()  # 會議時間
+    location = models.CharField(max_length=255, blank=True, null=True)  # 會議地點
+    details = models.TextField(blank=True, null=True)  # 其他資訊
+    created_by = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)  # 會議創建者
+    updated_at = models.DateTimeField(auto_now=True)      # 每次儲存時自動更新
+
+    def __str__(self):
+        return f"{self.name} ({self.datetime})"
