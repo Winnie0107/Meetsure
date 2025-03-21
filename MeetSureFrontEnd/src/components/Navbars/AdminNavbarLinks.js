@@ -109,7 +109,7 @@ export default function HeaderLinks(props) {
       w={{ sm: "100%", md: "auto" }}
       alignItems='center'
       flexDirection='row'>
-      <NotificationDropdown />
+    <NotificationDropdown userEmail={userEmail} />
 
       {userEmail ? (
         // ✅ 如果已登入，顯示 "用戶帳號 + 您好！"
