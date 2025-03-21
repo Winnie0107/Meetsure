@@ -201,7 +201,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
                     <ModalOverlay />
                     <ModalContent p={4} borderRadius="25px" minW="600px">
                         <ModalHeader>會議資訊</ModalHeader>
-                        <ModalCloseButton />
+                        <ModalCloseButton mt="4" mr="4" />
                         <ModalBody>
                             {selectedMeeting && (
                                 <>
