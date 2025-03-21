@@ -9,7 +9,7 @@ from myapp.gptApiview import chatgpt_response
 from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
 from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail
-from myapp.views_meetings import get_meetings, create_meeting
+from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
 
 # API 路由
 urlpatterns = [
@@ -57,6 +57,8 @@ urlpatterns = [
     #meetings
     path("api/meetings/<int:project_id>/", get_meetings, name="get_meetings"),
     path("api/meetings/create/", create_meeting, name="create_meeting"),  
+    path("api/meetings/<int:meeting_id>/update/", update_meeting, name="update_meeting"),
+    path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
     #
 ]
 

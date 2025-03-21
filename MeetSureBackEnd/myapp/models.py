@@ -141,6 +141,7 @@ class MeetingSchedule(models.Model):  # ✅ 修改這行
     location = models.CharField(max_length=255, blank=True, null=True)  # 會議地點
     details = models.TextField(blank=True, null=True)  # 其他資訊
     created_by = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)  # 會議創建者
+    updated_at = models.DateTimeField(auto_now=True)      # 每次儲存時自動更新
 
     def __str__(self):
         return f"{self.name} ({self.datetime})"

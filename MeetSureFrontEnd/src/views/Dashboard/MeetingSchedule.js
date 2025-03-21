@@ -22,6 +22,9 @@ const MeetingSchedule = ({ setTabIndex }) => {
         details: ""
     });
     const userId = localStorage.getItem("user_id");
+    const [selectedMeeting, setSelectedMeeting] = useState(null);
+    const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
+
 
     // 🚀 **取得會議列表**
     useEffect(() => {
@@ -64,6 +67,34 @@ const MeetingSchedule = ({ setTabIndex }) => {
         }
     };
 
+    // 🚀 **更新會議細節**
+    const handleUpdateMeeting = async () => {
+        try {
+            const response = await axios.put(
+                `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/update/`,
+                selectedMeeting
+            );
+            setMeetings(meetings.map(m => (m.id === selectedMeeting.id ? response.data : m)));
+            onDetailClose();
+        } catch (error) {
+            console.error("❌ 會議更新失敗:", error);
+        }
+    };
+
+    // 🚀 **刪會議**
+    const handleDeleteMeeting = async () => {
+        if (!selectedMeeting) return;
+
+        try {
+            await axios.delete(`http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`);
+            setMeetings(meetings.filter(m => m.id !== selectedMeeting.id));
+            onDetailClose(); // 關閉 Modal
+        } catch (error) {
+            console.error("❌ 無法刪除會議:", error);
+        }
+    };
+
+
     return (
         <Card flex="1" p="6" bg="white" boxShadow="lg" height="535px">
             <CardHeader pb="4">
@@ -72,6 +103,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
                     <Icon as={MdEvent} boxSize={5} color="gray.500" />
                 </Flex>
                 <Divider my="2" />
+                <Text fontSize="sm" color="gray.500"> 點擊會議查看詳細資訊或修改</Text>
             </CardHeader>
 
             <VStack spacing={4} align="stretch">
@@ -83,9 +115,9 @@ const MeetingSchedule = ({ setTabIndex }) => {
                 {/* 📅 Modal - 新增會議 */}
                 <Modal isOpen={isOpen} onClose={onClose}>
                     <ModalOverlay />
-                    <ModalContent>
+                    <ModalContent p={4} borderRadius="25px" minW="600px">
                         <ModalHeader>新增會議</ModalHeader>
-                        <ModalCloseButton />
+                        <ModalCloseButton mt="4" />
                         <ModalBody>
                             <FormControl mb={3}>
                                 <FormLabel>會議名稱</FormLabel>
@@ -112,7 +144,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
 
                             <FormControl mb={3}>
                                 <FormLabel>會議連結或其他資訊</FormLabel>
-                                <Textarea name="details" value={newMeeting.details} onChange={handleChange} placeholder="輸入您的資訊..." minHeight="100px" resize="vertical" />
+                                <Textarea name="details" value={newMeeting.details} onChange={handleChange} placeholder="輸入您的資訊..." minHeight="110px" resize="vertical" />
                             </FormControl>
                         </ModalBody>
                         <ModalFooter>
@@ -124,7 +156,24 @@ const MeetingSchedule = ({ setTabIndex }) => {
 
                 {/* 會議列表 */}
                 {meetings.map(meeting => (
-                    <Box key={meeting.id} p="6" bg="white" borderRadius="lg" boxShadow="md">
+                    <Box
+                        key={meeting.id}
+                        p="6"
+                        bg="white"
+                        borderRadius="lg"
+                        boxShadow="md"
+                        cursor="pointer"
+                        transition="all 0.2s ease-in-out"
+                        _hover={{
+                            bg: "gray.50",
+                            transform: "scale(1.02)",
+                            boxShadow: "lg",
+                        }}
+                        onClick={() => {
+                            setSelectedMeeting(meeting);
+                            onDetailOpen();
+                        }}
+                    >
                         <HStack justify="space-between">
                             <Box>
                                 <Text fontSize="sm" color="gray.500">New Meetings</Text>
@@ -146,6 +195,43 @@ const MeetingSchedule = ({ setTabIndex }) => {
                         </HStack>
                     </Box>
                 ))}
+
+                {/* ＃更新會議 */}
+                <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
+                    <ModalOverlay />
+                    <ModalContent p={4} borderRadius="25px" minW="600px">
+                        <ModalHeader>會議資訊</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            {selectedMeeting && (
+                                <>
+                                    <FormControl mb={3}>
+                                        <FormLabel>會議名稱</FormLabel>
+                                        <Input value={selectedMeeting.name} onChange={(e) => setSelectedMeeting({ ...selectedMeeting, name: e.target.value })} />
+                                    </FormControl>
+                                    <FormControl mb={3}>
+                                        <FormLabel>會議時間</FormLabel>
+                                        <DatePicker selected={new Date(selectedMeeting.datetime)} onChange={(date) => setSelectedMeeting({ ...selectedMeeting, datetime: date })} showTimeSelect timeFormat="HH:mm" timeIntervals={15} dateFormat="yyyy/MM/dd HH:mm" customInput={<Input />} />
+                                    </FormControl>
+                                    <FormControl mb={3}>
+                                        <FormLabel>地點</FormLabel>
+                                        <Input value={selectedMeeting.location} onChange={(e) => setSelectedMeeting({ ...selectedMeeting, location: e.target.value })} />
+                                    </FormControl>
+                                    <FormControl mb={3}>
+                                        <FormLabel>詳細資訊</FormLabel>
+                                        <Textarea value={selectedMeeting.details} onChange={(e) => setSelectedMeeting({ ...selectedMeeting, details: e.target.value })} />
+                                    </FormControl>
+                                </>
+                            )}
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button colorScheme="red" variant="outline" mr={3} onClick={handleDeleteMeeting}>
+                                刪除會議
+                            </Button>
+                            <Button colorScheme="teal" onClick={handleUpdateMeeting}>儲存變更</Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
 
             </VStack>
         </Card>
