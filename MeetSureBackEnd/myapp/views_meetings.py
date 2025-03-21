@@ -24,3 +24,27 @@ def create_meeting(request):
     print("❌ 會議驗證失敗:", serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# ✅ update會議
+@api_view(["PUT"])
+def update_meeting(request, meeting_id):
+    try:
+        meeting = MeetingSchedule.objects.get(pk=meeting_id)
+    except MeetingSchedule.DoesNotExist:
+        return Response({"error": "找不到此會議"}, status=404)
+
+    serializer = MeetingSerializer(meeting, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=200)
+    return Response(serializer.errors, status=400)
+
+
+# ✅ delete會議
+@api_view(["DELETE"])
+def delete_meeting(request, meeting_id):
+    try:
+        meeting = MeetingSchedule.objects.get(id=meeting_id)
+        meeting.delete()
+        return Response({"message": "會議已刪除"}, status=status.HTTP_204_NO_CONTENT)
+    except MeetingSchedule.DoesNotExist:
+        return Response({"error": "找不到此會議"}, status=status.HTTP_404_NOT_FOUND)
