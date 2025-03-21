@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     useColorModeValue,
     Box,
@@ -22,11 +22,18 @@ import MilestoneProgress from "./MilestoneProgress";
 import ToDoList from "./ToDoList";
 import GanttChart from "./GanttChart";
 import MeetingDataList from "./MeetingDataList";
+import { useParams } from "react-router-dom";
 
 function ProjectManagement() {
     const textColor = useColorModeValue("gray.700", "white");
     const cardBg = useColorModeValue("white", "gray.800");
     const [tabIndex, setTabIndex] = useState(0); // 控制 Tab 切換
+    const { id } = useParams();
+
+    useEffect(() => {
+        console.log("目前進入的專案 ID 是：", id);
+        // 👉 你可以根據這個 ID 去呼叫 API 或查資料
+    }, [id]);
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">

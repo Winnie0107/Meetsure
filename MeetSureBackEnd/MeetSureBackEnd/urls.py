@@ -8,7 +8,7 @@ from myapp.views import login_user
 from myapp.gptApiview import chatgpt_response  
 from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
-from myapp.views_project import create_project,get_user_by_email
+from myapp.views_project import create_project,get_user_by_email,get_projects
 
 
 # API 路由
@@ -19,7 +19,7 @@ urlpatterns = [
     path('api/users/', user_list, name='user_list'),  # 用戶列表
     path('api/meetings/add', add_meeting, name='add_meeting'),  # 新增會議
     path('api/meetings', get_meetings, name='get_meetings'),  # 獲取會議列表
-    path('api/transcribe', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
+    path('api/transcribe/', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
     path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
     path('register_company/', register_company, name='register_company'),
@@ -48,6 +48,7 @@ urlpatterns = [
     #project
     path("api/projects/", create_project, name="create_project"),
     path("api/user/", get_user_by_email, name="get_user_by_email"),  
+    path("api/projects/get/", get_projects, name="get_projects"),
     #
 ]
 
