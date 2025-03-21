@@ -39,8 +39,6 @@ function Project() {
         } else if (completedSteps.has(step - 1)) {
             if (step === 3) setCurrentPage("selectTask");
             else if (step === 4) setCurrentPage("setProgressBar");
-        } else {
-            alert("請先完成前一步驟！");
         }
     };
 

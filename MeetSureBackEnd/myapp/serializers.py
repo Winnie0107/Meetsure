@@ -5,7 +5,8 @@ from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule
 class ProjectTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTask
-        fields = ["name", "completed"]
+        fields = ["id", "name", "completed"]  # ✅ 加上 "id"
+
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(queryset=Users.objects.all(), source="user")  # ✅ **改成 `source="user"`**
@@ -40,6 +41,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             ProjectTask.objects.create(project=project, **task_data)
 
         return project
+    
 
 class MeetingSerializer(serializers.ModelSerializer):
     class Meta:
