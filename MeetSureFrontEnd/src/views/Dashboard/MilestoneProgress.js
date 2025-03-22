@@ -188,7 +188,7 @@ const MilestoneProgress = () => {
             <Card w="100%" p="8" bg={cardBg} boxShadow="lg">
                 <Text fontSize="lg" fontWeight="bold">專案進度追蹤</Text>
                 <Divider my="2" />
-                <HStack spacing="8" justify="center">
+                <HStack spacing="3" justify="center">
                     {/* ⭕ Pie Chart */}
                     <PieChart width={200} height={200}>
                         <Pie data={progressData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value">
@@ -216,7 +216,7 @@ const MilestoneProgress = () => {
             <Modal isOpen={isOpen} onClose={onClose} size="4xl">
                 <ModalOverlay />
                 <ModalContent p={4} borderRadius="25px">
-                    <ModalCloseButton mt="4" mr="4"/>
+                    <ModalCloseButton mt="4" mr="4" />
                     <ModalBody mt="6" mb="6">
                         <ProjectTimelineComponent selectedTasks={selectedTasks} />
                     </ModalBody>

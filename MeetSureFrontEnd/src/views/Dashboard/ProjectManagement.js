@@ -31,6 +31,7 @@ function ProjectManagement() {
     const { id } = useParams();
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [meetings, setMeetings] = useState([]);
 
     useEffect(() => {
         console.log("目前進入的專案 ID 是：", id);
@@ -54,7 +55,8 @@ function ProjectManagement() {
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
-            <Card w="100%" bg="#F9FAFC" boxShadow="lg" height="780px">
+            <Card w="100%" bg="#F9FAFC" boxShadow="lg" minHeight="780px" height="auto">
+
                 <Tabs index={tabIndex} onChange={(index) => setTabIndex(index)} variant="soft-rounded" colorScheme="teal">
                     <TabList pl="4">
                         <Tab><MdDashboard size={27} /></Tab>
@@ -79,7 +81,13 @@ function ProjectManagement() {
                                 </Text>
                             </Box>
                             <HStack align="start" spacing="6" mt="6">
-                                <MeetingSchedule setTabIndex={setTabIndex} />
+                                <MeetingSchedule
+                                    setTabIndex={setTabIndex}
+                                    limitMeetings={true}
+                                    meetings={meetings}
+                                    setMeetings={setMeetings}
+                                />
+
                                 <MilestoneProgress />
                                 <ToDoList />
                             </HStack>
@@ -88,7 +96,12 @@ function ProjectManagement() {
                         {/* 📅 會議紀錄頁面 */}
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch">
-                                <MeetingSchedule setTabIndex={setTabIndex} />
+                                <MeetingSchedule
+                                    setTabIndex={setTabIndex}
+                                    limitMeetings={false}
+                                    meetings={meetings}
+                                    setMeetings={setMeetings}
+                                />
                                 <MeetingDataList />
                             </HStack>
                         </TabPanel>
