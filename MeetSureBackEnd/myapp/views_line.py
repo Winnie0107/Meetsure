@@ -243,7 +243,14 @@ def send_line_message(user_id, message):
     }
     response = requests.post(url, json=data, headers=headers)
     print(f"回應狀態碼: {response.status_code}, 回應內容: {response.text}")
-
+    
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def check_line_binding(request):
+    auth_user = request.user
+    is_linked = LineBinding.objects.filter(user=auth_user, is_linked=True).exists()
+    return JsonResponse({"is_linked": is_linked})
 
 @csrf_exempt  # 忽略 CSRF 保護，讓 LINE Webhook 可以存取
 def webhook_line(request):

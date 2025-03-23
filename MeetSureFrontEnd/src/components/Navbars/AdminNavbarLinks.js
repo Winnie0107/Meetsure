@@ -1,132 +1,151 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Flex, Menu, MenuButton, MenuItem, MenuList, Text, useColorMode, useColorModeValue } from "@chakra-ui/react";
-import { BellIcon } from "@chakra-ui/icons";
+import {
+  Box,
+  Button,
+  Flex,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Text,
+  useColorMode,
+  useColorModeValue
+} from "@chakra-ui/react";
+import { BellIcon,CheckIcon} from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 import { ProfileIcon, SettingsIcon } from "components/Icons/Icons";
 import NotificationDropdown from "components/Navbars/NotificationDropdown";
+import MeetingNotification from "components/Navbars/MeetingNotification";
 
 export default function HeaderLinks(props) {
   const { colorMode } = useColorMode();
-  
-  // Chakra Color Mode
   const navbarIcon = useColorModeValue("gray.700", "gray.200");
   const menuBg = useColorModeValue("white", "navy.800");
 
-  // 🔥 新增 state 來存儲用戶帳號
   const [userEmail, setUserEmail] = useState(null);
+  const [isLineBound, setIsLineBound] = useState(false);
 
+  const LINE_ADD_FRIEND_URL = "https://line.me/R/ti/p/@459tzcgp"; // ✅ 替換成你的 LINE Bot ID
+
+  // ✅ 檢查是否登入 + 檢查是否已綁定 LINE
   useEffect(() => {
-    // 檢查 localStorage 是否有存儲的 email
     const email = localStorage.getItem("user_email");
     if (email) {
       setUserEmail(email);
     }
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch("http://127.0.0.1:8000/api/check-line-binding/", {
+        headers: {
+          Authorization: `Token ${token}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          setIsLineBound(data.is_linked); // ✅ 儲存綁定狀態
+        })
+        .catch(err => console.error("檢查 LINE 綁定失敗:", err));
+    }
   }, []);
 
-  const LINE_ADD_FRIEND_URL = "https://line.me/R/ti/p/@459tzcgp"; // ✅ 替換成你的 LINE Bot ID
-
+  // ✅ 取得 ngrok URL
   const getNgrokUrl = async () => {
     try {
-        const response = await fetch(`http://127.0.0.1:8000/api/get-ngrok-url/?t=${new Date().getTime()}`); // 加入時間戳，避免快取
-        const data = await response.json();
-        return data.ngrok_url;  
+      const response = await fetch(`http://127.0.0.1:8000/api/get-ngrok-url/?t=${new Date().getTime()}`);
+      const data = await response.json();
+      return data.ngrok_url;
     } catch (error) {
-        console.error("無法取得最新的 NGROK_URL:", error);
-        return null;
+      console.error("無法取得 ngrok URL:", error);
+      return null;
     }
-};
+  };
 
-   // 🔥 綁定 LINE 帳號函數
-   const bindLineAccount = async () => {
+  // ✅ 綁定 LINE 帳號流程
+  const bindLineAccount = async () => {
     const token = localStorage.getItem("token");
-    console.log("📌 讀取 localStorage Token:", token);  // ✅ 確保 Token 被正確讀取
-
     if (!token) {
-        alert("請先登入！");
-        window.location.href = "/#/auth/signin";
-        return;
+      alert("請先登入！");
+      window.location.href = "/#/auth/signin";
+      return;
     }
 
-    // 🔥 先詢問用戶是否已加入 LINE 好友
     const isFriend = confirm("請確認你已加入 LINE 好友，否則請先加入！");
     if (!isFriend) {
-        window.location.href = LINE_ADD_FRIEND_URL; // 讓用戶跳轉到 LINE 好友邀請頁面
-        return;
+      window.location.href = LINE_ADD_FRIEND_URL;
+      return;
     }
 
     try {
-        const NGROK_URL = await getNgrokUrl();
-        if (!NGROK_URL) {
-            alert("無法取得最新的 ngrok 連結，請稍後再試！");
-            return;
-        }
+      const NGROK_URL = await getNgrokUrl();
+      if (!NGROK_URL) {
+        alert("無法取得 ngrok 連結，請稍後再試！");
+        return;
+      }
 
-        const apiUrl = `${NGROK_URL}/api/generate-verification-code/`;
-        console.log("📌 發送 API 到:", apiUrl);
-
-        // ✅ 記錄發送的 Headers
-        const headers = {
-            "Content-Type": "application/json",
-            "Authorization": `Token ${token}`  
-        };
-        console.log("📌 發送 Headers:", headers);
-
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-              "Authorization": token ? `Token ${token}` : "",  // 確保 Token 正確
-          },
-          body: JSON.stringify({})
+      const response = await fetch(`${NGROK_URL}/api/generate-verification-code/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`
+        },
+        body: JSON.stringify({})
       });
-      
-        const data = await response.json();
-        console.log("📌 Response 狀態碼:", response.status);
-        console.log("📌 Response 內容:", data);
 
-        if (response.ok) {
-            alert(`請在 LINE 中輸入驗證碼: ${data.verification_code}`);
-        } else {
-            alert(`綁定 LINE 失敗: ${data.error || "請稍後再試"}`);
-        }
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`請在 LINE 中輸入驗證碼: ${data.verification_code}`);
+      } else {
+        alert(`綁定失敗: ${data.error || "請稍後再試"}`);
+      }
     } catch (error) {
-        console.error("綁定 LINE 失敗", error);
-        alert("綁定 LINE 失敗，請稍後再試。");
+      console.error("綁定 LINE 失敗", error);
+      alert("綁定失敗，請稍後再試");
     }
-};
+  };
 
-
-  // 🔥 登出函數
   const handleLogout = () => {
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_id");
-    window.location.href = "/#/auth/homepage"; // 跳轉回登入頁面
+    window.location.href = "/#/auth/homepage";
   };
 
   return (
     <Flex
       pe={{ sm: "0px", md: "16px" }}
       w={{ sm: "100%", md: "auto" }}
-      alignItems='center'
-      flexDirection='row'>
-    <NotificationDropdown userEmail={userEmail} />
+      alignItems="center"
+      flexDirection="row"
+    >
+      <Flex alignItems="center" gap="10px">
+        <MeetingNotification userEmail={userEmail} />
+        <NotificationDropdown userEmail={userEmail} />
+      </Flex>
 
       {userEmail ? (
-        // ✅ 如果已登入，顯示 "用戶帳號 + 您好！"
         <Menu>
-          <MenuButton as={Button} variant="ghost" color="white"  bg="transparent" _hover={{ bg: "gray.600" }}>
+          <MenuButton as={Button} variant="ghost" color="white" bg="transparent" _hover={{ bg: "gray.600" }}>
             <Flex align="center">
               <ProfileIcon w="22px" h="22px" me="10px" />
               <Text color="white">{userEmail}，您好！</Text>
             </Flex>
           </MenuButton>
           <MenuList p="16px 8px" bg={menuBg}>
-          <MenuItem onClick={bindLineAccount}>綁定 LINE 帳號</MenuItem>  {/* ✅ 新增綁定 LINE 選項 */}
-          <MenuItem onClick={handleLogout}>登出</MenuItem>
+            {isLineBound ? (
+              <MenuItem isDisabled>
+  <Flex align="center" gap="2px" color="green.500">
+  
+  <CheckIcon boxSize={4} />
+    <Text fontWeight="bold">已綁定 LINE 帳號</Text>
+  </Flex>
+</MenuItem>            ) : (
+              <MenuItem onClick={bindLineAccount}>綁定 LINE 帳號</MenuItem>
+            )}
+            <MenuItem onClick={handleLogout}>登出</MenuItem>
           </MenuList>
         </Menu>
       ) : (
-        // ✅ 未登入時，顯示 Sign In 按鈕
         <NavLink to="/auth/signin">
           <Button
             ms="0px"
@@ -140,7 +159,6 @@ export default function HeaderLinks(props) {
           </Button>
         </NavLink>
       )}
-
     </Flex>
   );
 }

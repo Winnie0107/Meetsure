@@ -1,6 +1,6 @@
 // Chakra imports
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 
 import {
   Avatar,
@@ -52,7 +52,7 @@ import {
   ChatIcon,
   PenIcon
 } from "components/Icons/Icons.js";
-import { CheckIcon } from '@chakra-ui/icons';
+import { CheckIcon} from '@chakra-ui/icons';
 
 // Variables
 import {
@@ -79,7 +79,8 @@ import {
 import { IoDocumentsSharp } from "react-icons/io5";
 import RightPanelWithCalendar from './RightPanelWithCalendar';
 import axios from "axios";
-import { FaClipboardList, FaCalendarAlt, FaBell, FaCheckCircle } from "react-icons/fa";
+import { FaClipboardList, FaCalendarAlt, FaBell, FaCheckCircle,FaMagic } from "react-icons/fa";
+import LineLogo from "assets/img/LineLogo.png"; 
 
 
 
@@ -106,7 +107,8 @@ export default function Dashboard() {
   const meetingModal = useDisclosure();  // 管理新增會議 Modal
   const [selectedModalContent, setSelectedModalContent] = useState("");
   const [newMeeting, setNewMeeting] = useState({ date: "", time: "", description: "" });
-
+  const lineModal = useDisclosure();
+  const [isLineBound, setIsLineBound] = useState(true);
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -136,6 +138,29 @@ export default function Dashboard() {
       alert("Failed to add meeting.");
     }
   };
+
+
+  // ✅ 檢查是否綁定 LINE
+  useEffect(() => {
+    const checkLineBinding = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://127.0.0.1:8000/api/check-line-binding/", {
+          headers: {
+            Authorization: `Token ${token}`
+          }
+        });
+        if (!res.data.is_linked) {
+          setIsLineBound(false);
+          lineModal.onOpen();
+        }
+      } catch (err) {
+        console.error("檢查 LINE 綁定狀態失敗:", err);
+      }
+    };
+    checkLineBinding();
+  }, []);
+
   
 
 
@@ -216,7 +241,65 @@ export default function Dashboard() {
         </ModalContent>
       </Modal>
 
+ {/* ✅ 尚未綁定 LINE 的提示 Modal */}
+ <Modal isOpen={lineModal.isOpen} onClose={lineModal.onClose} isCentered>
+  <ModalOverlay />
+  <ModalContent borderRadius="xl" p={6} boxShadow="lg">
+    <ModalHeader fontSize="2xl" fontWeight="bold" textAlign="center" color="teal.600">
+      尚未綁定 LINE 帳號
+    </ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      <Flex direction="column" align="center" textAlign="center">
+        <Image src={LineLogo} alt="LINE" boxSize="64px" mb={4} />
+        <Text fontSize="md" mb={4} lineHeight="1.8">
+          為了讓您能夠即時收到會議通知與提醒，<br />我們建議您綁定 LINE 帳號。
+        </Text>
+        <Box
+  textAlign="left"
+  fontSize="sm"
+  color="gray.700"
+  bg="gray.50"
+  p={5}
+  borderRadius="lg"
+  w="100%"
+  boxShadow="sm"
+>
+  <Text fontWeight="semibold" mb={3}>綁定後你可以：</Text>
 
+  <Flex align="center" mb={2}>
+    <CheckIcon color="teal.500" mr={2} />
+    <Text>會議建立、修改、自動提醒</Text>
+  </Flex>
+
+  <Flex align="center" mb={2}>
+    <Icon as={FaBell} color="teal.500" mr={2} />
+    <Text>即時 LINE 通知，免登入也能查訊息</Text>
+  </Flex>
+
+  <Flex align="center">
+    <Icon as={FaMagic} color="teal.500" mr={2} />
+    <Text>更多智慧整合功能開發中</Text>
+  </Flex>
+</Box>
+
+      </Flex>
+    </ModalBody>
+    <ModalFooter justifyContent="center">
+      <Button
+        colorScheme="teal"
+        px={8}
+        size="md"
+        borderRadius="md"
+        boxShadow="sm"
+        _hover={{ boxShadow: "md", transform: "translateY(-1px)" }}
+        onClick={lineModal.onClose}
+      >
+        確認
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
 
 
 

@@ -11,6 +11,8 @@ function Project() {
     const [completedSteps, setCompletedSteps] = useState(new Set()); // ✅ 記錄已完成的步驟
 
     const userEmail = localStorage.getItem("user_email") || "";
+    const token = localStorage.getItem("token");  // 或你儲存 token 的 key 名稱
+
 
     useEffect(() => {
         if (!userEmail) {
@@ -62,8 +64,12 @@ function Project() {
 
         try {
             const response = await axios.post("http://127.0.0.1:8000/api/projects/", formattedData, {
-                headers: { "Content-Type": "application/json" },
-            });
+    headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Token ${token}`
+    }
+});
+
 
             alert("🎉 專案已成功儲存！");
         } catch (error) {

@@ -1,12 +1,17 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes,authentication_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Project, Users, ProjectMember, ProjectTask
 from .serializers import ProjectSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+
 
 @api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_project_detail(request, id):  # ✅ 確保這裡是 `id`
     try:
         project = Project.objects.get(id=id)
@@ -16,6 +21,8 @@ def get_project_detail(request, id):  # ✅ 確保這裡是 `id`
         return Response({"error": "Project not found"}, status=404)
 
 @api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_projects(request):
     """ 獲取所有專案的 API，包含成員與任務 """
     projects = Project.objects.all()
@@ -23,6 +30,8 @@ def get_projects(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_project(request):
     data = request.data
     members_data = data.pop("members", [])
