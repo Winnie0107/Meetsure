@@ -11,7 +11,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
 from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members
-from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
+from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting,get_user_related_meetings
 from myapp.views_todolist import todo_list_create_view
 
 # API 路由
