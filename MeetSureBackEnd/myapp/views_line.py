@@ -215,7 +215,7 @@ def handle_message(event):
         )
 
         line_binding.is_linked = True  # 記錄此用戶已綁定
-        line_binding.verification_code = None  # ✅ 設為空字串，避免 unique=True 問題
+        line_binding.verification_code = None  # ✅ 改成空字串
         line_binding.save(update_fields=["verification_code", "is_linked"])  # 只更新這兩個欄位
 
 
