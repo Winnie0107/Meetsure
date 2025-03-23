@@ -1,44 +1,122 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Flex, Box, Icon, VStack, HStack, Text, Divider, Button, Modal, ModalOverlay, ModalContent,
-    ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Input, useDisclosure, FormControl, FormLabel, Checkbox
+    ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Input, useDisclosure, FormControl, FormLabel, Checkbox, Select
 } from "@chakra-ui/react";
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import { MdAdd } from "react-icons/md";
+import axios from "../../api/axios";
 
-// 定義不同執行人員的顏色
-const taskColors = {
-    "pc": "#EEFFF7",  // 淺綠
-    "px": "#FFEEFF",  // 淺紅
-    "zhi": "#EFF7FF",  // 淺藍
-    "c": "#FFF9C4 ",  // 淺黃
-    "winnie": "#FFF4EE",  // 淺橘
-};
 
-const ToDoList = () => {
+
+const ToDoList = ({ projectId }) => {
+    console.log("📌 目前 projectId：", projectId); // ✅ 就加這裡！
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const [tasks, setTasks] = useState([
-        { id: 1, name: "LINE API連接", assignedTo: "px", completed: false },
-        { id: 2, name: "專案管理前後端", assignedTo: "pc", completed: false },
-        { id: 3, name: "LLM 模型訓練", assignedTo: "zhi", completed: false },
-        { id: 4, name: "撰寫發表文件", assignedTo: "c", completed: false },
-        { id: 5, name: "社群功能後端", assignedTo: "winnie", completed: false },
-    ]);
-
+    const [tasks, setTasks] = useState([]);
+    const [members, setMembers] = useState([]);
     const [newTaskName, setNewTaskName] = useState("");
     const [newAssignedTo, setNewAssignedTo] = useState("");
+    const [taskColors, setTaskColors] = useState({});
 
-    // 新增任務
-    const addTask = () => {
-        if (!newTaskName || !newAssignedTo) return;
-        setTasks([...tasks, { id: tasks.length + 1, name: newTaskName, assignedTo: newAssignedTo, completed: false }]);
-        setNewTaskName("");
-        setNewAssignedTo("");
-        onClose();
+    // 隨機顏色生成器
+    const getRandomColor = () => {
+        const pastelColors = ["#EEFFF7", "#FFEEFF", "#EFF7FF", "#FFF9C4", "#FFF4EE"];
+        return pastelColors[Math.floor(Math.random() * pastelColors.length)];
     };
 
-    // 切換任務狀態
+    // 🎯 載入任務清單
+    useEffect(() => {
+        if (!projectId) return;
+
+        const token = localStorage.getItem("token");
+        axios
+            .get(`http://127.0.0.1:8000/api/todos/?project_id=${projectId}`, {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            })
+            .then((res) => {
+                console.log("📝 任務清單：", res.data);
+                setTasks(res.data);
+                const newColors = {};
+                res.data.forEach((task) => {
+                    if (!newColors[task.assigned_to_name]) {
+                        newColors[task.assigned_to_name] = getRandomColor();
+                    }
+                });
+                setTaskColors(newColors);
+            });
+    }, [projectId]);
+
+    // 🎯 載入專案成員清單（改用 /api/project-members/）
+    useEffect(() => {
+        if (!projectId) return;
+
+        const token = localStorage.getItem("token");
+
+        const fetchMembers = async () => {
+            try {
+                const response = await axios.get(`http://127.0.0.1:8000/api/project-members/?project_id=${projectId}`, {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                });
+                setMembers(response.data);
+                console.log("🎯 成員回傳：", response.data);
+            } catch (error) {
+                console.error("❌ 專案成員抓取失敗:", error);
+            }
+        };
+
+        fetchMembers();
+    }, [projectId]);
+
+
+
+    // ✅ 新增任務
+    const addTask = () => {
+        if (!newTaskName || !newAssignedTo) return;
+
+        const token = localStorage.getItem("token");
+
+        axios
+            .post(
+                "http://127.0.0.1:8000/api/todos/",
+                {
+                    name: newTaskName,
+                    assigned_to: newAssignedTo,
+                    project: projectId,
+                    completed: false,
+                },
+                {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                }
+            )
+            .then((res) => {
+                const task = res.data;
+                console.log("🆕 新增任務成功：", task);
+
+                // ✅ 補上 assigned_to_name（從 members 名單找對應人名）
+                const assignedUser = members.find((m) => String(m.ID) === String(task.assigned_to));
+                task.assigned_to_name = assignedUser?.name || "未知";
+
+                setTasks([...tasks, task]);
+                setTaskColors((prev) => ({
+                    ...prev,
+                    [task.assigned_to_name]: prev[task.assigned_to_name] || getRandomColor(),
+                }));
+                setNewTaskName("");
+                setNewAssignedTo("");
+                onClose();
+            });
+    };
+
+
+
+    // ✅ 切換完成狀態（額外功能，可補上 PATCH API）
     const toggleTaskCompletion = (id) => {
         setTasks(tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task));
     };
@@ -72,12 +150,19 @@ const ToDoList = () => {
 
                             <FormControl mb={3}>
                                 <FormLabel>選擇執行人員</FormLabel>
-                                <Input
-                                    placeholder="輸入執行人員..."
-                                    value={newAssignedTo}
+                                <Select
+                                    placeholder="選擇一位成員"
+                                    value={String(newAssignedTo)}  // ✅ 轉成字串，與 option.value 一致
                                     onChange={(e) => setNewAssignedTo(e.target.value)}
-                                />
+                                >
+                                    {members.map((member) => (
+                                        <option key={member.ID} value={String(member.ID)}>
+                                            {member.name}
+                                        </option>
+                                    ))}
+                                </Select>
                             </FormControl>
+
                         </ModalBody>
                         <ModalFooter>
                             <Button colorScheme="gray" mr={3} onClick={onClose}>
@@ -95,7 +180,7 @@ const ToDoList = () => {
                     <Box
                         key={task.id}
                         p="6"
-                        bg={taskColors[task.assignedTo] || "white"} // 設定顏色
+                        bg={taskColors[task.assigned_to_name] || "white"}
                         borderRadius="lg"
                         boxShadow="md"
                     >
@@ -111,8 +196,9 @@ const ToDoList = () => {
                                 <Text fontSize="md" fontWeight="bold" textDecoration={task.completed ? "line-through" : "none"}>
                                     {task.name}
                                 </Text>
+
                             </HStack>
-                            <Text fontSize="sm" color="gray.600">{task.assignedTo}</Text>
+                            <Text fontSize="sm" color="gray.600">{task.assigned_to_name}</Text>
                         </HStack>
                     </Box>
                 ))}

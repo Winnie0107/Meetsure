@@ -1,11 +1,24 @@
 # myapp/serializers.py
 from rest_framework import serializers
-from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule  
+from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule ,ToDoList 
+
+class ToDoListSerializer(serializers.ModelSerializer):
+    assigned_to_name = serializers.CharField(source='assigned_to.name', read_only=True)
+
+    class Meta:
+        model = ToDoList
+        fields = ['id', 'name', 'assigned_to', 'assigned_to_name', 'project', 'completed', 'created_at']
+
+class ProjectMemberUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Users
+        fields = ['ID', 'name', 'email']  # 你也可以加上其他欄位
 
 class ProjectTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTask
-        fields = ["name", "completed"]
+        fields = ["id", "name", "completed"]  # ✅ 加上 "id"
+
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(queryset=Users.objects.all(), source="user")  # ✅ **改成 `source="user"`**
@@ -40,6 +53,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             ProjectTask.objects.create(project=project, **task_data)
 
         return project
+    
 
 class MeetingSerializer(serializers.ModelSerializer):
     class Meta:
