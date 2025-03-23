@@ -15,6 +15,8 @@ import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, } from "@chakra-ui/icons";
 import React, { useState, useEffect } from "react";
 import MeetSureLogo from "assets/img/MeetSureLogo.jpg"; // 匯入你的圖片
 import axios from "axios";
+import { useLocation } from "react-router-dom";
+
 
 
 
@@ -42,7 +44,16 @@ function SocialPage() {
     const userEmail = localStorage.getItem("user_email");
     const [sentFriendRequests, setSentFriendRequests] = useState([]);
     const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
-
+    const location = useLocation();
+    useEffect(() => {
+        if (window.location.hash === "#friends") {
+          setSelectedTab("friends");
+        }
+      }, []);
+      
+      
+      
+      
 
     // ✅ **獲取好友列表**
     const fetchFriends = async () => {

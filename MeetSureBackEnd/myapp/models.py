@@ -5,7 +5,6 @@ import uuid
 from django.utils.crypto import get_random_string
 from django.conf import settings
 
-# Create your models here.
 
 #註冊表
 class Users(models.Model):
@@ -71,7 +70,7 @@ def __str__(self):
 
 class LineBinding(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    verification_code = models.CharField(max_length=6, unique=True, null=True, default=str(uuid.uuid4())[:6])  # ✅ 預設值
+    verification_code = models.CharField(max_length=6, unique=True, null=True, blank=True,default=str(uuid.uuid4())[:6])  # ✅ 預設值
     is_linked = models.BooleanField(default=False)  # ✅ 新增標記
 
     class Meta:
@@ -147,3 +146,17 @@ class MeetingSchedule(models.Model):  # ✅ 修改這行
 
     def __str__(self):
         return f"{self.name} ({self.datetime})"
+    
+#會議通知
+# models.py
+class MeetingNotification(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    meeting_name = models.CharField(max_length=255)
+    meeting_datetime = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.name or self.user.email} - {self.meeting_name}"
+
+    

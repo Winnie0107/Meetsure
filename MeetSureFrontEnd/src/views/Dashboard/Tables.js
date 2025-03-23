@@ -36,16 +36,29 @@ function Tables() {
   // **🚀 獲取專案列表**
   useEffect(() => {
     const fetchProjects = async () => {
-      try {
-        const response = await axios.get("http://127.0.0.1:8000/api/projects/get/");
-        console.log("🔥 API 回應:", response.data);
-        setProjects(response.data);
-      } catch (error) {
-        console.error("❌ 無法獲取專案列表:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const token = localStorage.getItem("token");  // 或你儲存 token 的 key 名稱
+
+    if (!token) {
+      console.warn("⚠️ Token 不存在，請重新登入！");
+      setLoading(false);
+      return;
+    }
+  
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/projects/get/", {
+        headers: {
+          "Authorization": `Token ${token}`  // ✅ 加入 Authorization header
+        }
+      });
+  
+      console.log("🔥 API 回應:", response.data);
+      setProjects(response.data);
+    } catch (error) {
+      console.error("❌ 無法獲取專案列表:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
     fetchProjects();
   }, []);
 

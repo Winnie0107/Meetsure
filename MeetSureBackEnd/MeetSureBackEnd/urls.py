@@ -6,12 +6,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
 from myapp.gptApiview import chatgpt_response  
-from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
+from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line,check_line_binding 
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
 from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail
-from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
+from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting,get_user_related_meetings
 
 # API 路由
 urlpatterns = [
@@ -33,6 +33,7 @@ urlpatterns = [
     path("api/line-webhook/", line_webhook, name="line-webhook-alt"),  # 另一個 Webhook 處理
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),
+    path("api/check-line-binding/", check_line_binding,name="check_line_binding"),
 
     #friends
     path("api/friend_requests/", send_friend_request, name="send_friend_request"),
@@ -61,6 +62,8 @@ urlpatterns = [
     path("api/meetings/create/", create_meeting, name="create_meeting"),  
     path("api/meetings/<int:meeting_id>/update/", update_meeting, name="update_meeting"),
     path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
+    path("api/meetings/get_user_related_meetings/", get_user_related_meetings,name="get_user_related_meetings"),
+
     #
 ]
 
