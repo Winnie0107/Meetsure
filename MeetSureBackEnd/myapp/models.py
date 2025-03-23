@@ -145,3 +145,11 @@ class MeetingSchedule(models.Model):  # ✅ 修改這行
 
     def __str__(self):
         return f"{self.name} ({self.datetime})"
+
+# 待辦事項
+class ToDoList(models.Model):
+    name = models.CharField(max_length=255)
+    assigned_to = models.ForeignKey(Users, on_delete=models.CASCADE)  # 假設用戶模型是預設的 User
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)

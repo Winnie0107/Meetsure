@@ -1,10 +1,12 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Project, Users, ProjectMember, ProjectTask
-from .serializers import ProjectSerializer,ProjectTaskSerializer
+from .serializers import ProjectSerializer,ProjectTaskSerializer,ProjectMemberUserSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 
 @api_view(["GET"])
 def get_project_detail(request, id):  # ✅ 確保這裡是 `id`
@@ -16,6 +18,8 @@ def get_project_detail(request, id):  # ✅ 確保這裡是 `id`
         return Response({"error": "Project not found"}, status=404)
     
 @api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_project_tasks(request, project_id):
     try:
         project = Project.objects.get(id=project_id)
@@ -28,6 +32,8 @@ def get_project_tasks(request, project_id):
 
 # ✅ 更新任務為已完成
 @api_view(["PUT"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def complete_task(request, task_id):
     try:
         task = ProjectTask.objects.get(id=task_id)
@@ -81,3 +87,16 @@ def get_user_by_email(request):
         "id": user.ID,   # 確保回傳 `id`
         "name": user.name if user.name else "未命名用戶"
     }, status=200)
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_project_members(request):
+    project_id = request.GET.get('project_id')
+    if not project_id:
+        return Response({"error": "project_id is required"}, status=400)
+
+    members = ProjectMember.objects.filter(project_id=project_id).select_related('user')
+    users = [pm.user for pm in members]
+    serializer = ProjectMemberUserSerializer(users, many=True)
+    return Response(serializer.data)

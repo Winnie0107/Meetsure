@@ -89,7 +89,7 @@ function ProjectManagement() {
                                 />
 
                                 <MilestoneProgress />
-                                <ToDoList />
+                                <ToDoList projectId={id} />
                             </HStack>
                         </TabPanel>
 

@@ -21,7 +21,7 @@ import { MdSend } from "react-icons/md";
 import Card from "components/Card/Card.js";
 import { ProjectTimelineComponent } from "./ProjectSetProgressBar";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import axios from "../../api/axios";
 
 // **專案任務的排序**
 const taskOrder = [
@@ -69,8 +69,14 @@ const MilestoneProgress = () => {
     }, [projectId]);
 
     const fetchTasks = async () => {
+
+        const token = localStorage.getItem("token");
         try {
-            const res = await axios.get(`http://127.0.0.1:8000/api/projects/${projectId}/`);
+            const res = await axios.get(`http://127.0.0.1:8000/api/projects/${projectId}/`, {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            });
             let projectTasks = res.data.tasks || [];
 
             // **按照 `taskOrder` 來排序**
@@ -105,13 +111,19 @@ const MilestoneProgress = () => {
 
     // **標記任務為完成**
     const handleCompleteTask = async () => {
+        const token = localStorage.getItem("token");
+
         if (!milestoneTask || !milestoneTask.id) {
             console.error("❌ 任務 ID 未定義");
             return;
         }
 
         try {
-            await axios.put(`http://127.0.0.1:8000/api/tasks/${milestoneTask.id}/complete/`);
+            await axios.put(`http://127.0.0.1:8000/api/tasks/${milestoneTask.id}/complete/`, {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            });
             console.log(`✅ 任務 ${milestoneTask.name} 已標記為完成`);
             fetchTasks(); // 重新載入任務
         } catch (error) {
