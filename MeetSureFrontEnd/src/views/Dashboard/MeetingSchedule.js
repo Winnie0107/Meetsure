@@ -11,11 +11,10 @@ import { useParams } from "react-router-dom";
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 
-const MeetingSchedule = ({ setTabIndex }) => {
+const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeetings }) => {
     const { id: projectId } = useParams();   // 從 URL 取得專案 ID
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [meetingDate, setMeetingDate] = useState(new Date());
-    const [meetings, setMeetings] = useState([]);
     const [newMeeting, setNewMeeting] = useState({
         name: "",
         location: "",
@@ -24,6 +23,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
     const userId = localStorage.getItem("user_id");
     const [selectedMeeting, setSelectedMeeting] = useState(null);
     const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
+    const displayedMeetings = limitMeetings ? meetings.slice(0, 2) : meetings;
 
 
     // 🚀 **取得會議列表**
@@ -130,7 +130,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
 
 
     return (
-        <Card flex="1" p="6" bg="white" boxShadow="lg" height="535px">
+        <Card flex="1" p="6" bg="white" boxShadow="lg" height={limitMeetings ? "550px" : "auto"}>
             <CardHeader pb="4">
                 <Flex justify="space-between" align="center">
                     <Text fontSize="lg" fontWeight="bold">會議排程</Text>
@@ -151,7 +151,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
                     <ModalOverlay />
                     <ModalContent p={4} borderRadius="25px" minW="600px">
                         <ModalHeader>新增會議</ModalHeader>
-                        <ModalCloseButton mt="4" />
+                        <ModalCloseButton mt="4" mr="4" />
                         <ModalBody>
                             <FormControl mb={3}>
                                 <FormLabel>會議名稱</FormLabel>
@@ -189,7 +189,7 @@ const MeetingSchedule = ({ setTabIndex }) => {
                 </Modal>
 
                 {/* 會議列表 */}
-                {meetings.map(meeting => (
+                {displayedMeetings.map(meeting => (
                     <Box
                         key={meeting.id}
                         p="6"
@@ -230,12 +230,19 @@ const MeetingSchedule = ({ setTabIndex }) => {
                     </Box>
                 ))}
 
+                {/* ▶️ 首頁下方的查看更多按鈕 */}
+                {limitMeetings && meetings.length > 2 && (
+                    <Button variant="ghost" colorScheme="blue" onClick={() => setTabIndex(1)} mt={2}>
+                        查看更多會議
+                    </Button>
+                )}
+
                 {/* ＃更新會議 */}
                 <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
                     <ModalOverlay />
                     <ModalContent p={4} borderRadius="25px" minW="600px">
                         <ModalHeader>會議資訊</ModalHeader>
-                        <ModalCloseButton />
+                        <ModalCloseButton mt="4" mr="4" />
                         <ModalBody>
                             {selectedMeeting && (
                                 <>
