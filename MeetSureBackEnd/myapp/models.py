@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 import uuid
 from django.utils.crypto import get_random_string
 from django.conf import settings
+import uuid
 
 
 #註冊表
@@ -67,10 +68,15 @@ class LineUser(models.Model):
 
 def __str__(self):
         return f"{self.user.username} - {self.line_display_name}"
-
+def generate_code():
+    from myapp.models import LineBinding  # ✅ 避免 import 循環
+    while True:
+        code = str(uuid.uuid4())[:6]
+        if not LineBinding.objects.filter(verification_code=code).exists():
+            return code
 class LineBinding(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    verification_code = models.CharField(max_length=6, unique=True, null=True, blank=True,default=str(uuid.uuid4())[:6])  # ✅ 預設值
+    verification_code = models.CharField(max_length=6,unique=True,null=True,blank=True,default=generate_code  )
     is_linked = models.BooleanField(default=False)  # ✅ 新增標記
 
     class Meta:
