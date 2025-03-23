@@ -8,8 +8,9 @@ from myapp.views import login_user
 from myapp.gptApiview import chatgpt_response  
 from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
-from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task
+from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members
 from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
+from myapp.views_todolist import todo_list_create_view
 
 # API 路由
 urlpatterns = [
@@ -54,6 +55,7 @@ urlpatterns = [
     path("api/projects/<int:id>/", get_project_detail, name="get_project_detail"),
     path("api/projects/<int:project_id>/tasks/", get_project_tasks, name="get_project_tasks"),
     path("api/tasks/<int:task_id>/complete/", complete_task, name="complete_task"),
+    path('api/project-members/', get_project_members, name='project-members'),
     #
 
     #meetings
@@ -61,6 +63,10 @@ urlpatterns = [
     path("api/meetings/create/", create_meeting, name="create_meeting"),  
     path("api/meetings/<int:meeting_id>/update/", update_meeting, name="update_meeting"),
     path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
+    #
+
+    #todolist
+    path("api/todos/", todo_list_create_view, name="todo-list-create"),
     #
 ]
 
