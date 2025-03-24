@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar
+from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,get_progress
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
@@ -11,6 +11,7 @@ from myapp.views_friends import send_friend_request, get_friend_requests, respon
 from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members
 from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
 from myapp.views_todolist import todo_list_create_view
+from myapp.views_meeting_record import save_meeting_record,get_meeting_records
 
 # API 路由
 urlpatterns = [
@@ -63,10 +64,16 @@ urlpatterns = [
     path("api/meetings/create/", create_meeting, name="create_meeting"),  
     path("api/meetings/<int:meeting_id>/update/", update_meeting, name="update_meeting"),
     path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
+    path("api/save-meeting-record/", save_meeting_record, name="save_meeting_record"),
+    path("api/meeting-records/<int:project_id>/",get_meeting_records, name="get_meeting_records"),
     #
 
     #todolist
     path("api/todos/", todo_list_create_view, name="todo-list-create"),
+    #
+
+    #轉檔進度
+    path("api/progress/", get_progress, name="get-progress"),
     #
 ]
 

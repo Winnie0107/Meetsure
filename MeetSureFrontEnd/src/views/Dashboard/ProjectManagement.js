@@ -102,7 +102,8 @@ function ProjectManagement() {
                                     meetings={meetings}
                                     setMeetings={setMeetings}
                                 />
-                                <MeetingDataList />
+                                <MeetingDataList projectId={id} />
+
                             </HStack>
                         </TabPanel>
 
@@ -110,7 +111,7 @@ function ProjectManagement() {
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch" width="100%" maxWidth="1200px" mx="auto">
                                 <Box flex="3" maxW="25%" minW="250px">
-                                    <ToDoList />
+                                    <ToDoList projectId={id} />
                                 </Box>
                                 <Box flex="7" maxW="75%" overflow="hidden">
                                     <GanttChart />
