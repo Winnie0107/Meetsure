@@ -135,7 +135,7 @@ const ToDoList = ({ projectId }) => {
                 {/* 📌 Modal - 新增任務 */}
                 <Modal isOpen={isOpen} onClose={onClose}>
                     <ModalOverlay />
-                    <ModalContent>
+                    <ModalContent p={4} borderRadius="25px">
                         <ModalHeader>新增代辦事項</ModalHeader>
                         <ModalCloseButton />
                         <ModalBody>
