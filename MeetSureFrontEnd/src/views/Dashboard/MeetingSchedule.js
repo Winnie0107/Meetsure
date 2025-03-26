@@ -118,7 +118,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
             <CardHeader pb="4">
                 <Flex justify="space-between" align="center">
                     <Text fontSize="lg" fontWeight="bold">會議排程</Text>
-                    <Icon as={MdEvent} boxSize={5} color="gray.500" />
+                    <Icon as={MdEvent} boxSize={5} color="blue.500" />
                 </Flex>
                 <Divider my="2" />
                 <Text fontSize="sm" color="gray.500"> 點擊會議查看詳細資訊或修改</Text>

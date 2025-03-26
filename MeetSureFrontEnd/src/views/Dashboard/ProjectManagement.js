@@ -33,6 +33,8 @@ function ProjectManagement() {
     const [loading, setLoading] = useState(true);
     const [meetings, setMeetings] = useState([]);
     const token = localStorage.getItem("token");
+    const [tasks, setTasks] = useState([]);
+
 
     useEffect(() => {
         console.log("目前進入的專案 ID 是：", id);
@@ -92,9 +94,14 @@ function ProjectManagement() {
                                     meetings={meetings}
                                     setMeetings={setMeetings}
                                 />
-
                                 <MilestoneProgress />
-                                <ToDoList projectId={id} />
+                                <ToDoList
+                                    projectId={id}
+                                    setTabIndex={setTabIndex}
+                                    limit={true}
+                                    tasks={tasks}
+                                    setTasks={setTasks}
+                                />
                             </HStack>
                         </TabPanel>
 
@@ -116,7 +123,12 @@ function ProjectManagement() {
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch" width="100%" maxWidth="1200px" mx="auto">
                                 <Box flex="3" maxW="25%" minW="250px">
-                                    <ToDoList projectId={id} />
+                                    <ToDoList
+                                        projectId={id}
+                                        limit={false}
+                                        tasks={tasks}
+                                        setTasks={setTasks}
+                                    />
                                 </Box>
                                 <Box flex="7" maxW="75%" overflow="hidden">
                                     <GanttChart />
