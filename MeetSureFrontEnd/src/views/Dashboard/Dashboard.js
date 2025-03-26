@@ -1,7 +1,6 @@
 // Chakra imports
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
-import React, { useState,useEffect } from "react";
 
 import {
   Avatar,
