@@ -1,4 +1,3 @@
-// Chakra imports
 import {
   Flex,
   Table,
@@ -13,38 +12,79 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
+  Spinner,
 } from "@chakra-ui/react";
 import { FiPlus, FiSearch } from "react-icons/fi";
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody.js";
 import CardHeader from "components/Card/CardHeader.js";
 import TablesProjectRow from "components/Tables/TablesProjectRow";
-import React, { useState } from "react";
-import { tablesProjectData, tablesTableData } from "variables/general";
+import React, { useState, useEffect } from "react";
+import axios from "axios"; // 🆕 引入 axios
+import { useHistory } from "react-router-dom";
+
 
 function Tables() {
   const textColor = useColorModeValue("gray.700", "white");
   const borderColor = useColorModeValue("gray.200", "gray.600");
+  const history = useHistory();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [projects, setProjects] = useState([]); // 🆕 專案列表
+  const [loading, setLoading] = useState(true); // 🆕 載入狀態
 
-  // 過濾後的專案資料
-  const filteredProjects = tablesProjectData.filter(
-    (row) =>
-      row.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (row.status && row.status.toLowerCase().includes(searchQuery.toLowerCase()))
+  // **🚀 獲取專案列表**
+  useEffect(() => {
+    const fetchProjects = async () => {
+    const token = localStorage.getItem("token");  // 或你儲存 token 的 key 名稱
+
+    if (!token) {
+      console.warn("⚠️ Token 不存在，請重新登入！");
+      setLoading(false);
+      return;
+    }
+  
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/projects/get/", {
+        headers: {
+          "Authorization": `Token ${token}`  // ✅ 加入 Authorization header
+        }
+      });
+  
+      console.log("🔥 API 回應:", response.data);
+      setProjects(response.data);
+    } catch (error) {
+      console.error("❌ 無法獲取專案列表:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+    fetchProjects();
+  }, []);
+
+  const userId = localStorage.getItem("user_id");
+
+  const myProjects = projects.filter((project) =>
+    project.members_name?.some((member) => member.user_id === parseInt(userId))
   );
+
+  const filteredProjects = myProjects.filter(
+    (project) =>
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
 
   return (
     <Flex direction="column" pt={{ base: "120px", md: "75px" }}>
-      <Card my="22px" overflowX={{ sm: "scroll", xl: "hidden" }} pb="0px">
+      <Card my="22px" overflowX={{ sm: "scroll", xl: "hidden" }} pb="0px" minH="650px"  >
         <CardHeader p="6px 0px 22px 16px">
           <Flex justify="space-between" alignItems="center" w="100%">
             <Text fontSize="xl" color={textColor} fontWeight="bold">
-              用戶媒體庫
+              專案列表
             </Text>
             <Flex alignItems="center" gap="12px">
-              {/* 搜尋框，設定固定寬度，不影響 +按鈕 */}
+              {/* 搜尋框 */}
               <InputGroup width="240px">
                 <InputLeftElement pointerEvents="none">
                   <Icon as={FiSearch} color="gray.400" />
@@ -58,94 +98,63 @@ function Tables() {
                   _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                 />
               </InputGroup>
-              {/* 新增檔案按鈕 保持原來的大小和樣式 */}
+              {/* 新增專案按鈕 */}
               <Button colorScheme="teal" leftIcon={<Icon as={FiPlus} />} size="md">
-                新增檔案
+                新增專案
               </Button>
             </Flex>
           </Flex>
         </CardHeader>
-        <CardBody>
-          <Table variant="simple" color={textColor}>
-            <Thead>
-              <Tr>
-                <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
-                  專案名稱
-                </Th>
-                <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
-                  開會日期
-                </Th>
-                <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
-                  AI分析狀況
-                </Th>
-                <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
-                  Completion
-                </Th>
-                <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
-                  參與人員
-                </Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredProjects.map((row, index, arr) => (
-                <TablesProjectRow
-                  name={row.name}
-                  logo={row.logo}
-                  status={row.status}
-                  budget={row.budget}
-                  progression={row.progression}
-                  participants={row.participants}
-                  isLast={index === arr.length - 1}
-                  key={index}
-                />
-              ))}
-            </Tbody>
-          </Table>
-        </CardBody>
-      </Card>
+        <CardBody p="6px 0px 22px 16px">
+          {loading ? (
+            <Spinner size="lg" />
+          ) : (
+            <Table variant="simple" color={textColor}>
+              <Thead>
+                <Tr>
+                  <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
+                    專案名稱
+                  </Th>
+                  <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
+                    說明
+                  </Th>
+                  <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
+                    建立時間
+                  </Th>
+                  <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
+                    參與人員
+                  </Th>
+                  <Th fontSize="15px" color="gray.400" borderColor={borderColor}>
+                    專案進度
+                  </Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {filteredProjects.map((project, index, arr) => {
+                  const tasks = project.tasks || [];
+                  const totalTasks = tasks.length;
+                  const completedTasks = tasks.filter(task => task.completed).length;
 
-      {/* Authors Table  */}
-      <Card overflowX={{ sm: "scroll", xl: "hidden" }} pb="0px">
-        <CardHeader p="6px 0px 22px 0px">
-          <Text fontSize="xl" color={textColor} fontWeight="bold">
-            Authors Table
-          </Text>
-        </CardHeader>
-        <CardBody>
-          <Table variant="simple" color={textColor}>
-            <Thead>
-              <Tr my=".8rem" pl="0px" color="gray.400">
-                <Th pl="0px" borderColor={borderColor} color="gray.400">
-                  Author
-                </Th>
-                <Th borderColor={borderColor} color="gray.400">
-                  Function
-                </Th>
-                <Th borderColor={borderColor} color="gray.400">
-                  Status
-                </Th>
-                <Th borderColor={borderColor} color="gray.400">
-                  Employed
-                </Th>
-                <Th borderColor={borderColor}></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {tablesTableData.map((row, index, arr) => (
-                <TablesProjectRow
-                  name={row.name}
-                  logo={row.logo}
-                  email={row.email}
-                  subdomain={row.subdomain}
-                  domain={row.domain}
-                  status={row.status}
-                  date={row.date}
-                  isLast={index === arr.length - 1}
-                  key={index}
-                />
-              ))}
-            </Tbody>
-          </Table>
+                  const progression = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+                  return (
+                    <TablesProjectRow
+                      key={project.id}
+                      name={project.name}
+                      logo={project.logo || ""}
+                      description={project.description}
+                      budget={project.created_at}
+                      participants={project.members_name || []}
+                      progression={progression} // ✅ 傳入計算好的進度百分比
+                      isLast={index === arr.length - 1}
+                      onClick={() => history.push(`/admin/projectmanagement/${project.id}`)}
+                    />
+                  );
+                })}
+              </Tbody>
+
+            </Table>
+          )}
         </CardBody>
       </Card>
     </Flex>

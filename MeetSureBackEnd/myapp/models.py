@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 import uuid
 from django.utils.crypto import get_random_string
 from django.conf import settings
+import uuid
 
-# Create your models here.
 
 #註冊表
 class Users(models.Model):
@@ -14,8 +14,8 @@ class Users(models.Model):
     password = models.CharField(max_length=128)
     acco_level = models.CharField(max_length=100)
     company = models.CharField(max_length=255, null=True, blank=True) 
-    name = models.CharField(max_length=100)
-    img = models.CharField(max_length=255)
+    name = models.CharField(max_length=100, null=True, blank=True, default="")
+    img = models.CharField(max_length=255, null=True, blank=True, default="")
     auth_user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     
     class Meta:
@@ -60,18 +60,25 @@ class CompanyRepresentative(models.Model):
         super().save(*args, **kwargs)
         
 class LineUser(models.Model):
-        user = models.OneToOneField(User, on_delete=models.CASCADE)
-        line_user_id = models.CharField(max_length=50, unique=True)
+        user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+        line_user_id = models.CharField(max_length=50)
         line_display_name = models.CharField(max_length=100, blank=True, null=True)
         class Meta:
             db_table = 'lineuser' 
 
 def __str__(self):
         return f"{self.user.username} - {self.line_display_name}"
-
+def generate_code():
+    from myapp.models import LineBinding  # ✅ 避免 import 循環
+    while True:
+        code = str(uuid.uuid4())[:6]
+        if not LineBinding.objects.filter(verification_code=code).exists():
+            return code
 class LineBinding(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    verification_code = models.CharField(max_length=6, unique=True, default=str(uuid.uuid4())[:6])
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    verification_code = models.CharField(max_length=6,unique=True,null=True,blank=True,default=generate_code  )
+    is_linked = models.BooleanField(default=False)  # ✅ 新增標記
+
     class Meta:
         db_table = 'linebinding' 
 class UserToken(models.Model):
@@ -144,6 +151,23 @@ class Project(models.Model):
     class Meta:
         db_table = 'project'
 
+class ProjectMember(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="members")
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)  # ✅ 參考 Users 表的 ID
+
+    def __str__(self):
+        return f"{self.user.email} - {self.project.name}"  # ✅ 使用 user.mail 來顯示正確的用戶資訊
+
+
+class ProjectTask(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
+    name = models.CharField(max_length=255)  # 任務名稱
+    completed = models.BooleanField(default=False)  # 是否已完成
+
+    def __str__(self):
+        return f"{self.name} - {self.project.name}"
+    
+
 # 會議列表
 class MeetingSchedule(models.Model):
     project = models.ForeignKey(
@@ -170,3 +194,25 @@ class MeetingSchedule(models.Model):
     
     class Meta:
         db_table = 'meetingschedule'
+    
+    
+#會議通知
+class MeetingNotification(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    meeting_name = models.CharField(max_length=255)
+    meeting_datetime = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.name or self.user.email} - {self.meeting_name}"
+
+    
+
+# 待辦事項
+class ToDoList(models.Model):
+    name = models.CharField(max_length=255)
+    assigned_to = models.ForeignKey(Users, on_delete=models.CASCADE)  # 假設用戶模型是預設的 User
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)

@@ -18,6 +18,8 @@ import axios from "axios";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "../../config/firebaseConfig";
 import FriendAvatar from "./FriendAvatar";
+import { useLocation } from "react-router-dom";
+
 
 
 
@@ -46,7 +48,16 @@ function SocialPage() {
     const [groupInvites, setGroupInvites] = useState([]);  // ✅ 存儲群組邀請
     const [newGroupName, setNewGroupName] = useState("");  // ✅ 用來存儲新群組名稱
     const [selectedFriends, setSelectedFriends] = useState([]);  // ✅ 確保 `selectedFriends` 有初始化
-
+    const location = useLocation();
+    useEffect(() => {
+        if (window.location.hash === "#friends") {
+          setSelectedTab("friends");
+        }
+      }, []);
+      
+      
+      
+      
 
     // ✅ **獲取好友列表**
     const fetchFriends = async () => {
