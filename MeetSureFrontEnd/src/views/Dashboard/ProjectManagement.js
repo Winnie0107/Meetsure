@@ -32,6 +32,7 @@ function ProjectManagement() {
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [meetings, setMeetings] = useState([]);
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
         console.log("目前進入的專案 ID 是：", id);
@@ -40,7 +41,11 @@ function ProjectManagement() {
     useEffect(() => {
         const fetchProject = async () => {
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`);
+                const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                });
                 console.log("🔥 API 回應:", response.data);
                 setProject(response.data);
             } catch (error) {
