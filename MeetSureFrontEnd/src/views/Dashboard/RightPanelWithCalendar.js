@@ -19,14 +19,21 @@ const RightPanelWithCalendar = () => {
             setLoading(true);
             const formattedDate = formatDate(selectedDate);
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/meetings?date=${formattedDate}`);
+                const userId = localStorage.getItem("user_id"); // 從 localStorage 拿 user_id
+                const response = await axios.get("http://127.0.0.1:8000/api/meetings", {
+                    params: {
+                        date: formattedDate,
+                        user_id: userId
+                    }
+                });
+
                 const meetings = response.data.meetings.map((meeting) => ({
                     ...meeting,
                     localTime: moment.utc(meeting.datetime) // 假設 API 返回 UTC 格式
                         .tz("Asia/Taipei")
                         .format("YYYY-MM-DD HH:mm:ss"),
                 }));
-                
+
                 // 按時間升序排列
                 meetings.sort((a, b) => {
                     const timeA = moment(a.localTime, "YYYY-MM-DD HH:mm:ss").toDate();
@@ -80,8 +87,9 @@ const RightPanelWithCalendar = () => {
                                     textAlign="left" // 文字置中
                                 >
                                     <Text fontSize="md" color="black" fontWeight="bold">
-                                        {moment(meeting.localTime, "YYYY-MM-DD HH:mm:ss").format("HH:mm")} - {meeting.description}
+                                        {moment(meeting.localTime, "YYYY-MM-DD HH:mm:ss").format("HH:mm")} - {meeting.name}
                                     </Text>
+
                                 </Box>
                             </ListItem>
                         ))
@@ -95,4 +103,3 @@ const RightPanelWithCalendar = () => {
 };
 
 export default RightPanelWithCalendar;
- 

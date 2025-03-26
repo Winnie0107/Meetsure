@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password,check_password
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import User, Users, Meeting,UserToken,Company,CompanyRepresentative
+from .models import User, Users, MeetingSchedule, UserToken,Company,CompanyRepresentative, Group, GroupMembership, Project
 from .serializers import UserSerializer
 from datetime import datetime
 from pytz import timezone
@@ -26,6 +26,13 @@ from PIL import Image
 from django.conf import settings
 import os
 import openai
+
+
+import firebase_admin
+from firebase_admin import firestore
+db = firestore.client()  # 不用再 initialize_app
+
+
 #顯示用戶列表
 def user_list(request):
     users = User.objects.all().values()
@@ -108,65 +115,86 @@ def register_user(request):
 
 
 
-#新增行事曆
 @csrf_exempt
 def add_meeting(request):
     if request.method == "POST":
         try:
-            data = json.loads(request.body)  # 解析前端傳來的 JSON
-            datetime_str = data.get("datetime")  # 從前端接收 datetime 字串
-            description = data.get("description")
+            data = json.loads(request.body)
+            print("接收到的資料：", data)
 
-            if not datetime_str or not description:
-                return JsonResponse({"error": "Missing fields in request"}, status=400)
+            data = json.loads(request.body)
+            date = data.get("date")  # 從前端獲取日期
+            time = data.get("time")   # 從前端獲取時間
+            details = data.get("description")
+            user_id = data.get("user_id")
+            name = data.get("name", "未命名會議")
 
-            # 將 datetime 字串解析成日期與時間
+            # 合併日期和時間
+            datetime_str = f"{date} {time}"
+
+            if not date or not time or not details or not user_id:
+                return JsonResponse({"error": "Missing fields"}, status=400)
+
             datetime_obj = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
-            date = datetime_obj.date()
-            time = datetime_obj.time()
+            user = Users.objects.get(ID=user_id)
 
-            # 創建新會議
-            meeting = Meeting(date=date, time=time, description=description)
-            meeting.save()
+            # 預設使用第一個專案，或者讓前端傳專案ID
+            default_project = Project.objects.first()
+
+            meeting_data = {
+                "name": name,
+                "datetime": datetime_obj,
+                "details": details,
+                "created_by": user,
+                "project": default_project  # 新增這行
+            }
+
+            MeetingSchedule.objects.create(**meeting_data)
 
             return JsonResponse({"message": "Meeting added successfully"}, status=201)
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)
-
-
     
 # 返回符合日期的會議
+@csrf_exempt
 def get_meetings(request):
-    # 從前端解析日期參數，格式: yyyy-MM-dd
-    date_str = request.GET.get('date')  # 例: "2024-12-03"
-    if not date_str:
-        return JsonResponse({"error": "Date parameter is required"}, status=400)
-
     try:
-        # 將字串轉為日期物件
+        date_str = request.GET.get('date')
+        user_id = request.GET.get('user_id')
+
+        if not date_str or not user_id:
+            return JsonResponse({"error": "Missing date or user_id"}, status=400)
+
+        # 轉換日期
         date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
-        # 查詢符合日期的會議
-        meetings = Meeting.objects.filter(date=date)
+        # 撈出該使用者在指定日期的所有會議（不論是否有指定專案）
+        meetings = MeetingSchedule.objects.filter(
+            datetime__date=date,
+            created_by_id=user_id
+        ).order_by('datetime')
 
-        # 構建返回資料，將時間轉為當地時區
+        # 回傳資料（附加 project_id，如果有的話）
         data = [
             {
-                "datetime": datetime.combine(meeting.date, meeting.time)
-                .astimezone(LOCAL_TIMEZONE)
-                .isoformat(),  # 返回 ISO 格式的時間戳
-                "description": meeting.description,
+                "name": meeting.name,
+                "datetime": meeting.datetime.isoformat(),
+                "date": meeting.datetime.strftime("%Y-%m-%d"),
+                "time": meeting.datetime.strftime("%H:%M"),
+                "description": meeting.details,
+                "location": meeting.location,
+                "project_id": meeting.project.id if meeting.project else None
             }
             for meeting in meetings
         ]
 
         return JsonResponse({"meetings": data}, safe=False)
 
-    except ValueError:
-        # 當日期格式不正確時，返回錯誤信息
-        return JsonResponse({"error": "Invalid date format. Use yyyy-MM-dd"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
     # 時區設置
 LOCAL_TIMEZONE = timezone("Asia/Taipei")  # 設定你想要的當地時區
@@ -183,14 +211,11 @@ try:
 except ImportError:
     torch = None
 
-try:
-    import tensorflow as tf
-except ImportError:
-    tf = None
+
 
 # 使用 Hugging Face API 而不依賴 TensorFlow/PyTorch
 print("🔄 Loading Whisper model...")
-whisper = pipeline("automatic-speech-recognition", model="openai/whisper-base", device=-1)  # 強制使用 CPU
+whisper = pipeline("automatic-speech-recognition", model="openai/whisper-tiny", device=-1)  # 強制使用 CPU
 print("✅ Whisper model loaded successfully!")
 
 def split_audio(audio_data, samplerate, segment_length=30):
@@ -224,9 +249,13 @@ def transcribe_audio(request):
         transcription_result = []
 
         for i, segment in enumerate(segments):
-            # 對每個片段使用 Whisper 模型進行轉錄
-            transcription = whisper(segment)
-            transcription_result.append(transcription["text"])  # ✅ 只加入內容，沒有 "Segment X"
+            print(f"🌀 正在處理第 {i+1}/{len(segments)} 段...")
+            transcription = whisper({
+                "raw": segment,
+                "sampling_rate": samplerate
+            })
+            transcription_result.append(transcription["text"])
+
 
         # 合併所有片段的結果，並以換行符分隔每個段落
         full_transcription = "\n\n".join(transcription_result)
@@ -461,7 +490,9 @@ def generate_avatar(request):
 
             # ✅ **Anime 風格 prompt**
             prompt = (
-                "Create a Disney-style avatar featuring only one person, facing forward in a close-up headshot. The focus should be on the upper body with a clean background. Use vibrant colors, smooth shading, and detailed facial features. Avoid multiple people and full-body shots." 
+                "A highly detailed Pixar-style and Disney 3D animated avatar, character facing forward, happy face, "
+                "upper body only, soft vibrant colors, cinematic lighting, "
+                "high-resolution, friendly and warm expression, simple background , digital painting, Pixar character design"
             )
 
 
@@ -581,3 +612,106 @@ def update_password(request):
             return JsonResponse({"error": f"伺服器錯誤: {e}"}, status=500)
 
     return JsonResponse({"error": "請求方法錯誤"}, status=405)
+
+
+
+@csrf_exempt
+def create_group(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        group_name = data.get("group_name")
+        owner_email = data.get("owner_email")
+        member_emails = data.get("member_emails", [])  # ✅ 取得選擇的好友 Email 列表
+
+        # ✅ 檢查必要參數
+        if not group_name or not owner_email:
+            return JsonResponse({"error": "缺少必要參數"}, status=400)
+
+        # ✅ 查找擁有者
+        owner = Users.objects.filter(email=owner_email).first()
+        if not owner:
+            return JsonResponse({"error": "用戶不存在"}, status=404)
+
+        # ✅ 創建群組
+        group = Group.objects.create(name=group_name, owner=owner)
+
+        # ✅ 讓擁有者成為群組成員
+        GroupMembership.objects.create(group=group, user=owner, is_admin=True)
+
+        # ✅ 遍歷選擇的好友，將他們加入群組
+        for email in member_emails:
+            user = Users.objects.filter(email=email).first()
+            if user:
+                GroupMembership.objects.create(group=group, user=user, is_admin=False)
+
+        return JsonResponse({"message": "群組建立成功", "group_id": group.id}, status=201)
+
+    return JsonResponse({"error": "請使用 POST 方法"}, status=405)
+
+
+@csrf_exempt
+def send_message(request):
+    """處理用戶發送訊息"""
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            sender = data.get("sender")
+            receiver = data.get("receiver")
+            message = data.get("message")
+
+            if not sender or not receiver or not message:
+                return JsonResponse({"error": "缺少必要字段"}, status=400)
+
+            conversation_id = "_".join(sorted([sender, receiver]))  # 統一雙方順序
+
+            messages_ref = db.collection("meetsure")
+
+            new_message = {
+                "sender": sender,
+                "receiver": receiver,
+                "message": message,
+                "timestamp": datetime.utcnow(),
+                "participants": [sender, receiver],
+                "conversation_id": conversation_id,  # ✅ 新增欄位
+            }
+
+            messages_ref.add(new_message)
+
+            return JsonResponse({"message": "訊息已發送"}, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "無效的 JSON 格式"}, status=400)
+
+    return JsonResponse({"error": "請使用 POST 方法"}, status=405)
+
+
+def get_messages(request):
+    """獲取與指定好友的聊天記錄"""
+    sender = request.GET.get("sender")
+    receiver = request.GET.get("receiver")
+
+    if not sender or not receiver:
+        return JsonResponse({"error": "請提供 sender 和 receiver"}, status=400)
+
+    # 從 Firestore 查找該對話的訊息
+    messages_ref = (
+        db.collection("meetsure")
+        .where("participants", "array-contains", sender)  # 確保發送者參與這段對話
+        .order_by("timestamp")
+    )
+    messages = messages_ref.stream()
+
+    chat_history = []
+    for msg in messages:
+        msg_data = msg.to_dict()
+        # 確保訊息是這兩位用戶的
+        if receiver in msg_data["participants"]:
+            chat_history.append({
+                "sender": msg_data["sender"],
+                "receiver": msg_data["receiver"],
+                "message": msg_data["message"],
+                "timestamp": msg_data["timestamp"].isoformat(),
+            })
+
+    return JsonResponse({"messages": chat_history}, safe=False)

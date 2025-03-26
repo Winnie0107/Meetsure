@@ -105,6 +105,13 @@ def get_friends_list(request):
         Q(ID__in=FriendRequest.objects.filter(sender=user, status="accepted").values_list("receiver", flat=True))
     )
 
-    friends_data = [{"email": friend.email, "name": friend.name} for friend in friends]
+    friends_data = [
+        {
+            "email": friend.email,
+            "name": friend.name,
+            "img": f"media/{friend.img.replace('\\', '/')}" if friend.img else None
+        }
+        for friend in friends
+    ]
 
     return JsonResponse({"friends": friends_data}, status=200)

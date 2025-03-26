@@ -1,0 +1,11 @@
+{
+  "projects": {
+    "default": "meetsure-new"
+  },
+  "targets": {},
+  "etags": {
+    "meetsure-new": {
+      "extensionInstances": {}
+    }
+  }
+}

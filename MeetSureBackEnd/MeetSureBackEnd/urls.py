@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar
+from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
@@ -16,9 +16,9 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='index.html')),  # 指向 React 的 index.html
     path('api/register', register_user, name='register_user'),  # 註冊用戶
     path('api/users/', user_list, name='user_list'),  # 用戶列表
-    path('api/meetings/add', add_meeting, name='add_meeting'),  # 新增會議
-    path('api/meetings', get_meetings, name='get_meetings'),  # 獲取會議列表
-    path('api/transcribe', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
+    path('api/meetings/add/', add_meeting, name='add_meeting'),  # 新增會議
+    path('api/meetings/', get_meetings, name='get_meetings'),  # 獲取會議列表
+    path('api/transcribe/', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
     path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
     path('register_company/', register_company, name='register_company'),
@@ -42,7 +42,8 @@ urlpatterns = [
     path('api/update_avatar/', update_avatar, name='update_avatar'),
     path("api/update_name/", update_name, name="update_name"),
     path("api/update_password/", update_password, name="update_password"),
-    #
+    path("send_message/", send_message, name="send_message"),
+    path("get_messages/", get_messages, name="get_messages"),
 ]
 
 # 靜態文件設置（開發模式下）

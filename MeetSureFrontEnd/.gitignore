@@ -37,3 +37,18 @@ logs/
 Thumbs.db
 ehthumbs.db
 desktop.ini
+
+# Firebase
+.firebase/
+*.secret.json
+*firebase-adminsdk*.json
+
+# Python
+__pycache__/
+*.pyc
+
+# 媒體與資料夾
+media/
+avatars/
+dataconnect-generated/
+

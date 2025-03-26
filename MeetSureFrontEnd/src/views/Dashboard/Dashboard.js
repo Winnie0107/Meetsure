@@ -119,7 +119,7 @@ export default function Dashboard() {
         console.error("Failed to fetch profile:", err);
       });
   }, [userId]);
-  
+
 
 
   // **請求 OpenAI 生成 AI 頭貼**
@@ -130,16 +130,16 @@ export default function Dashboard() {
         console.error("❌ userId 未定義，請重新登入");
         return;
       }
-  
+
       const response = await fetch("http://localhost:8000/api/generate_avatar/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId }),  // ✅ 確保 user_id 被傳遞
       });
-  
+
       const data = await response.json();
       console.log("AI 頭貼回應:", data); // ✅ Debug 回應
-  
+
       if (data.base64_img) {
         setGeneratedImg(`data:image/png;base64,${data.base64_img}`); // ✅ 設定 Base64 圖片
       } else {
@@ -149,18 +149,18 @@ export default function Dashboard() {
       console.error("❌ 生成頭貼請求錯誤:", error);
     }
   };
-  
-  
+
+
   const handleConfirmAvatar = async () => {
     if (!generatedImg || !userId) return;
-  
+
     try {
       const response = await fetch("http://localhost:8000/api/update_avatar/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, img_base64: generatedImg }),
       });
-  
+
       const data = await response.json();
       if (data.success) {
         setImg(generatedImg); // ✅ 更新 UI 頭貼
@@ -172,8 +172,8 @@ export default function Dashboard() {
       console.error("❌ 請求錯誤:", error);
     }
   };
-  
-  
+
+
   // **更新名稱**
   const handleUpdateName = async () => {
     if (!newName.trim()) {
@@ -209,21 +209,21 @@ export default function Dashboard() {
       toast({ title: "錯誤", description: "密碼不匹配", status: "error" });
       return;
     }
-  
+
     axios.post("http://localhost:8000/api/update_password/", {
       user_id: userId,
       new_password: newPassword, // 這裡發送的是明文，後端會加密
     })
-    .then(() => { // ✅ 移除 `res`
-      toast({ title: "密碼修改成功", status: "success" });
-      onPasswordClose();
-    })
-    .catch((err) => {
-      console.error("密碼修改失敗:", err);
-      toast({ title: "錯誤", description: "無法修改密碼", status: "error" });
-    });
+      .then(() => { // ✅ 移除 `res`
+        toast({ title: "密碼修改成功", status: "success" });
+        onPasswordClose();
+      })
+      .catch((err) => {
+        console.error("密碼修改失敗:", err);
+        toast({ title: "錯誤", description: "無法修改密碼", status: "error" });
+      });
   };
-  
+
 
 
   // **開啟彈窗**
@@ -252,9 +252,14 @@ export default function Dashboard() {
   const infoModal = useDisclosure();  // 管理資訊 Modal
   const meetingModal = useDisclosure();  // 管理新增會議 Modal
   const [selectedModalContent, setSelectedModalContent] = useState("");
-  const [newMeeting, setNewMeeting] = useState({ date: "", time: "", description: "" });
+  const [newMeeting, setNewMeeting] = useState({
+    date: "",
+    time: "",
+    name: "",            // ✅ 新增：會議名稱欄位
+    description: "",
+  });
 
-  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewMeeting({ ...newMeeting, [name]: value });
@@ -266,29 +271,30 @@ export default function Dashboard() {
         alert("All fields are required.");
         return;
       }
-  
-      const datetime = `${newMeeting.date} ${newMeeting.time}`;
-      const response = await axios.post("http://127.0.0.1:8000/api/meetings/add", {
-        datetime,
+      const datetime = `${newMeeting.date} ${newMeeting.time}`;  // ✅ 這裡要正確定義
+      const response = await axios.post("http://127.0.0.1:8000/api/meetings/add/", {
+        date: newMeeting.date,
+        time: newMeeting.time,
+        name: newMeeting.name,
         description: newMeeting.description,
+        user_id: userId
       });
+      console.log("送出的資料：", {
+        datetime,
+        name: newMeeting.name,
+        description: newMeeting.description,
+        user_id: userId,
+      });
+      
   
-      if (response.status === 201) {
-        alert("Meeting added successfully!");
-        setNewMeeting({ date: "", time: "", description: "" });
-        onClose();  // 這裡用參數帶進來的onClose
-      } else {
-        console.warn("Unexpected response status:", response.status, response.data);
-        alert("Failed to add meeting. Server returned unexpected status.");
-      }
-  
+      // 其餘代碼保持不變
     } catch (error) {
       console.error("Error adding meeting:", error.response?.data || error);
       alert(`Failed to add meeting. Error: ${error.message}`);
     }
   };
-  
-  
+
+
 
 
   return (
@@ -311,11 +317,11 @@ export default function Dashboard() {
         confirmPassword={confirmPassword}
         setConfirmPassword={setConfirmPassword}
         handleUpdatePassword={handleUpdatePassword}
-        isOpen={isOpen} 
+        isOpen={isOpen}
         handleOpenModal={handleOpenModal}
         handleCloseModal={handleCloseModal}
         generatedImg={generatedImg}  // ✅ 確保有傳遞 generatedImg
-        setGeneratedImg={setGeneratedImg}  
+        setGeneratedImg={setGeneratedImg}
         handleGenerateAvatar={handleGenerateAvatar}
         handleConfirmAvatar={handleConfirmAvatar}
       />
@@ -364,8 +370,8 @@ export default function Dashboard() {
               </Flex>
             </CardHeader>
             <CardBody>
-              <Text 
-                fontSize="sm" 
+              <Text
+                fontSize="sm"
                 color="gray.500"
                 ml={4} // ⭐ 讓內文稍微向左
                 whiteSpace="nowrap" // ⭐ 確保內容不換行
@@ -519,7 +525,7 @@ export default function Dashboard() {
                   您的會議安排行事曆
                 </Text>
               </Box>
-              <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9"   onClick={meetingModal.onOpen}>
+              <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9" onClick={meetingModal.onOpen}>
                 + New Meeting
               </Button>
             </Flex>
@@ -537,6 +543,15 @@ export default function Dashboard() {
               <ModalHeader>新增會議</ModalHeader>
               <ModalCloseButton />
               <ModalBody>
+                <Text mb="8px">會議名稱：</Text>
+                <Input
+                  type="text"
+                  name="name"
+                  placeholder="輸入會議名稱"
+                  value={newMeeting.name}
+                  onChange={handleInputChange}
+                  mb="16px"
+                />
                 <Text mb="8px">日期：</Text>
                 <Input
                   type="date"
