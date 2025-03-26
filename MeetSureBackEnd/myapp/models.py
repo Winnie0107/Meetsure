@@ -14,8 +14,8 @@ class Users(models.Model):
     password = models.CharField(max_length=128)
     acco_level = models.CharField(max_length=100)
     company = models.CharField(max_length=255, null=True, blank=True) 
-    name = models.CharField(max_length=100)
-    img = models.CharField(max_length=255)
+    name = models.CharField(max_length=100, null=True, blank=True, default="")
+    img = models.CharField(max_length=255, null=True, blank=True, default="")
     auth_user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     
     class Meta:
@@ -60,8 +60,8 @@ class CompanyRepresentative(models.Model):
         super().save(*args, **kwargs)
         
 class LineUser(models.Model):
-        user = models.OneToOneField(User, on_delete=models.CASCADE)
-        line_user_id = models.CharField(max_length=50, unique=True)
+        user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+        line_user_id = models.CharField(max_length=50)
         line_display_name = models.CharField(max_length=100, blank=True, null=True)
         class Meta:
             db_table = 'lineuser' 
@@ -70,8 +70,10 @@ def __str__(self):
         return f"{self.user.username} - {self.line_display_name}"
 
 class LineBinding(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    verification_code = models.CharField(max_length=6, unique=True, default=str(uuid.uuid4())[:6])
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    verification_code = models.CharField(max_length=6, unique=True, null=True, default=str(uuid.uuid4())[:6])  # ✅ 預設值
+    is_linked = models.BooleanField(default=False)  # ✅ 新增標記
+
     class Meta:
         db_table = 'linebinding' 
 class UserToken(models.Model):
