@@ -74,7 +74,7 @@ var dashRoutes = [
   },
   {
     path: "/tables",
-    name: "媒體庫",
+    name: "專案列表",
     rtlName: "لوحة القيادة",
     icon: <StatsIcon color='inherit' />,
     component: Tables,
@@ -140,9 +140,9 @@ var dashRoutes = [
     ],
   },
   {
-    path: "/projectmanagement",
+    path: "/projectmanagement/:id",  // ← 加上 :id 是關鍵
     name: "專案管理",
-    icon: <RocketIcon color='inherit' />,
+    icon: <RocketIcon color="inherit" />,
     component: ProjectManagement,
     layout: "/admin",
   },

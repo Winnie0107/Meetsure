@@ -13,8 +13,14 @@ import uuid
 import xml.etree.ElementTree as ET
 from django.contrib.auth.decorators import login_required
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.decorators import authentication_classes, permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
+from .models import Users
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+
+from django.contrib.auth import get_user_model  # ✅ 確保使用 Django 內建 User
+AuthUser = get_user_model()  # ✅ Django 內建 `User`
 
 
 
@@ -150,24 +156,42 @@ def reply_message(user_id, text):
     print(f"回覆訊息結果: {response.status_code}, {response.text}")
     
     
-@csrf_exempt
-@authentication_classes([TokenAuthentication])  # ✅ 確保使用 Token 驗證
-@permission_classes([IsAuthenticated])  # ✅ 確保用戶已登入
+@api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def generate_verification_code(request):
     """ 產生 LINE 綁定驗證碼 """
-    if request.method != "POST":
-        return JsonResponse({"error": "請使用 POST 請求"}, status=405)
+    print(f"🔍 `request.user`: {request.user}")  
+    print(f"🔍 `request.auth`: {request.auth}")  
+    print(f"🔍 `request.META.get('HTTP_AUTHORIZATION')`: {request.META.get('HTTP_AUTHORIZATION')}")
 
-    user = request.user  # 現在 `request.user` 一定會是登入狀態
-    if not user.is_authenticated:
-        return JsonResponse({"error": "未登入"}, status=401)
 
+    # **Step 1: 確保獲取的是 Django 內建 `auth.User`**
+    try:
+        token = Token.objects.get(key=request.auth)  # `request.auth` 應該是 Token 字串
+        auth_user = token.user  # ✅ `auth_user` = Django 內建 `User`
+        print(f"✅ 解析出的 AuthUser: {auth_user} (ID={auth_user.id})")
+    except Token.DoesNotExist:
+        return JsonResponse({"error": "無效的 Token"}, status=401)
+
+    # **Step 2: 找到對應的 `Users` instance**
+    try:
+        user = Users.objects.get(auth_user=auth_user)  # ✅ 透過 `auth_user` 找 `Users`
+        print(f"✅ 找到對應的 Users instance: {user} (ID={user.ID})")
+    except Users.DoesNotExist:
+        return JsonResponse({"error": "找不到對應的 Users 資料"}, status=400)
+
+    # **Step 3: 產生驗證碼並綁定 `auth_user`**
     verification_code = str(uuid.uuid4())[:6]  # 產生 6 碼驗證碼
-    line_user, created = LineUser.objects.update_or_create(
-        user_id=user.id, defaults={"verification_code": verification_code}
+    line_binding, created = LineBinding.objects.update_or_create(
+        user=auth_user,  # ✅ 存 `auth.User` 而不是 `Users`
+        defaults={"verification_code": verification_code}
     )
+    print(f"🔍 LineBinding 更新結果: created={created}, verification_code={line_binding.verification_code}")
 
     return JsonResponse({"verification_code": verification_code})
+
+
     
     
 @handler.add(MessageEvent, message=TextMessage)
@@ -175,24 +199,36 @@ def handle_message(event):
     user_id = event.source.user_id  # 取得 LINE 用戶 ID
     text = event.message.text.strip()  # 取得使用者輸入的驗證碼
 
+    if not user_id:
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="發生錯誤，請稍後再試！"))
+        return
+
     try:
-        # 🔽 改成查 `LineBinding`，而不是 `LineUser`
-        line_binding = LineBinding.objects.get(verification_code=text)
+        line_binding = LineBinding.objects.filter(verification_code=text).first()
+
+        if not line_binding:
+            raise LineBinding.DoesNotExist  # 讓 except 處理錯誤訊息
 
         # 綁定 LINE 帳號
         line_user, created = LineUser.objects.update_or_create(
             user=line_binding.user, defaults={"line_user_id": user_id}
         )
 
-        # 清除驗證碼
-        line_binding.verification_code = None
-        line_binding.save()
+        line_binding.is_linked = True  # 記錄此用戶已綁定
+        line_binding.verification_code = None  # ✅ 改成空字串
+        line_binding.save(update_fields=["verification_code", "is_linked"])  # 只更新這兩個欄位
+
 
         reply_text = "綁定成功！"
     except LineBinding.DoesNotExist:
         reply_text = "驗證碼錯誤，請確認後再輸入。"
+    except Exception as e:
+        print(f"❌ 發生錯誤: {e}")  # ✅ Debug 用
+        reply_text = "發生錯誤，請稍後再試。"
 
     line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+    
+
 
 
 def send_line_message(user_id, message):
@@ -207,7 +243,14 @@ def send_line_message(user_id, message):
     }
     response = requests.post(url, json=data, headers=headers)
     print(f"回應狀態碼: {response.status_code}, 回應內容: {response.text}")
-
+    
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def check_line_binding(request):
+    auth_user = request.user
+    is_linked = LineBinding.objects.filter(user=auth_user, is_linked=True).exists()
+    return JsonResponse({"is_linked": is_linked})
 
 @csrf_exempt  # 忽略 CSRF 保護，讓 LINE Webhook 可以存取
 def webhook_line(request):

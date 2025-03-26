@@ -15,6 +15,9 @@ from pathlib import Path
 import requests
 
 
+OPENAI_API_KEY = "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"
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -44,6 +47,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+OPENAI_API_KEY=[]
 
 # Application definition
 
@@ -75,6 +79,9 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 ROOT_URLCONF = 'MeetSureBackEnd.urls'
@@ -122,6 +129,7 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000", # 你的前端地址
     'http://127.0.0.1:8000',
+    'https://9e6f-36-229-19-203.ngrok-free.app',
 ]
 CORS_ALLOW_CREDENTIALS = True  # 允許傳遞 cookie
 
