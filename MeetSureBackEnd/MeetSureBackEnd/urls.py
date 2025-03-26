@@ -7,6 +7,8 @@ from django.conf.urls.static import static
 from myapp.views import login_user  
 from myapp.gptApiview import chatgpt_response  
 from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
 from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members
 from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
@@ -29,7 +31,7 @@ urlpatterns = [
     path('get_companies/', get_companies, name='get_companies'),
     path('get_representatives/', get_representatives, name='get_representatives'),
     path("webhook/line/", LineWebhookView.as_view(), name="line-webhook"),  
-    path("api/generate-verification-code/", generate_verification_code, name="generate-verification-code"),
+    path("api/generate-verification-code/", generate_verification_code),    
     path("api/line-webhook/", line_webhook, name="line-webhook-alt"),  # 另一個 Webhook 處理
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),

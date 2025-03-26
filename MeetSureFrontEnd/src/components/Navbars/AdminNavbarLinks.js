@@ -3,6 +3,7 @@ import { Box, Button, Flex, Menu, MenuButton, MenuItem, MenuList, Text, useColor
 import { BellIcon } from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 import { ProfileIcon, SettingsIcon } from "components/Icons/Icons";
+import NotificationDropdown from "components/Navbars/NotificationDropdown";
 
 export default function HeaderLinks(props) {
   const { colorMode } = useColorMode();
@@ -38,36 +39,51 @@ export default function HeaderLinks(props) {
    // 🔥 綁定 LINE 帳號函數
    const bindLineAccount = async () => {
     const token = localStorage.getItem("token");
+    console.log("📌 讀取 localStorage Token:", token);  // ✅ 確保 Token 被正確讀取
+
     if (!token) {
         alert("請先登入！");
         window.location.href = "/#/auth/signin";
         return;
     }
-// 🔥 先詢問用戶是否已加入 LINE 好友
-const isFriend = confirm("請確認你已加入 LINE 好友，否則請先加入！");
-if (!isFriend) {
-    window.location.href = LINE_ADD_FRIEND_URL; // 讓用戶跳轉到 LINE 好友邀請頁面
-    return;
-}
+
+    // 🔥 先詢問用戶是否已加入 LINE 好友
+    const isFriend = confirm("請確認你已加入 LINE 好友，否則請先加入！");
+    if (!isFriend) {
+        window.location.href = LINE_ADD_FRIEND_URL; // 讓用戶跳轉到 LINE 好友邀請頁面
+        return;
+    }
+
     try {
-        const NGROK_URL = await getNgrokUrl(); // ✅ 先取得最新的 ngrok URL
+        const NGROK_URL = await getNgrokUrl();
         if (!NGROK_URL) {
             alert("無法取得最新的 ngrok 連結，請稍後再試！");
             return;
         }
 
-        const apiUrl = `${NGROK_URL}/api/generate-verification-code/`; // ✅ 使用正確的變數插值
-        console.log("發送 API 到:", apiUrl);
+        const apiUrl = `${NGROK_URL}/api/generate-verification-code/`;
+        console.log("📌 發送 API 到:", apiUrl);
+
+        // ✅ 記錄發送的 Headers
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Token ${token}`  
+        };
+        console.log("📌 發送 Headers:", headers);
 
         const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            }
-        });
-
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "Authorization": token ? `Token ${token}` : "",  // 確保 Token 正確
+          },
+          body: JSON.stringify({})
+      });
+      
         const data = await response.json();
+        console.log("📌 Response 狀態碼:", response.status);
+        console.log("📌 Response 內容:", data);
+
         if (response.ok) {
             alert(`請在 LINE 中輸入驗證碼: ${data.verification_code}`);
         } else {
@@ -78,6 +94,7 @@ if (!isFriend) {
         alert("綁定 LINE 失敗，請稍後再試。");
     }
 };
+
 
   // 🔥 登出函數
   const handleLogout = () => {
@@ -92,7 +109,8 @@ if (!isFriend) {
       w={{ sm: "100%", md: "auto" }}
       alignItems='center'
       flexDirection='row'>
-      
+      <NotificationDropdown />
+
       {userEmail ? (
         // ✅ 如果已登入，顯示 "用戶帳號 + 您好！"
         <Menu>

@@ -77,6 +77,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
 ROOT_URLCONF = 'MeetSureBackEnd.urls'
 
@@ -123,6 +126,7 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000", # 你的前端地址
     'http://127.0.0.1:8000',
+    'https://9e6f-36-229-19-203.ngrok-free.app',
 ]
 CORS_ALLOW_CREDENTIALS = True  # 允許傳遞 cookie
 
