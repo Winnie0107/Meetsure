@@ -32,12 +32,17 @@ function Tables() {
   const [searchQuery, setSearchQuery] = useState("");
   const [projects, setProjects] = useState([]); // 🆕 專案列表
   const [loading, setLoading] = useState(true); // 🆕 載入狀態
+  const token = localStorage.getItem("token");
 
   // **🚀 獲取專案列表**
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/projects/get/");
+        const response = await axios.get("http://127.0.0.1:8000/api/projects/get/", {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
         console.log("🔥 API 回應:", response.data);
         setProjects(response.data);
       } catch (error) {

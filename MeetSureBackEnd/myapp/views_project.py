@@ -9,6 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
 @api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_project_detail(request, id):  # ✅ 確保這裡是 `id`
     try:
         project = Project.objects.get(id=id)
@@ -44,6 +46,8 @@ def complete_task(request, task_id):
         return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_projects(request):
     """ 獲取所有專案的 API，包含成員與任務 """
     projects = Project.objects.all()
@@ -51,6 +55,8 @@ def get_projects(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_project(request):
     data = request.data
     members_data = data.pop("members", [])
@@ -74,6 +80,8 @@ def create_project(request):
 
 
 @csrf_exempt
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_user_by_email(request):
     email = request.GET.get("email")
     if not email:

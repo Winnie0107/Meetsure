@@ -24,6 +24,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
     const [selectedMeeting, setSelectedMeeting] = useState(null);
     const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
     const displayedMeetings = limitMeetings ? meetings.slice(0, 2) : meetings;
+    const token = localStorage.getItem("token");
 
 
     // 🚀 **取得會議列表**
@@ -32,7 +33,11 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
 
         const fetchMeetings = async () => {
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/meetings/${projectId}/`);
+                const response = await axios.get(`http://127.0.0.1:8000/api/meetings/${projectId}/`, {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                });
                 console.log("🔥 取得的會議列表:", response.data);
                 setMeetings(response.data);
             } catch (error) {
@@ -56,7 +61,11 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
                 datetime: meetingDate,
                 location: newMeeting.location,
                 details: newMeeting.details,
-                created_by: userId, // ✅ 使用登入者 ID
+                created_by: userId,
+            }, {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
             });
 
             console.log("✅ 會議創建成功:", response.data);
@@ -72,7 +81,12 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
         try {
             const response = await axios.put(
                 `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/update/`,
-                selectedMeeting
+                selectedMeeting,
+                {
+                    headers: {
+                        Authorization: `Token ${token}`,
+                    },
+                }
             );
             setMeetings(meetings.map(m => (m.id === selectedMeeting.id ? response.data : m)));
             onDetailClose();
@@ -86,7 +100,11 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
         if (!selectedMeeting) return;
 
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`);
+            await axios.delete(`http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`, {
+                headers: {
+                    Authorization: `Token ${token}`,
+                },
+            });
             setMeetings(meetings.filter(m => m.id !== selectedMeeting.id));
             onDetailClose(); // 關閉 Modal
         } catch (error) {
