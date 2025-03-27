@@ -9,22 +9,25 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: MeetSureFrontEnd
+
     steps:
-      - name: 🔄 Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: npm install
-        working-directory: MeetSureFrontEnd
 
-      - name: 🏗️ Build project
+      - name: Build project
         run: npm run build
-        working-directory: MeetSureFrontEnd
 
-      - name: 🚀 Deploy to Firebase Hosting
+      - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MEETSURE_E6C67 }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MEETSURE_NEW }}
           channelId: live
-          projectId: meetsure-e6c67
+          projectId: meetsure-new
+          projectRoot: MeetSureFrontEnd
