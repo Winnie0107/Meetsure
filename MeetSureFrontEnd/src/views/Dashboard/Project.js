@@ -64,14 +64,12 @@ function Project() {
 
         try {
             const response = await axios.post("http://127.0.0.1:8000/api/projects/", formattedData, {
-    headers: {
-       
+                headers: {
+
                     "Content-Type": "application/json",
-                    Authorization: `Token ${token}`,
-               ,
-        "Authorization": `Token ${token}`
-    }
-});
+                    Authorization: `Token ${token}`,y
+                }
+            });
 
 
             alert("🎉 專案已成功儲存！");
