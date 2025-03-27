@@ -4,7 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 import json
 
-from myapp.models import FriendRequest,Users,Friend
+from myapp.models import FriendRequest,Users,Friend,LineUser
+from myapp.views_line import send_line_message
 
 # 允許 POST 請求時忽略 CSRF (如果使用 Django Rest Framework 可以用 APIView)
 @csrf_exempt
@@ -31,6 +32,13 @@ def send_friend_request(request):
 
             # 創建好友請求
             friend_request = FriendRequest.objects.create(sender=sender, receiver=receiver, status="pending")
+            # ✅ 發送 LINE 訊息給被邀請者
+            try:
+                line_user = LineUser.objects.get(user=receiver.auth_user)  # 這裡是 auth_user
+                message = f"你收到來自 {sender.name} 的好友邀請，快去看看吧！"
+                send_line_message(line_user.line_user_id, message)
+            except LineUser.DoesNotExist:
+                print("🔕 該用戶尚未綁定 LINE，不發送通知")
 
             return JsonResponse({"message": "好友邀請已發送", "request_id": friend_request.id}, status=201)
 
@@ -61,6 +69,7 @@ def get_friend_requests(request):
         "id", 
         "sender__email", 
         "sender__name",  # 確保回傳名稱
+        "sender__img",   # ✅ 加上這個
         "status"
     )
     return JsonResponse({
@@ -106,7 +115,13 @@ def get_friends_list(request):
         Q(ID__in=FriendRequest.objects.filter(sender=user, status="accepted").values_list("receiver", flat=True))
     )
 
-    # **✅ 回傳 id, name, email**
-    friends_data = [{"id": friend.ID, "email": friend.email, "name": friend.name} for friend in friends]
+    friends_data = [
+        {
+            "email": friend.email,
+            "name": friend.name,
+            "img": f"media/{friend.img.replace('\\', '/')}" if friend.img else None
+        }
+        for friend in friends
+    ]
 
     return JsonResponse({"friends": friends_data}, status=200)

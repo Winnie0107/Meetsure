@@ -68,3 +68,16 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ['id', 'mail', 'level']  # 定義要返回的欄位
+
+class MeetingReminderSerializer(serializers.ModelSerializer):
+    project_name = serializers.CharField(source="project.name", read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MeetingSchedule
+        fields = [
+            "id", "name", "datetime", "project_name", "created_by_name"
+        ]
+
+    def get_created_by_name(self, obj):
+        return obj.created_by.name if obj.created_by and obj.created_by.name else obj.created_by.email if obj.created_by else "系統"

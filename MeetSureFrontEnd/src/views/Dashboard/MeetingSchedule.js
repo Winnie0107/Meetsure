@@ -32,18 +32,20 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
         console.log("目前登入用戶 ID：", localStorage.getItem("user_id"));
 
         const fetchMeetings = async () => {
+            const token = localStorage.getItem("token");
+          
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/meetings/${projectId}/`, {
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
-                });
-                console.log("🔥 取得的會議列表:", response.data);
-                setMeetings(response.data);
+              const response = await axios.get(`http://127.0.0.1:8000/api/meetings/${projectId}/`, {
+                headers: {
+                  Authorization: `Token ${token}`
+                }
+              });
+              console.log("🔥 取得的會議列表:", response.data);
+              setMeetings(response.data);
             } catch (error) {
-                console.error("❌ 無法獲取會議列表:", error);
+              console.error("❌ 無法獲取會議列表:", error);
             }
-        };
+          };
         fetchMeetings();
     }, [projectId]);
 
@@ -54,63 +56,78 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
 
     // 🚀 **提交新增會議**
     const handleCreateMeeting = async () => {
+        const token = localStorage.getItem("token");
+      
         try {
-            const response = await axios.post("http://127.0.0.1:8000/api/meetings/create/", {
-                project: projectId,
-                name: newMeeting.name,
-                datetime: meetingDate,
-                location: newMeeting.location,
-                details: newMeeting.details,
-                created_by: userId,
-            }, {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-
-            console.log("✅ 會議創建成功:", response.data);
-            setMeetings([...meetings, response.data]);
-            onClose(); // 關閉 Modal
+          const response = await axios.post(
+            "http://127.0.0.1:8000/api/meetings/create/",
+            {
+              project: projectId,
+              name: newMeeting.name,
+              datetime: meetingDate,
+              location: newMeeting.location,
+              details: newMeeting.details,
+              created_by: userId,
+            },
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+      
+          console.log("✅ 會議創建成功:", response.data);
+          setMeetings([...meetings, response.data]);
+          onClose();
         } catch (error) {
-            console.error("❌ 無法創建會議:", error);
+          console.error("❌ 無法創建會議:", error);
         }
-    };
-
+      };
+      
     // 🚀 **更新會議細節**
     const handleUpdateMeeting = async () => {
+        const token = localStorage.getItem("token");
+      
         try {
-            const response = await axios.put(
-                `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/update/`,
-                selectedMeeting,
-                {
-                    headers: {
-                        Authorization: `Token ${token}`,
-                    },
-                }
-            );
-            setMeetings(meetings.map(m => (m.id === selectedMeeting.id ? response.data : m)));
-            onDetailClose();
+          const response = await axios.put(
+            `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/update/`,
+            selectedMeeting,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+          setMeetings(meetings.map(m => (m.id === selectedMeeting.id ? response.data : m)));
+          onDetailClose();
         } catch (error) {
-            console.error("❌ 會議更新失敗:", error);
+          console.error("❌ 會議更新失敗:", error);
         }
-    };
+      };
+      
 
     // 🚀 **刪會議**
     const handleDeleteMeeting = async () => {
+        const token = localStorage.getItem("token");
+      
         if (!selectedMeeting) return;
-
+      
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`, {
-                headers: {
-                    Authorization: `Token ${token}`,
-                },
-            });
-            setMeetings(meetings.filter(m => m.id !== selectedMeeting.id));
-            onDetailClose(); // 關閉 Modal
+          await axios.delete(
+            `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`,
+            {
+              headers: {
+                Authorization: `Token ${token}`,
+              },
+            }
+          );
+          setMeetings(meetings.filter(m => m.id !== selectedMeeting.id));
+          onDetailClose();
         } catch (error) {
-            console.error("❌ 無法刪除會議:", error);
+          console.error("❌ 無法刪除會議:", error);
         }
-    };
+      };
+      
 
 
     return (

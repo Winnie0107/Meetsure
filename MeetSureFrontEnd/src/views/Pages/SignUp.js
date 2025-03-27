@@ -18,6 +18,7 @@ function SignUp() {
   const bgForm = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("gray.700", "white");
 
+  // 新增：使用者名稱必填
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,13 +34,11 @@ function SignUp() {
       setErrorMessage("請輸入有效的電子郵件地址");
       return;
     }
-
-    // 表單驗證
-    if (!email || !password || !confirmPassword) {
-      setErrorMessage("請填寫所有欄位");
+    // 檢查必填欄位：email, password, 確認密碼, 使用者名稱
+    if (!email || !password || !confirmPassword || !name.trim()) {
+      setErrorMessage("請填寫所有必填欄位");
       return;
     }
-
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,16}$/;
     if (!passwordRegex.test(password)) {
       setErrorMessage("密碼長度須為8-16，且必須包含字母與數字");

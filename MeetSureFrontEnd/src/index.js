@@ -32,28 +32,9 @@ import { ChakraProvider } from "@chakra-ui/react";
 // Custom Chakra theme
 import theme from "theme/theme.js";
 
-// Import Firebase functions
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore"; // Import Firestore
+// ✅ 加這行：從 firebaseConfig.js 引入 db
+import { db } from "./config/firebaseConfig";
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyD8Khty5PEY9ABAVzkQblQd7RDKoX6oqzk",
-  authDomain: "meetsure-ai.firebaseapp.com",
-  projectId: "meetsure-ai",
-  storageBucket: "meetsure-ai.appspot.com",
-  messagingSenderId: "1097122682600",
-  appId: "1:1097122682600:web:c675af15466e69855d9b5d",
-  measurementId: "G-CYQ3VKMTKM"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app); // Initialize Firestore
-
-export { db }; // Export the Firestore database instance
 
 ReactDOM.render(
   <ChakraProvider theme={theme} resetCss={false} position="relative">

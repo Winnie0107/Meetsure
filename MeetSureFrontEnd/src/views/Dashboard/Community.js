@@ -15,6 +15,11 @@ import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, } from "@chakra-ui/icons";
 import React, { useState, useEffect } from "react";
 import MeetSureLogo from "assets/img/MeetSureLogo.jpg"; // 匯入你的圖片
 import axios from "axios";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "../../config/firebaseConfig";
+import FriendAvatar from "./FriendAvatar";
+import { useLocation } from "react-router-dom";
+
 
 
 
@@ -28,9 +33,6 @@ function SocialPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [chatMessages, setChatMessages] = useState({
         general: [],
-        Charlie: [],
-        Dana: [],
-        Eve: [],
         "Meetsure機器人": [{ sender: "Meetsure機器人", content: "您好！請選擇您想問的問題：" },
         ], // 新增一個MeetSure機器人的訊息數組
 
@@ -42,7 +44,20 @@ function SocialPage() {
     const userEmail = localStorage.getItem("user_email");
     const [sentFriendRequests, setSentFriendRequests] = useState([]);
     const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
-
+    const [groupsList, setGroupsList] = useState([]);  // ✅ 存儲群組清單
+    const [groupInvites, setGroupInvites] = useState([]);  // ✅ 存儲群組邀請
+    const [newGroupName, setNewGroupName] = useState("");  // ✅ 用來存儲新群組名稱
+    const [selectedFriends, setSelectedFriends] = useState([]);  // ✅ 確保 `selectedFriends` 有初始化
+    const location = useLocation();
+    useEffect(() => {
+        if (window.location.hash === "#friends") {
+          setSelectedTab("friends");
+        }
+      }, []);
+      
+      
+      
+      
 
     // ✅ **獲取好友列表**
     const fetchFriends = async () => {
@@ -51,8 +66,16 @@ function SocialPage() {
             console.log("🔥 來自 API 的好友列表:", response.data);
 
             if (response.data.friends) {
-                setFriendsList([{ name: "Meetsure機器人", status: "auto-reply" }, ...response.data.friends]);
+                setFriendsList([
+                    { name: "Meetsure機器人", status: "auto-reply", img: null },
+                    ...response.data.friends.map(friend => ({
+                        ...friend,
+                        img: friend.img || null // 加入頭像資料
+                    }))
+                ]);
             }
+            console.log("🔥 朋友資料:", response.data.friends);
+
         } catch (error) {
             console.error("❌ 獲取好友列表失敗:", error);
         }
@@ -90,6 +113,28 @@ function SocialPage() {
         }
     };
 
+    // ✅ **獲取用戶的群組清單**
+    const fetchGroups = async () => {
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/groups/?user_email=${userEmail}`);
+            console.log("🔥 來自 API 的群組列表:", response.data);
+            setGroupsList(response.data.groups || []);
+        } catch (error) {
+            console.error("❌ 獲取群組列表失敗:", error);
+        }
+    };
+
+    // ✅ **獲取群組邀請**
+    const fetchGroupInvites = async () => {
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/group_invites/?user_email=${userEmail}`);
+            console.log("🔥 來自 API 的群組邀請:", response.data);
+            setGroupInvites(response.data.received_invites || []);
+        } catch (error) {
+            console.error("❌ 獲取群組邀請失敗:", error);
+        }
+    };
+
 
     // ✅ **發送好友邀請**
     const handleSendFriendRequest = async () => {
@@ -112,6 +157,40 @@ function SocialPage() {
         } catch (error) {
             console.error("❌ 發送好友邀請失敗:", error.response?.data);
             alert(error.response?.data?.error || "發送好友邀請失敗");
+        }
+    };
+
+    // ✅ **創建群組**
+    const handleCreateGroup = async () => {
+        if (!newGroupName.trim()) {
+            alert("請輸入群組名稱");
+            return;
+        }
+
+        const selectedMemberEmails = selectedFriends.map(friend => friend.email);
+
+        if (selectedMemberEmails.length === 0) {
+            alert("請選擇至少一位好友來創建群組");
+            return;
+        }
+
+        try {
+            await axios.post("http://127.0.0.1:8000/api/groups/", {
+                group_name: newGroupName,
+                owner_email: userEmail,
+                members: selectedFriends.map(friend => friend.email),  // ✅ 確保 `selectedFriends` 被使用
+            });
+
+            alert("群組建立成功！");
+            setNewGroupName("");  // ✅ 清空輸入框
+            setSelectedFriends([]);  // ✅ 清空已選擇的好友
+
+            // ✅ 立即更新 UI
+            await fetchGroups();
+
+        } catch (error) {
+            console.error("❌ 創建群組失敗:", error.response?.data);
+            alert(error.response?.data?.error || "創建群組失敗");
         }
     };
 
@@ -151,10 +230,49 @@ function SocialPage() {
         }
     };
 
+    const fetchMessages = () => {
+        if (!selectedFriend) return;
+
+        const conversationId = [userEmail, selectedFriend].sort().join("_");
+        console.log("📡 準備查詢 conversation_id:", conversationId);
+
+        const q = query(
+            collection(db, "meetsure"),
+            where("conversation_id", "==", conversationId),
+            orderBy("timestamp", "asc")
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const messages = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            console.log("📥 取得訊息：", messages);  // ✅ 加這一行
+
+            setChatMessages(prevMessages => ({
+                ...prevMessages,
+                [selectedFriend]: messages
+            }));
+        });
+
+        return () => unsubscribe();
+    };
+
+
+    // 當 `selectedFriend` 改變時，自動載入聊天記錄
+    useEffect(() => {
+        if (selectedFriend) {
+            fetchMessages();
+        }
+    }, [selectedFriend]);
+
     // ✅ **確保 `fetchFriends` 和 `fetchFriendRequests` 會在 `userEmail` 變更時觸發**
     useEffect(() => {
         fetchFriends();
         fetchFriendRequests();
+        fetchGroups();  // ✅ 新增獲取群組的函式
+        fetchGroupInvites();
     }, [userEmail]);
 
 
@@ -162,18 +280,36 @@ function SocialPage() {
 
     const [inputValue, setInputValue] = useState("");
 
-    const handleSendMessage = () => {
-        if (inputValue.trim() === "") return;
+    const handleSendMessage = async () => {
+        if (!inputValue.trim() || !selectedFriend) return;
 
-        setChatMessages((prevMessages) => ({
-            ...prevMessages,
-            [selectedFriend || "general"]: [
-                ...prevMessages[selectedFriend || "general"],
-                { sender: "You", content: inputValue },
-            ],
-        }));
-        setInputValue("");
+        try {
+            const response = await fetch("http://127.0.0.1:8000/send_message/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    sender: userEmail,
+                    receiver: selectedFriend,
+                    message: inputValue,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "發送訊息失敗");
+            }
+
+            setInputValue("");
+        } catch (error) {
+            console.error("❌ 發送訊息失敗:", error);
+        }
     };
+
+
+
+
 
     //左側好友聊天室顯示
     const renderFriendsSidebar = () => {
@@ -201,14 +337,13 @@ function SocialPage() {
                             _hover={{ bg: "gray.200" }}
                             justify="space-between"
                             cursor="pointer"
-                            onClick={() => setSelectedFriend(friend.name)}
+                            onClick={() => setSelectedFriend(friend.email)}
                         >
                             <HStack>
-                                <Avatar
-                                    name={friend.name}
-                                    src={friend.name === "Meetsure機器人" ? MeetSureLogo : null} // 自定義頭像
-                                    bg={friend.name === "Meetsure機器人" ? "transparent" : undefined} // 只有Meetsure機器人設置透明背景
-                                />
+                                <FriendAvatar name={friend.name} img={friend.img} />
+
+
+
                                 <Box>
                                     {/* 顯示名稱為黑色 */}
                                     <Text fontWeight="bold" color="black" noOfLines={1} whiteSpace="nowrap">
@@ -272,7 +407,10 @@ function SocialPage() {
                                         alignItems="center"
                                     >
                                         <HStack>
-                                            <Avatar name={friend.name} />
+                                            <FriendAvatar name={friend.name} img={friend.img} />
+
+
+
                                             <Box>
                                                 <Text fontWeight="bold">{friend.name}</Text>
                                                 <Badge colorScheme={friend.status === "online" ? "green" : "gray"}>
@@ -356,9 +494,86 @@ function SocialPage() {
     };
 
 
-    //聊天室內容
+    // ✅ **渲染群組列表**
+    const renderGroupsList = () => {
+        return (
+            <Box flex="1" p="20px" overflowY="auto">
+                <VStack spacing={4} align="stretch">
+                    {/* 🔹 創建群組輸入框 */}
+                    <HStack p="10px" bg="gray.100" borderRadius="lg">
+                        <Input placeholder="輸入群組名稱" value={newGroupName}
+                            onChange={(e) => setNewGroupName(e.target.value)} />
+                        <Button colorScheme="blue" onClick={handleCreateGroup}>創建群組</Button>
+                    </HStack>
+
+                    {/* 📌 群組區塊 */}
+                    <HStack spacing={6} align="start">
+                        {/* 🔹 左側 - 我的群組 */}
+                        <Box flex="1" bg="white" p="4" borderRadius="lg" boxShadow="md" h="75vh">
+                            <Text fontSize="lg" fontWeight="bold" mb="4">我的群組 🎭</Text>
+                            {groupsList.length === 0 ? (
+                                <Text color="gray.500">目前沒有加入的群組</Text>
+                            ) : (
+                                groupsList.map((group) => (
+                                    <HStack
+                                        key={group.id}
+                                        p="10px"
+                                        bg="gray.100"
+                                        borderRadius="lg"
+                                        justify="space-between"
+                                        alignItems="center"
+                                    >
+                                        <Text fontWeight="bold">{group.name}</Text>
+                                        <HStack>
+                                            <IconButton
+                                                size="md"
+                                                colorScheme="blue"
+                                                icon={<ChatIcon />}
+                                                aria-label="進入群組聊天"
+                                            />
+                                            <IconButton
+                                                size="md"
+                                                colorScheme="red"
+                                                icon={<DeleteIcon />}
+                                                aria-label="退出群組"
+                                            />
+                                        </HStack>
+                                    </HStack>
+                                ))
+                            )}
+                        </Box>
+
+                        {/* 🔹 右側 - 群組邀請 */}
+                        <Box flex="1" bg="white" p="4" borderRadius="lg" boxShadow="md" minW="250px" h="75vh">
+                            <Text fontSize="lg" fontWeight="bold" mb="4">群組邀請 📩</Text>
+                            {groupInvites.length === 0 ? (
+                                <Text color="gray.500">目前沒有新的群組邀請</Text>
+                            ) : (
+                                groupInvites.map((invite) => (
+                                    <HStack key={invite.id} p="10px" bg="gray.100" borderRadius="lg">
+                                        <Text>{invite.group_name} 的邀請</Text>
+                                        <Button colorScheme="green" size="sm"
+                                            onClick={() => handleRespondToGroupInvite(invite.id, "accepted")}>
+                                            接受
+                                        </Button>
+                                        <Button colorScheme="red" size="sm"
+                                            onClick={() => handleRespondToGroupInvite(invite.id, "rejected")}>
+                                            拒絕
+                                        </Button>
+                                    </HStack>
+                                ))
+                            )}
+                        </Box>
+                    </HStack>
+                </VStack>
+            </Box>
+        );
+    };
+
+
+
     const renderChatContent = () => {
-        const currentMessages = chatMessages[selectedFriend] || []; // ✅ 避免 undefined
+        const currentMessages = chatMessages[selectedFriend] || [];
 
         return (
             <Box flex="1" p="20px" overflowY="auto">
@@ -372,30 +587,60 @@ function SocialPage() {
                     </Box>
                 ) : (
                     <VStack spacing={4} align="stretch">
-                        {currentMessages.map((msg, index) => (
-                            <Flex
-                                key={index}
-                                justify={msg.sender === "You" ? "flex-end" : "flex-start"}
-                            >
-                                <Box
-                                    maxW="60%"
-                                    bg={msg.sender === "You" ? "blue.500" : "gray.300"}
-                                    color={msg.sender === "You" ? "white" : "black"}
-                                    p="10px"
-                                    borderRadius="md"
-                                    mb="4px"
+                        {currentMessages.map((msg, index) => {
+                            const isMe = msg.sender === userEmail;
+
+                            return (
+                                <VStack
+                                    key={index}
+                                    align={isMe ? "flex-end" : "flex-start"}
+                                    spacing={1}
+                                    w="100%"
                                 >
-                                    <Text>{msg.content}</Text>
-                                </Box>
-                            </Flex>
-                        ))}
+                                    <Flex justify={isMe ? "flex-end" : "flex-start"} w="100%">
+                                        <Box
+                                            maxW="60%"
+                                            bg={isMe ? "blue.500" : "gray.200"}
+                                            color={isMe ? "white" : "black"}
+                                            p="10px"
+                                            borderRadius="md"
+                                            borderTopRightRadius={isMe ? "0" : "md"}
+                                            borderTopLeftRadius={isMe ? "md" : "0"}
+                                        >
+                                            <Text fontSize="sm">{msg.message}</Text>
+                                        </Box>
+                                    </Flex>
+
+                                    {msg.timestamp && (
+                                        <Text
+                                            fontSize="xs"
+                                            color="gray.500"
+                                            px="5px"
+                                            textAlign={isMe ? "right" : "left"}
+                                            w="100%"
+                                        >
+                                            {new Date(
+                                                msg.timestamp?.seconds
+                                                    ? msg.timestamp.seconds * 1000
+                                                    : msg.timestamp
+                                            ).toLocaleTimeString("zh-TW", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </Text>
+                                    )}
+                                </VStack>
+                            );
+                        })}
                     </VStack>
                 )}
 
-                {/* 如果是MeetSure機器人顯示問題選項 */}
+                {/* 如果是 Meetsure機器人 顯示預設問題選單 */}
                 {selectedFriend === "Meetsure機器人" && (
                     <Box mt="20px">
-                        <Text fontWeight="bold" color="gray.700">請選擇一個問題：</Text>
+                        <Text fontWeight="bold" color="gray.700">
+                            請選擇一個問題：
+                        </Text>
                         <VStack spacing={4} align="stretch">
                             <Button
                                 colorScheme="teal"
@@ -466,6 +711,7 @@ function SocialPage() {
                     >
                         群組
                     </Button>
+
                 </HStack>
 
                 {selectedTab === "chat" ? (
@@ -480,10 +726,19 @@ function SocialPage() {
                                 borderColor={borderColor}
                             >
                                 <HStack>
-                                    <Avatar name={selectedFriend} />
+                                    <FriendAvatar
+                                        name={friendsList.find(f => f.email === selectedFriend)?.name || selectedFriend}
+                                        img={friendsList.find(f => f.email === selectedFriend)?.img}
+                                    />
+
+
+
+
+
                                     <Text fontWeight="bold" fontSize="lg">
-                                        {selectedFriend}
+                                        {friendsList.find(f => f.email === selectedFriend)?.name}（{selectedFriend}）
                                     </Text>
+
                                 </HStack>
                                 <IconButton
                                     size="md"
@@ -512,9 +767,12 @@ function SocialPage() {
                             </Button>
                         </Flex>
                     </>
-                ) : (
+                ) : selectedTab === "friends" ? (
                     renderFriendsList()
+                ) : (
+                    renderGroupsList()  // ✅ 新增對「群組」的支援
                 )}
+
 
             </Flex>
 

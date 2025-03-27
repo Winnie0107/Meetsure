@@ -1,17 +1,17 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,get_progress
+from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages,get_progress
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
 from myapp.gptApiview import chatgpt_response  
-from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line 
+from myapp.views_line import LineWebhookView,line_webhook,generate_verification_code,get_ngrok_url,webhook_line,check_line_binding 
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
 from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members,delete_project
-from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
+from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting,get_user_related_meetings
 from myapp.views_todolist import todo_list_create_view,todo_delete_view
 from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
 
@@ -21,8 +21,8 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='index.html')),  # 指向 React 的 index.html
     path('api/register', register_user, name='register_user'),  # 註冊用戶
     path('api/users/', user_list, name='user_list'),  # 用戶列表
-    path('api/meetings/add', add_meeting, name='add_meeting'),  # 新增會議
-    path('api/meetings', get_meetings, name='get_meetings'),  # 獲取會議列表
+    path('api/meetings/add/', add_meeting, name='add_meeting'),  # 新增會議
+    path('api/meetings/', get_meetings, name='get_meetings'),  # 獲取會議列表
     path('api/transcribe/', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
     path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/line-webhook/", line_webhook, name="line-webhook-alt"),  # 另一個 Webhook 處理
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),
+    path("api/check-line-binding/", check_line_binding,name="check_line_binding"),
 
     #friends
     path("api/friend_requests/", send_friend_request, name="send_friend_request"),
@@ -49,7 +50,8 @@ urlpatterns = [
     path('api/update_avatar/', update_avatar, name='update_avatar'),
     path("api/update_name/", update_name, name="update_name"),
     path("api/update_password/", update_password, name="update_password"),
-    #
+    path("send_message/", send_message, name="send_message"),
+    path("get_messages/", get_messages, name="get_messages"),
 
     #project
     path("api/projects/", create_project, name="create_project"),
@@ -71,6 +73,8 @@ urlpatterns = [
     path("api/meeting-records/<int:project_id>/",get_meeting_records, name="get_meeting_records"),
     path('api/meeting-records/delete/<int:record_id>/', delete_meeting_record, name='delete_meeting_record'),
     path('api/meeting-records/update/<int:record_id>/', update_meeting_record, name='update_meeting_record'),
+    path("api/meetings/get_user_related_meetings/", get_user_related_meetings,name="get_user_related_meetings"),
+
     #
 
     #todolist
