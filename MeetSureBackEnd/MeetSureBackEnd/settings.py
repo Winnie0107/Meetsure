@@ -15,6 +15,7 @@ from pathlib import Path
 import requests
 import firebase_admin
 from firebase_admin import credentials, firestore, initialize_app
+import dj_database_url
 
 OPENAI_API_KEY = "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"
 import firebase_admin
@@ -25,6 +26,7 @@ OPENAI_API_KEY = "sk-proj-L3pql8_ixAJM0tRJNunh0rVXNiiqw0kCjTBeqX65rJSGgb34hk1_ix
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 # 設定 Firebase JSON 憑證路徑
 FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "MeetSureBackEnd", "meetsure-new-firebase-adminsdk-fbsvc-b3b700a86d.json")
 
@@ -32,6 +34,7 @@ if not firebase_admin._apps:
     cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
     firebase_app = initialize_app(cred)
     db = firestore.client()
+
 # time_zone
 USE_TZ = True
 TIME_ZONE = 'Asia/Taipei'# 設定 Firebase JSON 憑證路徑
@@ -128,13 +131,6 @@ WSGI_APPLICATION = 'MeetSureBackEnd.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -145,6 +141,10 @@ DATABASES = {
         'PORT': '5432',  # PostgreSQL 默認端口號
     }
 }
+
+# ⚠️ 如果有DATABASE_URL（表示在 Heroku 環境），就改用 Heroku 的設定
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000", # 你的前端地址
