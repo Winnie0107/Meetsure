@@ -17,11 +17,24 @@ import firebase_admin
 from firebase_admin import credentials, firestore, initialize_app
 
 OPENAI_API_KEY = "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"
+import firebase_admin
+from firebase_admin import credentials, firestore, initialize_app
+
+OPENAI_API_KEY = "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"
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # 設定 Firebase JSON 憑證路徑
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "MeetSureBackEnd", "meetsure-new-firebase-adminsdk-fbsvc-b3b700a86d.json")
+
+if not firebase_admin._apps:
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+    firebase_app = initialize_app(cred)
+    db = firestore.client()
+# time_zone
+USE_TZ = True
+TIME_ZONE = 'Asia/Taipei'# 設定 Firebase JSON 憑證路徑
 FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "MeetSureBackEnd", "meetsure-new-firebase-adminsdk-fbsvc-b3b700a86d.json")
 
 if not firebase_admin._apps:

@@ -60,13 +60,16 @@ function Project() {
 
         console.log("📢 轉換後的 projectData:", JSON.stringify(formattedData, null, 2));
 
+        const token = localStorage.getItem("token"); // ✅ 加上這行
+
         try {
             const response = await axios.post("http://127.0.0.1:8000/api/projects/", formattedData, {
-    headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Token ${token}`
-    }
-});
+                headers: {
+
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${token}`,y
+                }
+            });
 
 
             alert("🎉 專案已成功儲存！");

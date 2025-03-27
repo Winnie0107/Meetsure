@@ -3,7 +3,7 @@ import {
     Flex, Box, Icon, VStack, HStack, Text, Divider, Button, Modal, ModalOverlay, ModalContent, Textarea,
     ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Input, useDisclosure, FormControl, FormLabel
 } from "@chakra-ui/react";
-import { MdAdd, MdEvent } from "react-icons/md";
+import { MdAdd, MdEvent, MdSend } from "react-icons/md";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
@@ -24,6 +24,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
     const [selectedMeeting, setSelectedMeeting] = useState(null);
     const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
     const displayedMeetings = limitMeetings ? meetings.slice(0, 2) : meetings;
+    const token = localStorage.getItem("token");
 
 
     // 🚀 **取得會議列表**
@@ -134,7 +135,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
             <CardHeader pb="4">
                 <Flex justify="space-between" align="center">
                     <Text fontSize="lg" fontWeight="bold">會議排程</Text>
-                    <Icon as={MdEvent} boxSize={5} color="gray.500" />
+                    <Icon as={MdEvent} boxSize={5} color="blue.500" />
                 </Flex>
                 <Divider my="2" />
                 <Text fontSize="sm" color="gray.500"> 點擊會議查看詳細資訊或修改</Text>
@@ -234,6 +235,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
                 {limitMeetings && meetings.length > 2 && (
                     <Button variant="ghost" colorScheme="blue" onClick={() => setTabIndex(1)} mt={2}>
                         查看更多會議
+                        <Icon ml={2} as={MdSend} color="blue.500" boxSize={4} />
                     </Button>
                 )}
 

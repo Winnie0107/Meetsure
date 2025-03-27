@@ -208,6 +208,24 @@ class MeetingNotification(models.Model):
         return f"{self.user.name or self.user.email} - {self.meeting_name}"
 
     
+    
+from django.db import models
+
+# 會議影音紀錄
+class MeetingRecord(models.Model):
+    title = models.CharField(max_length=255)             # 會議名稱
+    datetime = models.DateTimeField()                    # 會議時間
+    transcript = models.TextField()                      # 逐字稿
+    analysis = models.TextField()                        # AI 分析內容
+    notes = models.TextField(blank=True)                 # 補充說明（選填）
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='meeting_records')  # 所屬專案
+    uploaded_by = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='uploaded_meetings')  # 上傳者
+    created_at = models.DateTimeField(auto_now_add=True)  # 自動記錄建立時間
+
+    def __str__(self):
+        return f"{self.title} ({self.datetime.strftime('%Y-%m-%d %H:%M')})"
+
+
 
 # 待辦事項
 class ToDoList(models.Model):
