@@ -110,8 +110,8 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
                         borderRadius="lg"
                         boxShadow="lg"
                     >
-                        <Text fontWeight="bold">即將刪除任務</Text>
-                        <Text fontSize="md">任務將在 3 秒後刪除，可取消勾選以保留</Text>
+                        <Text fontWeight="bold">即將刪除代辦事項</Text>
+                        <Text fontSize="md">將在 3 秒後刪除，可取消勾選以保留</Text>
                     </Box>
                 ),
             });

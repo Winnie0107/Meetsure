@@ -9,6 +9,7 @@ import {
     Box,
     Input,
     Textarea,
+    useToast,
 } from "@chakra-ui/react";
 import { FiPlus, FiMessageSquare, FiCopy, FiDownload } from "react-icons/fi";
 import Card from "components/Card/Card.js";
@@ -18,9 +19,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Spinner } from "@chakra-ui/react"; // 引入 Spinner 元件
 
-function MeetSure({ onCancel, projectId }) {
+function MeetSure({ onCancel, onSuccess, projectId }) {
     const textColor = useColorModeValue("gray.700", "white");
     const borderColor = useColorModeValue("gray.200", "gray.600");
+    const toast = useToast();
 
     // State to store transcript, file, and loading status
     const [transcript, setTranscript] = useState([]);
@@ -144,6 +146,7 @@ function MeetSure({ onCancel, projectId }) {
             const response = await axios.post("http://127.0.0.1:8000/chatgpt/", {
                 message: `
     以下是一段會議逐字稿，請幫我進行結構化分析，並以繁體中文回答。請依照以下格式輸出：
+    會議記錄：
     
     1️⃣ 【會議大綱】：請摘要這段逐字稿的主要討論主題和流程。
     
@@ -191,16 +194,43 @@ function MeetSure({ onCancel, projectId }) {
 
     // 儲存會議記錄
     const handleSaveMeetingRecord = async () => {
+        // ✏️ 表單必填驗證
+        if (!meetingTitle.trim()) {
+            toast({
+                title: "請填寫會議名稱！",
+                status: "info",
+                duration: 3000,
+                isClosable: true,
+                position: "top",
+                variant: "solid",
+                colorScheme: "teal",
+            });
+            return;
+        }
+
+        if (!meetingDatetime) {
+            toast({
+                title: "請選擇會議時間！",
+                status: "info",
+                duration: 3000,
+                isClosable: true,
+                position: "top",
+                variant: "solid",
+                colorScheme: "teal",
+            });
+            return;
+        }
+
+
         try {
             const userId = localStorage.getItem("user_id");
-            console.log("👤 user_id:", userId, "📁 project_id:", projectId);
-
-
             const fullTranscript = transcript.map((e) => e.text).join("\n");
+            const localDatetime = new Date(meetingDatetime);
+            const utcDatetime = new Date(localDatetime.getTime() - localDatetime.getTimezoneOffset() * 60000).toISOString();
 
             const res = await axios.post("http://127.0.0.1:8000/api/save-meeting-record/", {
                 title: meetingTitle,
-                datetime: meetingDatetime,
+                datetime: utcDatetime,
                 transcript: fullTranscript,
                 analysis: aiAnalysis,
                 notes: notes,
@@ -209,14 +239,36 @@ function MeetSure({ onCancel, projectId }) {
             });
 
             if (res.status === 201) {
-                alert("✅ 儲存成功！");
+                toast({
+                    title: "✅ 會議紀錄已儲存！",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                    position: "top",
+                });
+
+                if (onSuccess) {
+                    onSuccess({
+                        id: res.data.id,
+                        title: meetingTitle,
+                        datetime: localDatetime.toISOString(),
+                        transcript: fullTranscript,
+                        analysis: aiAnalysis,
+                        notes,
+                    });
+                }
+
                 onCancel(); // 關掉 modal
-            } else {
-                alert("❌ 儲存失敗：" + res.data.error);
             }
         } catch (err) {
-            console.error("儲存錯誤：", err);
-            alert("伺服器錯誤：" + (err.response?.data?.error || err.message));
+            toast({
+                title: "❌ 儲存錯誤",
+                description: err.response?.data?.error || err.message,
+                status: "error",
+                duration: 4000,
+                isClosable: true,
+                position: "top",
+            });
         }
     };
 
@@ -254,7 +306,7 @@ function MeetSure({ onCancel, projectId }) {
                     <CardHeader p="6px 0px 22px 0px">
                         <Flex justify="space-between" alignItems="center">
                             <Text fontSize="xl" color={textColor} fontWeight="bold">
-                                新增會議影音檔案
+                                上傳會議音檔 (接收格式：.wav)
                             </Text>
                         </Flex>
                     </CardHeader>
@@ -323,23 +375,20 @@ function MeetSure({ onCancel, projectId }) {
                             </Flex>
                         </CardHeader>
                         <CardBody>
-                            <Box
-                                maxH="500px"
+                            <Textarea
+                                value={transcript.map((entry) => entry.text).join("\n")}
+                                onChange={(e) => {
+                                    const newText = e.target.value;
+                                    setTranscript(newText.split("\n").map(line => ({ text: line })));
+                                }}
+                                minHeight="500px"
                                 overflowY="auto"
+                                whiteSpace="pre-wrap"
+                                p="4"
                                 border="1px solid"
                                 borderColor={borderColor}
-                                p="4"
-                                whiteSpace="pre-wrap" // 確保換行符生效
-                            >
-                                {transcript.length > 0 ? (
-                                    <Text>
-                                        {transcript.map((entry) => entry.text).join("\n")}
+                            />
 
-                                    </Text>
-                                ) : (
-                                    <Text>目前沒有轉錄內容</Text>
-                                )}
-                            </Box>
                         </CardBody>
 
                     </Card>
@@ -363,11 +412,13 @@ function MeetSure({ onCancel, projectId }) {
                                     </Button>
                                     <Button
                                         onClick={() => {
-                                            const blob = new Blob([aiAnalysis], { type: "text/plain" });
+                                            const blob = new Blob([`\uFEFF${aiAnalysis}`], { type: "text/plain;charset=utf-8" });
                                             const link = document.createElement("a");
                                             link.href = URL.createObjectURL(blob);
                                             link.download = "ai_analysis.txt";
+                                            document.body.appendChild(link); // ⬅️ 確保在 DOM 中
                                             link.click();
+                                            document.body.removeChild(link);
                                         }}
                                         leftIcon={<FiDownload />}
                                         backgroundColor="gray.200"
@@ -377,30 +428,29 @@ function MeetSure({ onCancel, projectId }) {
                                     >
                                         下載.txt
                                     </Button>
+
                                 </Stack>
                             </Flex>
                         </CardHeader>
 
                         <CardBody>
-                            <Box
-                                as="pre"
-                                maxH="500px"
-                                overflowY="auto"
-                                border="1px solid"
-                                borderColor={borderColor}
-                                p="4"
-                                whiteSpace="pre-wrap"
-                                fontFamily="inherit"
-                            >
-                                {isAnalyzing ? (
-                                    <Flex alignItems="center">
-                                        <Spinner size="sm" mr="2" />
-                                        <Text>AI 分析中，請稍候...</Text>
-                                    </Flex>
-                                ) : (
-                                    aiAnalysis || "尚無 AI 分析結果"
-                                )}
-                            </Box>
+                            {isAnalyzing ? (
+                                <Flex alignItems="center">
+                                    <Spinner size="sm" mr="2" />
+                                    <Text>AI 分析中，請稍候...</Text>
+                                </Flex>
+                            ) : (
+                                <Textarea
+                                    value={aiAnalysis}
+                                    onChange={(e) => setAiAnalysis(e.target.value)}
+                                    minHeight="500px"
+                                    overflowY="auto"
+                                    whiteSpace="pre-wrap"
+                                    p="4"
+                                    border="1px solid"
+                                    borderColor={borderColor}
+                                />
+                            )}
 
                         </CardBody>
                     </Card>

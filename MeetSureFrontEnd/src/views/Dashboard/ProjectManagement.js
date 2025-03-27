@@ -15,7 +15,7 @@ import {
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import "react-datepicker/dist/react-datepicker.css";
-import { FaTasks, FaCalendarAlt, FaUsers } from "react-icons/fa";
+import { FaTasks, FaCalendarAlt, FaUsers, FaFileAlt } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import MeetingSchedule from "./MeetingSchedule";
 import MilestoneProgress from "./MilestoneProgress";
@@ -70,6 +70,8 @@ function ProjectManagement() {
                         <Tab><FaCalendarAlt size={22} /></Tab>
                         <Tab><FaTasks size={24} /></Tab>
                         <Tab><FaUsers size={26} /></Tab>
+                        <Tab><FaFileAlt size={22} /></Tab>
+
                     </TabList>
                     <TabPanels>
                         {/* 🚀 專案概覽頁面 */}
@@ -115,7 +117,6 @@ function ProjectManagement() {
                                     setMeetings={setMeetings}
                                 />
                                 <MeetingDataList projectId={id} />
-
                             </HStack>
                         </TabPanel>
 
@@ -137,7 +138,14 @@ function ProjectManagement() {
                         </TabPanel>
 
                         {/* 🚀 組員管理頁面 */}
-                        <TabPanel></TabPanel>
+                        <TabPanel>
+
+                        </TabPanel>
+
+                        {/* 🚀 檔案管理頁面 */}
+                        <TabPanel>
+                            
+                        </TabPanel>
                     </TabPanels>
                 </Tabs>
             </Card>

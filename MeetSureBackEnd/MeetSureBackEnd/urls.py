@@ -13,7 +13,7 @@ from myapp.views_friends import send_friend_request, get_friend_requests, respon
 from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members,delete_project
 from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting
 from myapp.views_todolist import todo_list_create_view,todo_delete_view
-from myapp.views_meeting_record import save_meeting_record,get_meeting_records
+from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
 
 # API 路由
 urlpatterns = [
@@ -69,6 +69,8 @@ urlpatterns = [
     path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
     path("api/save-meeting-record/", save_meeting_record, name="save_meeting_record"),
     path("api/meeting-records/<int:project_id>/",get_meeting_records, name="get_meeting_records"),
+    path('api/meeting-records/delete/<int:record_id>/', delete_meeting_record, name='delete_meeting_record'),
+    path('api/meeting-records/update/<int:record_id>/', update_meeting_record, name='update_meeting_record'),
     #
 
     #todolist
