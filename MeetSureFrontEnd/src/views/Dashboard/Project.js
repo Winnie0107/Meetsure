@@ -67,7 +67,7 @@ function Project() {
                 headers: {
 
                     "Content-Type": "application/json",
-                    Authorization: `Token ${token}`,y
+                    Authorization: `Token ${token}`,
                 }
             });
 
