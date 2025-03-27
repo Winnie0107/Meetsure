@@ -15,9 +15,11 @@ jobs:
 
       - name: 📦 Install dependencies
         run: npm install
+        working-directory: MeetSureFrontEnd
 
       - name: 🏗️ Build project
         run: npm run build
+        working-directory: MeetSureFrontEnd
 
       - name: 🚀 Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
