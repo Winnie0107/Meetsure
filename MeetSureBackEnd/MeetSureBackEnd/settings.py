@@ -18,6 +18,9 @@ import requests
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# time_zone
+USE_TZ = True
+TIME_ZONE = 'Asia/Taipei'
 
 
 try:

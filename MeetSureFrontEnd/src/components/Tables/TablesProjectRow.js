@@ -14,7 +14,6 @@ import {
 } from "@chakra-ui/react";
 import MeetSureLogo from "assets/img/MeetSureLogo.png";
 import { HiOutlineTrash } from "react-icons/hi";
-import { Tooltip } from "@chakra-ui/react";
 
 
 
@@ -103,8 +102,6 @@ function TablesProjectRow(props) {
           }}
         >
           <Icon as={HiOutlineTrash} boxSize={6} />
-
-
         </Button>
       </Td>
     </Tr>
