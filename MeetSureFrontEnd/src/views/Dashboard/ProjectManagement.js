@@ -42,6 +42,13 @@ function ProjectManagement() {
 
     useEffect(() => {
         const fetchProject = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                console.warn("❌ 找不到 token，請重新登入");
+                setLoading(false);
+                return;
+            }
+    
             try {
                 const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
                     headers: {
@@ -51,14 +58,15 @@ function ProjectManagement() {
                 console.log("🔥 API 回應:", response.data);
                 setProject(response.data);
             } catch (error) {
-                console.error("❌ 專案資料抓取失敗:", error);
+                console.error("❌ 專案資料抓取失敗:", error.response?.data || error);
             } finally {
                 setLoading(false);
             }
         };
-
+    
         fetchProject();
     }, [id]);
+    
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
