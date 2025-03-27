@@ -103,6 +103,10 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return f"{self.sender.email} -> {self.receiver.email} ({self.status})"
+    
+    class Meta:
+        db_table = "friendrequest" 
+
 # 📌 好友表 (管理真正的好友關係)
 class Friend(models.Model):
     user1 = models.ForeignKey(Users, related_name="friends_1", on_delete=models.CASCADE)
@@ -115,6 +119,26 @@ class Friend(models.Model):
     def __str__(self):
         return f"{self.user1} <-> {self.user2}"
     
+    class Meta:
+        unique_together = ("user1", "user2")
+        db_table = "friend"
+
+class Group(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    owner = models.ForeignKey(Users, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'groups'
+
+class GroupMembership(models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    is_admin = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'group_memberships'
+
+
 # 📌 專案管理基本資訊
 class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)  # 專案名稱
@@ -123,6 +147,9 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        db_table = 'project'
 
 class ProjectMember(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="members")
@@ -139,22 +166,37 @@ class ProjectTask(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.project.name}"
+    
 
 # 會議列表
-class MeetingSchedule(models.Model):  # ✅ 修改這行
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="meetings")  # 會議所屬專案
+class MeetingSchedule(models.Model):
+    project = models.ForeignKey(
+        Project, 
+        on_delete=models.SET_NULL,  # 當專案被刪除時，設置為 NULL
+        related_name="meetings", 
+        null=True,  # 允許為 NULL
+        blank=True  # 表單中允許為空
+    )
     name = models.CharField(max_length=255)  # 會議名稱
     datetime = models.DateTimeField()  # 會議時間
     location = models.CharField(max_length=255, blank=True, null=True)  # 會議地點
     details = models.TextField(blank=True, null=True)  # 其他資訊
-    created_by = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True)  # 會議創建者
-    updated_at = models.DateTimeField(auto_now=True)      # 每次儲存時自動更新
+    created_by = models.ForeignKey(
+        Users, 
+        on_delete=models.SET_NULL, 
+        null=True,
+        related_name="meetings"  # 添加反向關聯名稱
+    )
+    updated_at = models.DateTimeField(auto_now=True)  # 每次儲存時自動更新
 
     def __str__(self):
         return f"{self.name} ({self.datetime})"
     
+    class Meta:
+        db_table = 'meetingschedule'
+    
+    
 #會議通知
-# models.py
 class MeetingNotification(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     meeting_name = models.CharField(max_length=255)
