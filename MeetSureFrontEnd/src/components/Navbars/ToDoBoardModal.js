@@ -70,29 +70,32 @@ const TaskCard = ({ task, onToggle }) => {
 };
 
 const TaskColumn = ({ title, icon, tasks, bg, onToggle }) => (
-  <Box
-    flex="1"
-    px={4}
-    py={3}
-    borderRadius="xl"
-    minH="300px"
-    bg={`${bg}`}
-    style={{ backgroundColor: `${bg}40` }}
-  >
-    <Flex align="center" mb={4} gap={2} color="gray.700" fontWeight="bold">
-      {icon}
-      <Text fontSize="lg">{title}</Text>
-      <Text fontSize="sm" color="gray.500">({tasks.length})</Text>
-    </Flex>
-    {tasks.length === 0 ? (
-      <Text fontSize="sm" color="gray.400">無任務</Text>
-    ) : (
-      tasks.map((task) => (
-        <TaskCard key={task.id} task={task} onToggle={onToggle} />
-      ))
-    )}
-  </Box>
-);
+    <Box
+      flex="1"
+      px={4}
+      py={3}
+      borderRadius="xl"
+      minH="300px"
+      bg={`${bg}`}
+      style={{ backgroundColor: `${bg}40` }}
+    >
+      <Flex align="center" mb={4} gap={2} color="gray.700" fontWeight="bold">
+        {icon}
+        <Text fontSize="lg">{title}</Text>
+        <Text fontSize="sm" color="gray.500">({tasks.length})</Text>
+      </Flex>
+      {tasks.length === 0 ? (
+        <Text fontSize="sm" color="gray.400">無任務</Text>
+      ) : (
+        <Box maxH="360px" overflowY="auto" pr={2}>
+          {tasks.map((task) => (
+            <TaskCard key={task.id} task={task} onToggle={onToggle} />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+  
 
 export default function ToDoBoardModal({ isOpen, onClose }) {
   const [tasks, setTasks] = useState([]);
