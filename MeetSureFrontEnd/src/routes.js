@@ -68,7 +68,7 @@ var dashRoutes = [
     path: "/meetsure",
     name: "MeetSure",
     rtlName: "MeetSure",
-    icon: <DocumentIcon color='inherit' />,
+    //icon: <DocumentIcon color='inherit' />,
     component: MeetSure,
     layout: "/admin",
   },
@@ -142,7 +142,7 @@ var dashRoutes = [
   {
     path: "/projectmanagement/:id",  // ← 加上 :id 是關鍵
     name: "專案管理",
-    icon: <RocketIcon color="inherit" />,
+    //icon: <RocketIcon color="inherit" />,
     component: ProjectManagement,
     layout: "/admin",
   },

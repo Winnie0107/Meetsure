@@ -108,3 +108,15 @@ def recent_todos_view(request):
         })
 
     return Response(data, status=status.HTTP_200_OK)
+
+@api_view(["DELETE"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def todo_delete_view(request, pk):
+    try:
+        todo = ToDoList.objects.get(pk=pk)
+        todo.delete()
+        return Response({"message": "任務已刪除"}, status=status.HTTP_204_NO_CONTENT)
+    except ToDoList.DoesNotExist:
+        return Response({"error": "任務不存在"}, status=status.HTTP_404_NOT_FOUND)
+

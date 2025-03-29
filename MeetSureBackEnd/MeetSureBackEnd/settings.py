@@ -13,14 +13,34 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 import requests
+import firebase_admin
+from firebase_admin import credentials, firestore, initialize_app
 
+OPENAI_API_KEY = "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"
+import firebase_admin
+from firebase_admin import credentials, firestore, initialize_app
 
 OPENAI_API_KEY = "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"
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# 設定 Firebase JSON 憑證路徑
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "MeetSureBackEnd", "meetsure-new-firebase-adminsdk-fbsvc-b3b700a86d.json")
 
+if not firebase_admin._apps:
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+    firebase_app = initialize_app(cred)
+    db = firestore.client()
+# time_zone
+USE_TZ = True
+TIME_ZONE = 'Asia/Taipei'# 設定 Firebase JSON 憑證路徑
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "MeetSureBackEnd", "meetsure-new-firebase-adminsdk-fbsvc-b3b700a86d.json")
+
+if not firebase_admin._apps:
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+    firebase_app = initialize_app(cred)
+    db = firestore.client()
 
 
 try:
@@ -59,7 +79,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken',  # ✅ 確保啟用 Token 認證
+    'rest_framework.authtoken',  
     'myapp',
     'corsheaders',
     'transcriber'
@@ -129,13 +149,13 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000", # 你的前端地址
     'http://127.0.0.1:8000',
-    'https://9e6f-36-229-19-203.ngrok-free.app',
 ]
 CORS_ALLOW_CREDENTIALS = True  # 允許傳遞 cookie
 
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',  # 前端地址
+    "https://meetsure-new.web.app",
 ]
 
 CSRF_COOKIE_SECURE = False  # 在開發環境中應為 False

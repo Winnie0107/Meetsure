@@ -9,13 +9,14 @@ import {
   MenuList,
   Text,
   useColorMode,
-  useColorModeValue
+  useColorModeValue, Avatar
 } from "@chakra-ui/react";
 import { BellIcon,CheckIcon} from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 import { ProfileIcon, SettingsIcon } from "components/Icons/Icons";
 import NotificationDropdown from "components/Navbars/NotificationDropdown";
 import MeetingNotification from "components/Navbars/MeetingNotification";
+import axios from "axios";
 import ToDoNotifications from "components/Navbars/ToDoNotifications";
 
 export default function HeaderLinks(props) {
@@ -27,6 +28,8 @@ export default function HeaderLinks(props) {
   const [isLineBound, setIsLineBound] = useState(false);
 
   const LINE_ADD_FRIEND_URL = "https://line.me/R/ti/p/@459tzcgp"; // ✅ 替換成你的 LINE Bot ID
+  const [userName, setUserName] = useState(null);
+  const [userImg, setUserImg] = useState(null);
 
   // ✅ 檢查是否登入 + 檢查是否已綁定 LINE
   useEffect(() => {
@@ -47,6 +50,18 @@ export default function HeaderLinks(props) {
           setIsLineBound(data.is_linked); // ✅ 儲存綁定狀態
         })
         .catch(err => console.error("檢查 LINE 綁定失敗:", err));
+    }
+    
+    const userId = localStorage.getItem("user_id");
+    if (userId) {
+      axios.get(`http://localhost:8000/api/profile?user_id=${userId}`)
+        .then((res) => {
+          setUserName(res.data.name || "使用者");
+          setUserImg(res.data.img || "black.png");
+        })
+        .catch((err) => {
+          console.error("獲取用戶資料失敗:", err);
+        });
     }
   }, []);
 
@@ -129,8 +144,12 @@ export default function HeaderLinks(props) {
         <Menu>
           <MenuButton as={Button} variant="ghost" color="white" bg="transparent" _hover={{ bg: "gray.600" }}>
             <Flex align="center">
-              <ProfileIcon w="22px" h="22px" me="10px" />
-              <Text color="white">{userEmail}，您好！</Text>
+              {userImg === "black.png" ? (
+                <ProfileIcon w="22px" h="22px" me="10px" />
+              ) : (
+                <Avatar src={`http://localhost:8000/media/${userImg}`} w="40px" h="40px" me="10px" />
+              )}
+              <Text color="white">{userName}，您好！</Text>
             </Flex>
           </MenuButton>
           <MenuList p="16px 8px" bg={menuBg}>
