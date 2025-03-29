@@ -10,9 +10,12 @@ import {
   AvatarGroup,
   useColorModeValue,
   Image,
+  Button,
 } from "@chakra-ui/react";
-import { FaEllipsisV } from "react-icons/fa";
-import MeetSureLogo from "assets/img/MeetSureLogo.png"; // ✅ 請根據實際路徑調整
+import MeetSureLogo from "assets/img/MeetSureLogo.png";
+import { HiOutlineTrash } from "react-icons/hi";
+
+
 
 function TablesProjectRow(props) {
   const {
@@ -20,9 +23,11 @@ function TablesProjectRow(props) {
     name,
     description,
     budget,
-    progression = 0, // 預設值，避免 undefined
+    progression = 0,
     isLast,
     participants = [],
+    onClick,
+    onDelete, // ✅ 新增刪除事件處理
   } = props;
 
   const textColor = useColorModeValue("gray.500", "white");
@@ -31,18 +36,17 @@ function TablesProjectRow(props) {
 
   return (
     <Tr
-      onClick={props.onClick}
+      onClick={onClick}
       cursor="pointer"
-      _hover={{ bg: "gray.100" }} // 可選：滑過變色
+      _hover={{ bg: "gray.100" }}
     >
-
       <Td width="25%" pl="0px" borderColor={borderColor} borderBottom={isLast ? "none" : null}>
         <Flex alignItems="center" py=".8rem" minWidth="100%" flexWrap="nowrap">
           <Image
             src={MeetSureLogo}
             alt="MeetSure Logo"
-            width="40px"         // ✅ 寬度
-            height="auto"        // ✅ 高度自動等比例
+            width="40px"
+            height="auto"
             me="10px"
           />
           <Text fontSize="md" color={titleColor} fontWeight="bold" minWidth="100%">
@@ -50,17 +54,25 @@ function TablesProjectRow(props) {
           </Text>
         </Flex>
       </Td>
+
       <Td width="35%" borderBottom={isLast ? "none" : null} borderColor={borderColor}>
-        <Text fontSize="md" color={textColor} fontWeight="bold" pb=".5rem">
-          {description}
+        <Text
+          fontSize="md"
+          color={textColor}
+          fontWeight="bold"
+          pb=".5rem"
+        >
+          {description?.length > 46 ? `${description.slice(0, 46)}...` : description}
         </Text>
       </Td>
+
+
       <Td width="15%" borderBottom={isLast ? "none" : null} borderColor={borderColor}>
         <Text fontSize="md" color={textColor} fontWeight="bold" pb=".5rem">
-          {budget?.slice(0, 10)}  {/* ✅ 只取前 10 個字元，"YYYY-MM-DD" */}
+          {budget?.slice(0, 10)}
         </Text>
-
       </Td>
+
       <Td width="10%" borderBottom={isLast ? "none" : null} borderColor={borderColor}>
         <AvatarGroup size="sm" max={3}>
           {participants.map((participant, index) => (
@@ -68,6 +80,7 @@ function TablesProjectRow(props) {
           ))}
         </AvatarGroup>
       </Td>
+
       <Td width="15%" borderBottom={isLast ? "none" : null} borderColor={borderColor}>
         <Flex direction="column">
           <Text fontSize="md" color="teal.500" fontWeight="bold" pb=".2rem">
@@ -75,6 +88,21 @@ function TablesProjectRow(props) {
           </Text>
           <Progress colorScheme="teal" size="xs" value={progression} borderRadius="15px" />
         </Flex>
+      </Td>
+
+      {/* ✅ 新增刪除按鈕區塊 */}
+      <Td width="5%" borderBottom={isLast ? "none" : null} borderColor={borderColor}>
+        <Button
+          size="md"
+          colorScheme="red"
+          variant="ghost"
+          onClick={(e) => {
+            e.stopPropagation(); // ❗️避免觸發 row 的 onClick
+            if (onDelete) onDelete();
+          }}
+        >
+          <Icon as={HiOutlineTrash} boxSize={6} />
+        </Button>
       </Td>
     </Tr>
   );

@@ -34,6 +34,7 @@ import {
   useColorMode,
   useColorModeValue,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 // Custom components
 
@@ -43,6 +44,7 @@ import CardHeader from "components/Card/CardHeader";
 import BarChart from "components/Charts/BarChart";
 import LineChart from "components/Charts/LineChart";
 import IconBox from "components/Icons/IconBox";
+
 // Custom icons
 import {
   CartIcon,
@@ -82,9 +84,154 @@ import axios from "axios";
 import { FaClipboardList, FaCalendarAlt, FaBell, FaCheckCircle,FaMagic } from "react-icons/fa";
 import LineLogo from "assets/img/LineLogo.png"; 
 
+import UserBanner from "../../components/Tables/UserBanner";
+
 
 
 export default function Dashboard() {
+  const toast = useToast();
+
+  // 用戶資料狀態
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [img, setImg] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [isOpen, setIsOpen] = useState(false); // 控制彈窗開關
+  const [generatedImg, setGeneratedImg] = useState(""); // 存放 AI 生成的頭貼
+  const userId = localStorage.getItem("user_id"); // 取得用戶 ID
+
+  const { isOpen: isNameOpen, onOpen: onNameOpen, onClose: onNameClose } = useDisclosure();
+  const { isOpen: isPasswordOpen, onOpen: onPasswordOpen, onClose: onPasswordClose } = useDisclosure();
+
+  // 載入用戶資料
+  useEffect(() => {
+    if (!userId) return;
+    axios
+      .get(`http://localhost:8000/api/profile?user_id=${userId}`)
+      .then((res) => {
+        setEmail(res.data.email || "");
+        setName(res.data.name || "");
+        setImg(res.data.img && res.data.img !== "null" ? res.data.img : "default-profile.png"); // ✅ 確保不會是 null
+      })
+      .catch((err) => {
+        console.error("Failed to fetch profile:", err);
+      });
+  }, [userId]);
+  
+
+
+  // **請求 OpenAI 生成 AI 頭貼**
+  const handleGenerateAvatar = async () => {
+    try {
+      console.log("發送 user_id:", userId);  // ✅ Debug 檢查 userId 是否存在
+      if (!userId) {
+        console.error("❌ userId 未定義，請重新登入");
+        return;
+      }
+  
+      const response = await fetch("http://localhost:8000/api/generate_avatar/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),  // ✅ 確保 user_id 被傳遞
+      });
+  
+      const data = await response.json();
+      console.log("AI 頭貼回應:", data); // ✅ Debug 回應
+  
+      if (data.base64_img) {
+        setGeneratedImg(`data:image/png;base64,${data.base64_img}`); // ✅ 設定 Base64 圖片
+      } else {
+        console.error("❌ 生成頭貼失敗，未返回 Base64 圖片");
+      }
+    } catch (error) {
+      console.error("❌ 生成頭貼請求錯誤:", error);
+    }
+  };
+  
+  
+  const handleConfirmAvatar = async () => {
+    if (!generatedImg || !userId) return;
+  
+    try {
+      const response = await fetch("http://localhost:8000/api/update_avatar/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, img_base64: generatedImg }),
+      });
+  
+      const data = await response.json();
+      if (data.success) {
+        setImg(generatedImg); // ✅ 更新 UI 頭貼
+        handleCloseModal();  // ✅ 關閉 Modal
+      } else {
+        console.error("❌ 更新頭貼失敗:", data.error);
+      }
+    } catch (error) {
+      console.error("❌ 請求錯誤:", error);
+    }
+  };
+  
+  
+  // **更新名稱**
+  const handleUpdateName = async () => {
+    if (!newName.trim()) {
+      toast({
+        title: "錯誤",
+        description: "名稱不能為空",
+        status: "error",
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:8000/api/update_name/", {
+        user_id: userId,
+        new_name: newName,
+      });
+
+      if (response.data.success) {
+        setName(newName); // 更新 UI
+        onNameClose(); // 關閉 Modal
+        toast({ title: "名稱更新成功", status: "success" });
+      } else {
+        toast({ title: "更新失敗", description: response.data.error, status: "error" });
+      }
+    } catch (error) {
+      console.error("更新名稱時發生錯誤", error);
+    }
+  };
+
+  // **更新密碼**
+  const handleUpdatePassword = () => {
+    if (newPassword !== confirmPassword) {
+      toast({ title: "錯誤", description: "密碼不匹配", status: "error" });
+      return;
+    }
+  
+    axios.post("http://localhost:8000/api/update_password/", {
+      user_id: userId,
+      new_password: newPassword, // 這裡發送的是明文，後端會加密
+    })
+    .then(() => { // ✅ 移除 `res`
+      toast({ title: "密碼修改成功", status: "success" });
+      onPasswordClose();
+    })
+    .catch((err) => {
+      console.error("密碼修改失敗:", err);
+      toast({ title: "錯誤", description: "無法修改密碼", status: "error" });
+    });
+  };
+  
+
+
+  // **開啟彈窗**
+  const handleOpenModal = () => setIsOpen(true);
+  // **關閉彈窗**
+  const handleCloseModal = () => setIsOpen(false);
+
   // Chakra Color Mode
   const iconteal = useColorModeValue("teal.500", "teal.500");
   const iconBoxInside = useColorModeValue("white", "white");
@@ -115,24 +262,28 @@ export default function Dashboard() {
     setNewMeeting({ ...newMeeting, [name]: value });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (onClose) => {
     try {
-      // 確保 date 和 time 已輸入
       if (!newMeeting.date || !newMeeting.time || !newMeeting.description) {
         alert("All fields are required.");
         return;
       }
   
-      // 格式化 datetime
       const datetime = `${newMeeting.date} ${newMeeting.time}`;
-      await axios.post("http://127.0.0.1:8000/api/meetings/add", {
+      const response = await axios.post("http://127.0.0.1:8000/api/meetings/add", {
         datetime,
         description: newMeeting.description,
       });
   
-      alert("Meeting added successfully!");
-      setNewMeeting({ date: "", time: "", description: "" });
-      onClose();
+      if (response.status === 201) {
+        alert("Meeting added successfully!");
+        setNewMeeting({ date: "", time: "", description: "" });
+        onClose();  // 這裡用參數帶進來的onClose
+      } else {
+        console.warn("Unexpected response status:", response.status, response.data);
+        alert("Failed to add meeting. Server returned unexpected status.");
+      }
+  
     } catch (error) {
       console.error("Error adding meeting:", error.response?.data || error);
       alert("Failed to add meeting.");
@@ -166,6 +317,32 @@ export default function Dashboard() {
 
   return (
     <Flex flexDirection='column' pt={{ base: "120px", md: "75px" }}>
+      <UserBanner
+        name={name}
+        email={email}
+        img={img}
+        isNameOpen={isNameOpen}
+        onNameOpen={onNameOpen}
+        onNameClose={onNameClose}
+        newName={newName}
+        setNewName={setNewName}
+        handleUpdateName={handleUpdateName}
+        isPasswordOpen={isPasswordOpen}
+        onPasswordOpen={onPasswordOpen}
+        onPasswordClose={onPasswordClose}
+        newPassword={newPassword}
+        setNewPassword={setNewPassword}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+        handleUpdatePassword={handleUpdatePassword}
+        isOpen={isOpen} 
+        handleOpenModal={handleOpenModal}
+        handleCloseModal={handleCloseModal}
+        generatedImg={generatedImg}  // ✅ 確保有傳遞 generatedImg
+        setGeneratedImg={setGeneratedImg}  
+        handleGenerateAvatar={handleGenerateAvatar}
+        handleConfirmAvatar={handleConfirmAvatar}
+      />
       <SimpleGrid columns={{ sm: 1, md: 2, xl: 4 }} spacing="24px" mb="20px">
         {cards.map((card, index) => (
           <Card
@@ -467,13 +644,14 @@ export default function Dashboard() {
                 />
               </ModalBody>
               <ModalFooter>
-                <Button colorScheme="teal" mr={3} onClick={handleSubmit}>
+                <Button colorScheme="teal" mr={3} onClick={() => handleSubmit(meetingModal.onClose)}>
                   提交
                 </Button>
                 <Button onClick={meetingModal.onClose}>取消</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>
+
         </Card>
       </Grid>
 
