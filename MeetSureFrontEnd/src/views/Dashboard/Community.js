@@ -10,6 +10,16 @@ import {
     IconButton,
     Avatar,
     Badge,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    useDisclosure,
+    Icon,
+    Checkbox,
+
 } from "@chakra-ui/react";
 import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, } from "@chakra-ui/icons";
 import React, { useState, useEffect } from "react";
@@ -22,6 +32,8 @@ import { useLocation } from "react-router-dom";
 
 
 
+
+import { FaPlusCircle, FaExclamationTriangle, FaTools,FaThumbtack} from "react-icons/fa";
 
 function SocialPage() {
     const backgroundColor = useColorModeValue("white");
@@ -37,29 +49,31 @@ function SocialPage() {
         ], // 新增一個MeetSure機器人的訊息數組
 
     });
-
-    const [friendsList, setFriendsList] = useState([{ name: "Meetsure機器人", status: "auto-reply" }]);
+    const [friendsList, setFriendsList] = useState([
+        { name: "Meetsure機器人", status: "auto-reply" }, // 將MeetSure機器人加入
+       
+    ]);
+    const [inputValue, setInputValue] = useState("");
     const [friendRequests, setFriendRequests] = useState([]);
     const [newFriendEmail, setNewFriendEmail] = useState("");
     const userEmail = localStorage.getItem("user_email");
     const [sentFriendRequests, setSentFriendRequests] = useState([]);
     const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
     const [groupsList, setGroupsList] = useState([]);  // ✅ 存儲群組清單
     const [groupInvites, setGroupInvites] = useState([]);  // ✅ 存儲群組邀請
     const [newGroupName, setNewGroupName] = useState("");  // ✅ 用來存儲新群組名稱
     const [selectedFriends, setSelectedFriends] = useState([]);  // ✅ 確保 `selectedFriends` 有初始化
+    const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
+    const { isOpen: isAddFriendModalOpen, onOpen: onOpenAddFriendModal, onClose: onCloseAddFriendModal } = useDisclosure();
     const location = useLocation();
     useEffect(() => {
         if (window.location.hash === "#friends") {
           setSelectedTab("friends");
         }
       }, []);
-      
-      
-      
-      
-
-    // ✅ **獲取好友列表**
+          // ✅ **獲取好友列表**
     const fetchFriends = async () => {
         try {
             const response = await axios.get(`http://127.0.0.1:8000/api/friends/?user_email=${userEmail}`);
@@ -135,6 +149,60 @@ function SocialPage() {
         }
     };
 
+    // ✅ **發送訊息給MeetSure機器人**
+   const handleSendMessage = async () => {
+        if (inputValue.trim() === "") return;
+    
+        // 這是用戶原本輸入的訊息（UI 顯示）
+        const userMessage = { sender: "You", content: inputValue };
+    
+        // 如果是傳送給 "Meetsure機器人"，則在訊息後面加上 "用中文回答"
+        const botMessageText = selectedFriend === "Meetsure機器人" 
+            ? `${inputValue} 用中文回答`
+            : inputValue;
+    
+        setChatMessages((prevMessages) => ({
+            ...prevMessages,
+            [selectedFriend || "general"]: [...prevMessages[selectedFriend || "general"], userMessage],
+        }));
+    
+        if (selectedFriend === "Meetsure機器人") {
+            try {
+                const response = await fetch("http://localhost:3001/api/v1/workspace/zhi-workspace/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer 06JBKJC-TPJ46K5-KCRNVPS-M66G24D",
+                        "accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: botMessageText, // 這裡的 message 會帶 "用中文回答"
+                        mode: "chat",
+                        sessionId: "same-session-id",
+                    }),
+                });
+    
+                const data = await response.json();
+                const botMessage = { sender: "Meetsure機器人", content: data.textResponse };
+    
+                setChatMessages((prevMessages) => ({
+                    ...prevMessages,
+                    "Meetsure機器人": [...prevMessages["Meetsure機器人"], botMessage],
+                }));
+            } catch (error) {
+                console.error("Error fetching bot response:", error);
+                setChatMessages((prevMessages) => ({
+                    ...prevMessages,
+                    "Meetsure機器人": [...prevMessages["Meetsure機器人"], { sender: "Meetsure機器人", content: "發送請求失敗，請稍後再試。" }],
+                }));
+            }
+        }
+    
+        setInputValue("");
+    };
+
+
+    
 
     // ✅ **發送好友邀請**
     const handleSendFriendRequest = async () => {
@@ -278,9 +346,8 @@ function SocialPage() {
 
 
 
-    const [inputValue, setInputValue] = useState("");
 
-    const handleSendMessage = async () => {
+    const handleSendMessage_F = async () => {
         if (!inputValue.trim() || !selectedFriend) return;
 
         try {
@@ -361,13 +428,23 @@ function SocialPage() {
                             </HStack>
                             {friend.name === "Meetsure機器人" && (
                                 <IconButton
-                                    size="sm"
-                                    icon={<StarIcon color="blue.500" />} // 設置星星的顏色為藍色
-                                    aria-label="Star"
-                                    bg="transparent" // 設置背景為透明
-                                    _hover={{ bg: "transparent" }} // 鼠標懸停時保持背景透明
-                                    variant="ghost"
-                                />
+  size="sm"
+  icon={
+    <FaThumbtack
+      style={{
+        transform: "rotate(45deg)",
+        color: "#f44336", // 可改成你想要的紅
+        fontSize: "20px", // 放大圖示
+        filter: "drop-shadow(0 0 1px black)", // 加黑邊
+      }}
+    />
+  }
+  aria-label="Pin to top"
+  bg="transparent"
+  _hover={{ bg: "transparent" }}
+  variant="ghost"
+/>
+
                             )}
                         </HStack>
                     ))}
@@ -637,47 +714,117 @@ function SocialPage() {
 
                 {/* 如果是 Meetsure機器人 顯示預設問題選單 */}
                 {selectedFriend === "Meetsure機器人" && (
-                    <Box mt="20px">
-                        <Text fontWeight="bold" color="gray.700">
-                            請選擇一個問題：
-                        </Text>
-                        <VStack spacing={4} align="stretch">
-                            <Button
-                                colorScheme="teal"
-                                onClick={() => handleQuestionSelect("如何使用本平台？")}
-                            >
-                                如何使用本平台？
-                            </Button>
-                            <Button
-                                colorScheme="teal"
-                                onClick={() => handleQuestionSelect("有關隱私政策的問題")}
-                            >
-                                有關隱私政策的問題
-                            </Button>
-                            <Button
-                                colorScheme="teal"
-                                onClick={() => handleQuestionSelect("如何修改個人資料？")}
-                            >
-                                如何修改個人資料？
-                            </Button>
-                        </VStack>
-                    </Box>
+                    <Box
+
+>
+<HStack spacing={6} justify="center" p={5}>
+  {/* 建立專案 */}
+  <Box
+    as="button"
+    onClick={() => handleQuestionSelect("我要如何建立專案？")}
+    w="250px"
+    h="220px"
+    borderRadius="xl"
+    boxShadow="md"
+    bg="white"
+    textAlign="center"
+    _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+    transition="all 0.2s"
+  >
+    <VStack spacing={4} justify="center" h="100%">
+      <Icon as={FaPlusCircle} w={12} h={12} color="teal.500" />
+      <Text fontWeight="bold" fontSize="md" color="gray.800">
+        我要如何建立專案？
+      </Text>
+    </VStack>
+  </Box>
+
+  {/* 上傳失敗 */}
+  <Box
+    as="button"
+    onClick={() => handleQuestionSelect("我的影音檔案上傳失敗？")}
+    w="250px"
+    h="220px"
+    borderRadius="xl"
+    boxShadow="md"
+    bg="white"
+    textAlign="center"
+    _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+    transition="all 0.2s"
+  >
+    <VStack spacing={4} justify="center" h="100%">
+      <Icon as={FaExclamationTriangle} w={12} h={12} color="orange.400" />
+      <Text fontWeight="bold" fontSize="md" color="gray.800">
+        我的影音檔案上傳失敗？
+      </Text>
+    </VStack>
+  </Box>
+
+  {/* 網站功能 */}
+  <Box
+    as="button"
+    onClick={() => handleQuestionSelect("MeetSure網站有什麼主要功能？")}
+    w="250px"
+    h="220px"
+    borderRadius="xl"
+    boxShadow="md"
+    bg="white"
+    textAlign="center"
+    _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+    transition="all 0.2s"
+  >
+    <VStack spacing={4} justify="center" h="100%">
+      <Icon as={FaTools} w={12} h={12} color="blue.500" />
+      <Text fontWeight="bold" fontSize="md" color="gray.800">
+        MeetSure網站有什麼主要功能？
+      </Text>
+    </VStack>
+  </Box>
+</HStack>
+
+
+</Box>
+
                 )}
             </Box>
         );
     };
 
     const handleQuestionSelect = (question) => {
+        let response = "";
+
+        if (question === "我要如何建立專案？") {
+            response = `在 MeetSure 系統中，您可以按照以下步驟來建立專案：
+            1. 點擊「我的專案」按鈕，進入專案列表頁面。
+            2. 點擊「新建專案」按鈕，開始創建新的專案。
+            3. 輸入專案名稱、目標和描述等基本信息。
+            4. 選擇專案類型（例如：項目管理、會議記錄、媒體管理等）。
+            5. 設置專案的進度條目標和階段（例如：開始、進行中、完成等）。
+            6. 根據需求，添加相關的 Task、 Milestone 和文件等。
+            7. 點擊「保存」按鈕，以儲存您的專案。`;
+        } else if (question === "我的影音檔案上傳失敗？") {
+            response = `如果您的影音檔案上傳失敗，可能是以下原因導致的：
+            1. 檔案格式錯誤： MeetSure 支持的文件格式可能不包括您所選擇的檔案格式。請嘗試將檔案轉換為支持的格式（例如：MP4、AVI、MOV 等）。
+            2. 檔案大小超過限制： MeetSure 上傳檔案大小限制可能已經超過您的檔案大小。您可以嘗試將檔案分割成多個小檔案上傳。`;
+        } else if (question === "MeetSure網站有什麼主要功能？") {
+            response = `MeetSure 是一個專案管理與 AI 支援平台，提供各式 AI 工具，包括：
+            ChatGPT、智能寫作、AI翻譯等各式AI 工具支援
+            會議轉錄：支援會議內容轉錄和摘要
+            專案管理：讓使用者可以創建專案、管理進度、設定任務
+            社群與聊天室：用戶可以與其他使用者交流、組建團隊
+            檔案分享：允許團隊成員分享文件、發佈訊息`;
+
+        }
+
         setChatMessages((prevMessages) => ({
             ...prevMessages,
             "Meetsure機器人": [
                 ...prevMessages["Meetsure機器人"],
                 { sender: "You", content: question },
-                { sender: "Meetsure機器人", content: `您選擇的問題是：${question}` },
+                { sender: "Meetsure機器人", content: response },
             ],
         }));
     };
-
 
 
     return (
@@ -760,7 +907,7 @@ function SocialPage() {
                             />
                             <Button
                                 colorScheme="blue"
-                                onClick={handleSendMessage}
+                                onClick={handleSendMessage_F}
                                 isDisabled={!selectedFriend}
                             >
                                 傳送
@@ -779,5 +926,6 @@ function SocialPage() {
         </Flex>
     );
 }
+
 
 export default SocialPage;

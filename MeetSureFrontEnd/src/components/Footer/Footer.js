@@ -1,92 +1,42 @@
-/*eslint-disable*/
-import { Flex, Link, List, ListItem, Text } from "@chakra-ui/react";
-import React from "react";
+import { Box, Flex, Text, VStack, HStack, Icon } from "@chakra-ui/react";
+import { FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
 
-export default function Footer(props) {
+const Footer = () => {
   return (
-    <Flex
-      flexDirection={{
-        base: "column",
-        xl: "row",
-      }}
-      alignItems={{
-        base: "center",
-        xl: "start",
-      }}
-      justifyContent='space-between'
-      px='30px'
-      pb='20px'>
-      {/* <Text
-        color='gray.400'
-        textAlign={{
-          base: "center",
-          xl: "start",
-        }}
-        mb={{ base: "20px", xl: "0px" }}>
-        &copy; {1900 + new Date().getYear()},{" "}
-        <Text as='span'>
-          {document.documentElement.dir === "rtl"
-            ? " مصنوع من ❤️ بواسطة"
-            : "Made with ❤️ by "}
-        </Text>
-        <Link
-          color='blue.400'
-          href='https://www.creative-tim.com'
-          target='_blank'>
-          {document.documentElement.dir === "rtl"
-            ? " توقيت الإبداعية"
-            : "Creative Tim "}
-        </Link>
-        &
-        <Link color='blue.400' href='https://www.simmmple.com' target='_blank'>
-          {document.documentElement.dir === "rtl" ? "سيممبل " : " Simmmple"}
-        </Link>
-        {document.documentElement.dir === "rtl"
-          ? "للحصول على ويب أفضل"
-          : " for a better web"}
-      </Text>
-      <List display='flex'>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link color='gray.400' href='https://www.creative-tim.com'>
-            {document.documentElement.dir === "rtl"
-              ? "توقيت الإبداعية"
-              : "Creative Tim"}
-          </Link>
-        </ListItem>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link color='gray.400' href='https://www.simmmple.com'>
-            {document.documentElement.dir === "rtl" ? "سيممبل" : "Simmmple"}
-          </Link>
-        </ListItem>
-        <ListItem
-          me={{
-            base: "20px",
-            md: "44px",
-          }}>
-          <Link
-            color='gray.400'
-            href='#blog'
-            href='https://creative-tim.com/blog'>
-            {document.documentElement.dir === "rtl" ? "مدونة" : "Blog"}
-          </Link>
-        </ListItem>
-        <ListItem>
-          <Link
-            color='gray.400'
-            href='#license'
-            href='https://www.creative-tim.com/license'>
-            {document.documentElement.dir === "rtl" ? "رخصة" : "License"}
-          </Link>
-        </ListItem>
-      </List> */}
-    </Flex>
+    <Box
+      as="footer"
+      bg="rgba(245, 245, 245, 0.8)" // 非常淺灰 + 高透明度
+      borderRadius="xl"
+      boxShadow="md"
+      maxW="1200px"
+      mx="auto"
+      my={8}
+      px={8}
+      py={10}
+      backdropFilter="blur(4px)" // 加點霧化效果更有質感（選用）
+    >
+      <Flex
+        direction={{ base: "column", md: "row" }}
+        justify="space-between"
+        wrap="wrap"
+      >
+        <VStack align="flex-start" spacing={3} mb={8}>
+          <Text fontWeight="bold" color="teal.500">聯絡我們</Text>
+          <Text color="teal.500">meetsure0911@gmail.com</Text>
+        </VStack>
+
+        <VStack align="flex-start" spacing={3} mb={8}>
+          <Text fontWeight="bold" color="teal.500">追蹤我們</Text>
+          <HStack spacing={4}>
+            <Icon as={FaFacebook} boxSize={6} color="teal.500" />
+            <Icon as={FaInstagram} boxSize={6} color="teal.500" />
+            <Icon as={FaYoutube} boxSize={6} color="teal.500" />
+          </HStack>
+        </VStack>
+      </Flex>
+
+    </Box>
   );
-}
+};
+
+export default Footer;
