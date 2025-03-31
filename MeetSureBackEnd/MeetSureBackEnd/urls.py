@@ -10,7 +10,7 @@ from myapp.views_line import LineWebhookView,line_webhook,generate_verification_
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
-from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members
+from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members,delete_project
 from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting,get_user_related_meetings
 from myapp.views_todolist import todo_list_create_view,todo_delete_view,all_todos_view,recent_todos_view
 from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
@@ -78,6 +78,10 @@ urlpatterns = [
 
     #todolist
     path("api/todos/", todo_list_create_view, name="todo-list-create"),
+    path("api/todos/<int:pk>/", todo_delete_view, name="todo_delete_view"), 
+    path("api/todos/recent/",recent_todos_view,name="recent_todos_view"),
+    path("api/todos/all/",all_todos_view,name="all_todos_view"),
+
     #
 ]
 
