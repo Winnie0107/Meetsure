@@ -45,12 +45,18 @@ export default function NotificationDropdown({ userEmail }) {
   
   return (
     <Menu>
-      <MenuButton as={Box} position="relative">
+      <MenuButton as={Box} position="relative" display="flex"
+  alignItems="center"
+  justifyContent="center"
+  w="36px"
+  h="36px">
         <motion.div
           animate={{ rotate: [0, -10, 10, -10, 0] }}
           transition={{ duration: 0.5, repeat: 2 }}
         >
-          <IconButton icon={<BellIcon w={8} h={8} color="white" />} variant="ghost" _hover={{ bg: "gray.600" }} />
+          <IconButton icon={<BellIcon w={8} h={8} color="white" />} variant="ghost" _hover={{ bg: "gray.600" }}size="sm"
+    p="0"
+    minW="auto" />
         </motion.div>
 
         {friendRequests.length > 0 && (

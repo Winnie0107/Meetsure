@@ -343,66 +343,7 @@ export default function Dashboard() {
         handleGenerateAvatar={handleGenerateAvatar}
         handleConfirmAvatar={handleConfirmAvatar}
       />
-      <SimpleGrid columns={{ sm: 1, md: 2, xl: 4 }} spacing="24px" mb="20px">
-        {cards.map((card, index) => (
-          <Card
-            key={index}
-            bg="white"
-            color="gray.800"
-            p={6}
-            borderRadius="2xl"
-            overflow="hidden"
-            boxShadow="lg"
-            transition="all 0.3s ease-in-out"
-            _hover={{
-              transform: "translateY(-5px)",
-              boxShadow: "2xl",
-              transition: "all 0.3s ease-in-out",
-            }}
-            onClick={() => {
-              setSelectedModalContent(card.content);
-              infoModal.onOpen();
-            }}
-          >
-            <CardHeader pb={3}>
-              <Flex align="center">
-                {/* Icon 保持獨立 */}
-                <Flex
-                  w={12}
-                  h={12}
-                  borderRadius="full"
-                  bg="teal.500"
-                  align="center"
-                  justify="center"
-                  mr={4}
-                  boxShadow="sm"
-                  transition="0.2s ease-in-out"
-                  _hover={{ bg: "teal.600" }}
-                >
-                  <Icon as={card.icon} w={6} h={6} color="white" />
-                </Flex>
-                {/* 標題保持左對齊 */}
-                <Text fontSize="xl" fontWeight="bold" letterSpacing="wide">
-                  {card.title}
-                </Text>
-              </Flex>
-            </CardHeader>
-            <CardBody>
-              <Text 
-                fontSize="sm" 
-                color="gray.500"
-                ml={4} // ⭐ 讓內文稍微向左
-                whiteSpace="nowrap" // ⭐ 確保內容不換行
-                overflow="hidden" // ⭐ 避免超出卡片
-                textOverflow="clip" // ⭐ 溢出時直接截斷 (可改為 ellipsis 顯示 "...")
-                display="block"
-              >
-                {card.content}
-              </Text>
-            </CardBody>
-          </Card>
-        ))}
-      </SimpleGrid>
+
 
       <Modal isOpen={infoModal.isOpen} onClose={infoModal.onClose}>
         <ModalOverlay />
