@@ -64,8 +64,16 @@ def create_project(request):
     members_data = data.pop("members", [])
     tasks_data = data.pop("tasks", [])
 
-    # ✅ **確保不會創建重複的專案**
-    project, created = Project.objects.get_or_create(name=data["name"], defaults=data)
+    custom_user = Users.objects.filter(email=request.user.email).first()
+    if not custom_user:
+        return Response({"error": "找不到對應的使用者（Users）"}, status=400)
+
+    # ✅ 將 created_by 設定成 custom_user
+    project, created = Project.objects.get_or_create(
+        name=data["name"],
+        defaults={**data, "created_by": custom_user}
+    )
+
 
     # ✅ **確保不會重複加入 members**
     for user_id in set(members_data):
