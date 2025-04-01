@@ -1,6 +1,6 @@
 # myapp/serializers.py
 from rest_framework import serializers
-from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule ,ToDoList ,MeetingRecord
+from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule ,ToDoList ,MeetingRecord,Group
 
 class MeetingRecordSerializer(serializers.ModelSerializer):
     class Meta:
@@ -75,6 +75,7 @@ class UserSerializer(serializers.ModelSerializer):
             'name',
             'img',
             'auth_user',
+            'img',
         ]
         read_only_fields = ['ID', 'auth_user']  # 通常不讓使用者手動設這些
 
@@ -90,3 +91,11 @@ class MeetingReminderSerializer(serializers.ModelSerializer):
 
     def get_created_by_name(self, obj):
         return obj.created_by.name if obj.created_by and obj.created_by.name else obj.created_by.email if obj.created_by else "系統"
+
+class GroupSerializer(serializers.ModelSerializer):
+    owner = UserSerializer(read_only=True)  # 這樣 owner 的 name、email 也會回傳
+
+    class Meta:
+        model = Group
+        fields = "__all__"
+

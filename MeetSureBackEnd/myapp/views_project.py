@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from .models import Group, GroupMembership
 
 
 
@@ -74,6 +75,15 @@ def create_project(request):
         defaults={**data, "created_by": custom_user}
     )
 
+    # ✅ 建立一個對應的群組（type: project）
+    group_name = f"{data['name']}"
+    group = Group.objects.create(name=group_name, owner=custom_user, type='project')
+
+    # ✅ 將所有成員加入群組
+    for user_id in set(members_data):
+        user = Users.objects.filter(ID=user_id).first()
+        if user:
+            GroupMembership.objects.get_or_create(group=group, user=user)
 
     # ✅ **確保不會重複加入 members**
     for user_id in set(members_data):
@@ -101,6 +111,10 @@ def delete_project(request, project_id):
         ProjectMember.objects.filter(project=project).delete()
         MeetingSchedule.objects.filter(project=project).delete()
         ToDoList.objects.filter(project=project).delete()  # 如果有的話
+        
+        # ✅ 刪除對應的群組（名稱為 `專案名稱_群組` 且 type='project'）
+        group_name = f"{project.name}"
+        Group.objects.filter(name=group_name, type='project').delete()
 
         # 🔥 最後刪除專案
         project.delete()
