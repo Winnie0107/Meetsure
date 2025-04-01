@@ -123,17 +123,26 @@ class Friend(models.Model):
         unique_together = ("user1", "user2")
         db_table = "friend"
 
+#團隊
 class Group(models.Model):
+    GROUP_TYPE_CHOICES = (
+        ('project', '專案群組'),
+        ('custom', '自創群組'),
+    )
+
     name = models.CharField(max_length=255, unique=True)
     owner = models.ForeignKey(Users, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, choices=GROUP_TYPE_CHOICES, default='custom')  # ✅ 新增群組類型欄位
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'groups'
 
+
 class GroupMembership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    is_admin = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True) 
 
     class Meta:
         db_table = 'group_memberships'

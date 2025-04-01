@@ -15,6 +15,8 @@ from myapp.views_meetings import get_meetings, create_meeting,update_meeting,del
 from myapp.views_todolist import todo_list_create_view,todo_delete_view,all_todos_view,recent_todos_view
 from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
 from myapp.views_search_friends import search_users
+from myapp.views_group import get_user_groups,create_custom_group
+
 # API 路由
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -88,6 +90,11 @@ urlpatterns = [
 
     #轉檔進度
     path("api/progress/", get_progress, name="get-progress"),
+    #
+
+    #群組
+    path("api/groups/", get_user_groups, name="get_user_groups"),
+    path("api/groups/create/", create_custom_group, name="create_group"),
     #
 ]
 
