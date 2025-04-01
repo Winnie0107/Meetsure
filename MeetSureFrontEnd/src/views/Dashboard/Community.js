@@ -19,6 +19,8 @@ import { collection, query, where, orderBy, onSnapshot } from "firebase/firestor
 import { db } from "../../config/firebaseConfig";
 import FriendAvatar from "./FriendAvatar";
 import { useLocation } from "react-router-dom";
+import GroupSection from "./GroupSection";
+
 
 
 
@@ -418,7 +420,7 @@ function SocialPage() {
                     <Box p="10px" bg="gray.100" borderRadius="lg">
                         <HStack>
                             <Input
-                                placeholder="輸入好友 Email"
+                                placeholder="請輸入 Email 或 用戶名稱 查詢"
                                 value={newFriendEmail}
                                 onChange={(e) => setNewFriendEmail(e.target.value)}
                             />
@@ -603,81 +605,7 @@ function SocialPage() {
     };
 
 
-    // ✅ **渲染群組列表**
-    const renderGroupsList = () => {
-        return (
-            <Box flex="1" p="20px" overflowY="auto">
-                <VStack spacing={4} align="stretch">
-                    {/* 🔹 創建群組輸入框 */}
-                    <HStack p="10px" bg="gray.100" borderRadius="lg">
-                        <Input placeholder="輸入群組名稱" value={newGroupName}
-                            onChange={(e) => setNewGroupName(e.target.value)} />
-                        <Button colorScheme="blue" onClick={handleCreateGroup}>創建群組</Button>
-                    </HStack>
 
-                    {/* 📌 群組區塊 */}
-                    <HStack spacing={6} align="start">
-                        {/* 🔹 左側 - 我的群組 */}
-                        <Box flex="1" bg="white" p="4" borderRadius="lg" boxShadow="md" h="75vh">
-                            <Text fontSize="lg" fontWeight="bold" mb="4">我的群組 🎭</Text>
-                            {groupsList.length === 0 ? (
-                                <Text color="gray.500">目前沒有加入的群組</Text>
-                            ) : (
-                                groupsList.map((group) => (
-                                    <HStack
-                                        key={group.id}
-                                        p="10px"
-                                        bg="gray.100"
-                                        borderRadius="lg"
-                                        justify="space-between"
-                                        alignItems="center"
-                                    >
-                                        <Text fontWeight="bold">{group.name}</Text>
-                                        <HStack>
-                                            <IconButton
-                                                size="md"
-                                                colorScheme="blue"
-                                                icon={<ChatIcon />}
-                                                aria-label="進入群組聊天"
-                                            />
-                                            <IconButton
-                                                size="md"
-                                                colorScheme="red"
-                                                icon={<DeleteIcon />}
-                                                aria-label="退出群組"
-                                            />
-                                        </HStack>
-                                    </HStack>
-                                ))
-                            )}
-                        </Box>
-
-                        {/* 🔹 右側 - 群組邀請 */}
-                        <Box flex="1" bg="white" p="4" borderRadius="lg" boxShadow="md" minW="250px" h="75vh">
-                            <Text fontSize="lg" fontWeight="bold" mb="4">群組邀請 📩</Text>
-                            {groupInvites.length === 0 ? (
-                                <Text color="gray.500">目前沒有新的群組邀請</Text>
-                            ) : (
-                                groupInvites.map((invite) => (
-                                    <HStack key={invite.id} p="10px" bg="gray.100" borderRadius="lg">
-                                        <Text>{invite.group_name} 的邀請</Text>
-                                        <Button colorScheme="green" size="sm"
-                                            onClick={() => handleRespondToGroupInvite(invite.id, "accepted")}>
-                                            接受
-                                        </Button>
-                                        <Button colorScheme="red" size="sm"
-                                            onClick={() => handleRespondToGroupInvite(invite.id, "rejected")}>
-                                            拒絕
-                                        </Button>
-                                    </HStack>
-                                ))
-                            )}
-                        </Box>
-                    </HStack>
-                </VStack>
-            </Box>
-        );
-    };
 
 
 
@@ -879,7 +807,7 @@ function SocialPage() {
                 ) : selectedTab === "friends" ? (
                     renderFriendsList()
                 ) : (
-                    renderGroupsList()  // ✅ 新增對「群組」的支援
+                    <GroupSection userEmail={userEmail} />
                 )}
 
 
