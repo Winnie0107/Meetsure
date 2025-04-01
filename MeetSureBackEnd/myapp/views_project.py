@@ -133,3 +133,41 @@ def get_project_members(request):
     users = [pm.user for pm in members]
     serializer = ProjectMemberUserSerializer(users, many=True)
     return Response(serializer.data)
+
+@api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def add_project_member(request):
+    print("📥 POST 請求資料：", request.data)  # 加上這行
+    project_id = request.data.get("project_id")
+    user_id = request.data.get("user_id")
+
+    if not project_id or not user_id:
+        return Response({"error": "缺少 project_id 或 user_id"}, status=400)
+
+    try:
+        project = Project.objects.get(id=project_id)
+        user = Users.objects.get(ID=user_id)
+        ProjectMember.objects.get_or_create(project=project, user=user)
+        return Response({"message": "已成功加入專案"}, status=201)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["DELETE"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def remove_project_member(request):
+    project_id = request.data.get("project_id")
+    user_email = request.data.get("user_email")
+
+    if not project_id or not user_email:
+        return Response({"error": "缺少 project_id 或 user_email"}, status=400)
+
+    try:
+        user = Users.objects.get(email=user_email)
+        ProjectMember.objects.filter(project_id=project_id, user=user).delete()
+        return Response({"message": "已成功移除成員"}, status=204)
+    except Users.DoesNotExist:
+        return Response({"error": "找不到使用者"}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
