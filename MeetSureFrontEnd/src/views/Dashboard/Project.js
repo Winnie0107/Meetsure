@@ -4,6 +4,10 @@ import ProjectIntroPage from "views/Dashboard/ProjectIntroPage";
 import ProjectSelectMembers from "views/Dashboard/ProjectSelectMembers";
 import ProjectSelectTask from "views/Dashboard/ProjectSelectTask";
 import ProjectTimeline from "views/Dashboard/ProjectSetProgressBar";
+import { useToast } from "@chakra-ui/react";
+import { useHistory } from "react-router-dom";
+
+
 
 function Project() {
     const [currentPage, setCurrentPage] = useState("intro");
@@ -12,6 +16,8 @@ function Project() {
 
     const userEmail = localStorage.getItem("user_email") || "";
     const token = localStorage.getItem("token");  // 或你儲存 token 的 key 名稱
+    const toast = useToast();
+    const history = useHistory();
 
 
     useEffect(() => {
@@ -52,30 +58,42 @@ function Project() {
             name: projectData.name,
             description: projectData.description,
             members: projectData.members
-                .filter(member => typeof member === "object" && member.id)  // 只保留有 id 的
-                .map(member => member.id),  // 只傳 user ID
-
-            tasks: projectData.selectedTasks.map(task => ({ name: task, completed: false })), // ✅ 仍然是 { name, completed }
+                .filter(member => typeof member === "object" && member.id)
+                .map(member => member.id),
+            tasks: projectData.selectedTasks.map(task => ({ name: task, completed: false })),
         };
 
         console.log("📢 轉換後的 projectData:", JSON.stringify(formattedData, null, 2));
-
-        const token = localStorage.getItem("token"); // ✅ 加上這行
+        const token = localStorage.getItem("token");
 
         try {
             const response = await axios.post("http://127.0.0.1:8000/api/projects/", formattedData, {
                 headers: {
-
                     "Content-Type": "application/json",
                     Authorization: `Token ${token}`,
                 }
             });
 
+            toast({
+                title: "專案已成功儲存！",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+                position: "top",
+            });
 
-            alert("🎉 專案已成功儲存！");
+            history.push("/admin/tables");
+
         } catch (error) {
             console.error("❌ 儲存專案時發生錯誤:", error.response?.data || error);
-            alert(`❌ 專案儲存失敗！錯誤訊息：${JSON.stringify(error.response?.data)}`);
+            toast({
+                title: "❌ 專案儲存失敗",
+                description: JSON.stringify(error.response?.data),
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "top",
+            });
         }
     };
 

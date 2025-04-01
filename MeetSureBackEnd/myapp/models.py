@@ -145,6 +145,14 @@ class Project(models.Model):
     description = models.TextField(blank=True, null=True)  # 專案描述
     created_at = models.DateTimeField(auto_now_add=True)  # 建立時間
 
+    created_by = models.ForeignKey(
+    "Users",
+    on_delete=models.PROTECT,
+    related_name="created_projects"
+)
+
+
+
     def __str__(self):
         return self.name
     
