@@ -67,7 +67,16 @@ class MeetingSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ['id', 'mail', 'level']  # 定義要返回的欄位
+        fields = [
+            'ID',         # 自訂主鍵
+            'email',
+            'acco_level',
+            'company',
+            'name',
+            'img',
+            'auth_user',
+        ]
+        read_only_fields = ['ID', 'auth_user']  # 通常不讓使用者手動設這些
 
 class MeetingReminderSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source="project.name", read_only=True)

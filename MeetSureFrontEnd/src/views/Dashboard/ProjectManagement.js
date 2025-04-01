@@ -24,6 +24,8 @@ import GanttChart from "./GanttChart";
 import MeetingDataList from "./MeetingDataList";
 import { useParams } from "react-router-dom";
 import axios from "axios"; // 🆕 引入 axios
+import ProjectTeamMember from "./ProjectTeamMember";
+
 
 function ProjectManagement() {
     const textColor = useColorModeValue("gray.700", "white");
@@ -48,7 +50,7 @@ function ProjectManagement() {
                 setLoading(false);
                 return;
             }
-    
+
             try {
                 const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
                     headers: {
@@ -63,10 +65,10 @@ function ProjectManagement() {
                 setLoading(false);
             }
         };
-    
+
         fetchProject();
     }, [id]);
-    
+
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
@@ -147,12 +149,17 @@ function ProjectManagement() {
 
                         {/* 🚀 組員管理頁面 */}
                         <TabPanel>
-
+                            <HStack spacing="6" mt="6" align="start">
+                                <Box flex="1">
+                                    <ProjectTeamMember />
+                                </Box>
+                            </HStack>
                         </TabPanel>
+
 
                         {/* 🚀 檔案管理頁面 */}
                         <TabPanel>
-                            
+
                         </TabPanel>
                     </TabPanels>
                 </Tabs>

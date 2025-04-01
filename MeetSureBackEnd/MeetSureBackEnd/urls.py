@@ -10,11 +10,11 @@ from myapp.views_line import LineWebhookView,line_webhook,generate_verification_
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
-from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members,delete_project
-from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting,get_user_related_meetings
+from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members,delete_project,add_project_member, remove_project_member
+from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting,get_user_related_meetings,get_user_related_meetings
 from myapp.views_todolist import todo_list_create_view,todo_delete_view,all_todos_view,recent_todos_view
 from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
-
+from myapp.views_search_friends import search_users
 # API 路由
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -44,6 +44,7 @@ urlpatterns = [
     path("api/friends/", get_friends_list, name="get_friends_list"),
     path('api/profile', get_profile, name='get_profile'),
     path('api/profile/update', update_profile, name='update_profile'),
+    path('api/search_users/', search_users, name='search_users'),
 
     #user profile
     path('api/generate_avatar/', generate_avatar, name='generate_avatar'),  # ✅ 註冊 AI 生成頭貼 API
@@ -62,6 +63,8 @@ urlpatterns = [
     path("api/tasks/<int:task_id>/complete/", complete_task, name="complete_task"),
     path('api/project-members/', get_project_members, name='project-members'),
     path('api/projects/<int:project_id>/delete/', delete_project, name='delete_project-members'),
+    path('api/project-members/add/', add_project_member, name='add_project_member'),
+    path('api/project-members/remove/', remove_project_member, name='remove_project_member'),  # DELETE 移除
     #
 
     #meetings
@@ -81,7 +84,10 @@ urlpatterns = [
     path("api/todos/<int:pk>/", todo_delete_view, name="todo_delete_view"), 
     path("api/todos/recent/",recent_todos_view,name="recent_todos_view"),
     path("api/todos/all/",all_todos_view,name="all_todos_view"),
+    #
 
+    #轉檔進度
+    path("api/progress/", get_progress, name="get-progress"),
     #
 ]
 

@@ -51,13 +51,13 @@ function SocialPage() {
     const location = useLocation();
     useEffect(() => {
         if (window.location.hash === "#friends") {
-          setSelectedTab("friends");
+            setSelectedTab("friends");
         }
-      }, []);
-      
-      
-      
-      
+    }, []);
+
+
+
+
 
     // ✅ **獲取好友列表**
     const fetchFriends = async () => {
@@ -159,6 +159,38 @@ function SocialPage() {
             alert(error.response?.data?.error || "發送好友邀請失敗");
         }
     };
+
+    const [searchResults, setSearchResults] = useState([]);
+    // ✅ **好友模糊搜索**
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            const fetchSearchResults = async () => {
+                if (!newFriendEmail.trim()) {
+                    setSearchResults([]);
+                    return;
+                }
+                try {
+                    const token = localStorage.getItem("token");
+                    const response = await axios.get(
+                        `http://127.0.0.1:8000/api/search_users/?keyword=${newFriendEmail}&exclude=${userEmail}`,
+                        {
+                            headers: {
+                                Authorization: `Token ${token}`
+                            }
+                        }
+                    );
+                    setSearchResults(response.data);
+                } catch (error) {
+                    console.error("❌ 搜尋使用者失敗:", error);
+                }
+            };
+            fetchSearchResults();
+        }, 300); // debounce 300ms
+
+        return () => clearTimeout(delayDebounce);
+    }, [newFriendEmail]);
+
+
 
     // ✅ **創建群組**
     const handleCreateGroup = async () => {
@@ -383,11 +415,47 @@ function SocialPage() {
             <Box flex="1" p="20px" overflowY="auto">
                 <VStack spacing={4} align="stretch">
                     {/* 🔹 搜尋好友輸入框 */}
-                    <HStack p="10px" bg="gray.100" borderRadius="lg">
-                        <Input placeholder="輸入好友 Email" value={newFriendEmail}
-                            onChange={(e) => setNewFriendEmail(e.target.value)} />
-                        <Button colorScheme="blue" onClick={handleSendFriendRequest}>發送邀請</Button>
-                    </HStack>
+                    <Box p="10px" bg="gray.100" borderRadius="lg">
+                        <HStack>
+                            <Input
+                                placeholder="輸入好友 Email"
+                                value={newFriendEmail}
+                                onChange={(e) => setNewFriendEmail(e.target.value)}
+                            />
+                            <Button colorScheme="blue" onClick={handleSendFriendRequest}>
+                                發送邀請
+                            </Button>
+                        </HStack>
+
+                        {/* 🔽 搜尋結果移出 HStack，顯示在下方 */}
+                        {searchResults.length > 0 && (
+                            <Box bg="white" p="4" borderRadius="md" boxShadow="md" mt="2">
+                                <Text fontWeight="bold" mb="2">搜尋結果：</Text>
+                                {searchResults.map(user => (
+                                    <HStack
+                                        key={user.email}
+                                        justify="space-between"
+                                        mb="2"
+                                        _hover={{ bg: "gray.100", cursor: "pointer" }}
+                                        p="2"
+                                        borderRadius="md"
+                                        onClick={() => {
+                                            setNewFriendEmail(user.email);  // 自動填入
+                                            setSearchResults([]);           // 清空結果列表
+                                        }}
+                                    >
+                                        <HStack>
+                                            <FriendAvatar name={user.name} img={user.img} />
+                                            <Box>
+                                                <Text>{user.name}（{user.email}）</Text>
+                                            </Box>
+                                        </HStack>
+                                    </HStack>
+                                ))}
+                            </Box>
+                        )}
+
+                    </Box>
 
                     {/* 📌 好友區塊 (左右並排) */}
                     <HStack spacing={6} align="start">
@@ -455,15 +523,30 @@ function SocialPage() {
                                 <Text color="gray.500">目前沒有送出的邀請</Text>
                             ) : (
                                 sentFriendRequests.map((req) => (
-                                    <HStack key={req.id} p="10px" bg="gray.100" borderRadius="lg">
-                                        <Text>已送出給 {req.receiver_name || req.receiver_email}</Text>
-                                        <Button colorScheme="red" size="sm"
-                                            onClick={() => handleCancelFriendRequest(req.id)}>
-                                            取消邀請
-                                        </Button>
+                                    <HStack
+                                        key={req.id}
+                                        p="10px"
+                                        bg="gray.100"
+                                        borderRadius="lg"
+                                        justify="space-between"
+                                        align="center"
+                                    >
+                                        <HStack>
+                                            <Avatar name={req.receiver_name || req.receiver_email} size="md" />
+                                            <Box>
+                                                <Text fontWeight="bold" fontSize="md">
+                                                    {req.receiver_name || "未知使用者"}
+                                                </Text>
+                                                <Text fontSize="sm" color="gray.600">
+                                                    {req.receiver_email}
+                                                </Text>
+                                            </Box>
+                                        </HStack>
                                     </HStack>
+
                                 ))
                             )}
+
 
                             <Box mt="4" /> {/* 分隔區域 */}
 
@@ -473,16 +556,42 @@ function SocialPage() {
                                 <Text color="gray.500">目前沒有新的好友邀請</Text>
                             ) : (
                                 receivedFriendRequests.map((req) => (
-                                    <HStack key={req.id} p="10px" bg="gray.100" borderRadius="lg">
-                                        <Text>{req.sender_email} 想加你為好友</Text>
-                                        <Button colorScheme="green" size="sm"
-                                            onClick={() => handleRespondToRequest(req.id, "accepted")}>
-                                            接受
-                                        </Button>
-                                        <Button colorScheme="red" size="sm"
-                                            onClick={() => handleRespondToRequest(req.id, "rejected")}>
-                                            拒絕
-                                        </Button>
+                                    <HStack
+                                        key={req.id}
+                                        p="10px"
+                                        bg="gray.100"
+                                        borderRadius="lg"
+                                        justify="space-between"
+                                        align="center"
+                                    >
+                                        <HStack>
+                                            <Avatar name={req.sender_name || req.sender_email} size="md" />
+                                            <Box>
+                                                <Text fontWeight="bold" fontSize="md">
+                                                    {req.sender_name || "未知使用者"}
+                                                </Text>
+                                                <Text fontSize="sm" color="gray.600">
+                                                    {req.sender_email}
+                                                </Text>
+                                            </Box>
+                                        </HStack>
+
+                                        <HStack>
+                                            <Button
+                                                colorScheme="green"
+                                                size="sm"
+                                                onClick={() => handleRespondToRequest(req.id, "accepted")}
+                                            >
+                                                接受
+                                            </Button>
+                                            <Button
+                                                colorScheme="red"
+                                                size="sm"
+                                                onClick={() => handleRespondToRequest(req.id, "rejected")}
+                                            >
+                                                拒絕
+                                            </Button>
+                                        </HStack>
                                     </HStack>
                                 ))
                             )}
