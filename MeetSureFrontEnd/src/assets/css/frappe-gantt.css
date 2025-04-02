@@ -37,6 +37,12 @@
     /* 避免內容緊貼底部 */
 }
 
+.edit-bar-icon {
+    margin-left: 5px;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
 .gantt {
     position: relative;
     min-height: auto;

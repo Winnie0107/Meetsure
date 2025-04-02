@@ -160,8 +160,6 @@ class Project(models.Model):
     related_name="created_projects"
 )
 
-
-
     def __str__(self):
         return self.name
     
@@ -251,3 +249,17 @@ class ToDoList(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+#甘特圖
+class GanttTask(models.Model):
+    name = models.CharField(max_length=200)
+    start = models.DateField()
+    end = models.DateField()
+    progress = models.IntegerField(default=0)
+    dependencies = models.CharField(max_length=500, blank=True)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='gantt_tasks')
+
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
+
+    def __str__(self):
+        return self.name

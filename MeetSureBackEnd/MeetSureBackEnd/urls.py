@@ -16,6 +16,7 @@ from myapp.views_todolist import todo_list_create_view,todo_delete_view,all_todo
 from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
 from myapp.views_search_friends import search_users
 from myapp.views_group import get_user_groups,create_custom_group
+from myapp.views_ganttask import get_gantt_tasks,create_gantt_task,update_gantt_task,delete_gantt_task
 
 # API 路由
 urlpatterns = [
@@ -92,9 +93,16 @@ urlpatterns = [
     path("api/progress/", get_progress, name="get-progress"),
     #
 
-    #群組
+    #group
     path("api/groups/", get_user_groups, name="get_user_groups"),
     path("api/groups/create/", create_custom_group, name="create_group"),
+    #
+
+    #gantt
+    path('api/projects/<int:project_id>/gantt-tasks/', get_gantt_tasks, name='get_gantt_tasks'),
+    path('api/gantt-tasks/create/', create_gantt_task, name='create_gantt_task'),
+    path('api/gantt-tasks/<int:task_id>/update/', update_gantt_task, name='update_gantt_task'),
+    path('api/gantt-tasks/<int:task_id>/delete/', delete_gantt_task, name='delete_gantt_task'),
     #
 ]
 
