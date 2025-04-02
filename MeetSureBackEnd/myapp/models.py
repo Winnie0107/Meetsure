@@ -123,17 +123,26 @@ class Friend(models.Model):
         unique_together = ("user1", "user2")
         db_table = "friend"
 
+#團隊
 class Group(models.Model):
+    GROUP_TYPE_CHOICES = (
+        ('project', '專案群組'),
+        ('custom', '自創群組'),
+    )
+
     name = models.CharField(max_length=255, unique=True)
     owner = models.ForeignKey(Users, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, choices=GROUP_TYPE_CHOICES, default='custom')  # ✅ 新增群組類型欄位
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'groups'
 
+
 class GroupMembership(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    is_admin = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True) 
 
     class Meta:
         db_table = 'group_memberships'
@@ -144,6 +153,12 @@ class Project(models.Model):
     name = models.CharField(max_length=255, unique=True)  # 專案名稱
     description = models.TextField(blank=True, null=True)  # 專案描述
     created_at = models.DateTimeField(auto_now_add=True)  # 建立時間
+
+    created_by = models.ForeignKey(
+    "Users",
+    on_delete=models.PROTECT,
+    related_name="created_projects"
+)
 
     def __str__(self):
         return self.name
@@ -234,3 +249,17 @@ class ToDoList(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+#甘特圖
+class GanttTask(models.Model):
+    name = models.CharField(max_length=200)
+    start = models.DateField()
+    end = models.DateField()
+    progress = models.IntegerField(default=0)
+    dependencies = models.CharField(max_length=500, blank=True)
+    project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='gantt_tasks')
+
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
+
+    def __str__(self):
+        return self.name

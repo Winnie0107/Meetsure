@@ -26,9 +26,10 @@ import ToDoList from "./ToDoList";
 import GanttChart from "./GanttChart";
 import MeetingDataList from "./MeetingDataList";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import axios from "axios"; // 🆕 引入 axios
+import ProjectTeamMember from "./ProjectTeamMember";
 import { QuestionIcon } from "@chakra-ui/icons";
-import ProjectHelpModal from "./ProjectHelpModal"; // ✅ 你自己建立的 modal
+import ProjectHelpModal from "./ProjectHelpModal";
 
 function ProjectManagement() {
     const textColor = useColorModeValue("gray.700", "white");
@@ -70,6 +71,7 @@ function ProjectManagement() {
 
         fetchProject();
     }, [id]);
+    
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
@@ -103,6 +105,7 @@ function ProjectManagement() {
                         <Tab><FaTasks size={24} /></Tab>
                         <Tab><FaUsers size={26} /></Tab>
                         <Tab><FaFileAlt size={22} /></Tab>
+
                     </TabList>
 
                     <TabPanels>
@@ -163,17 +166,20 @@ function ProjectManagement() {
                                         setTasks={setTasks}
                                     />
                                 </Box>
-                                <Box flex="7" maxW="75%" overflow="hidden">
+                                <Box flex="7" maxW="75%" overflow="hidden" >
                                     <GanttChart />
                                 </Box>
                             </HStack>
                         </TabPanel>
 
-                        {/* 👥 組員管理 */}
-                        <TabPanel></TabPanel>
-
-                        {/* 📂 檔案管理 */}
-                        <TabPanel></TabPanel>
+                        {/* 🚀 組員管理頁面 */}
+                        <TabPanel>
+                            <HStack spacing="6" mt="6" align="start">
+                                <Box flex="1">
+                                    <ProjectTeamMember />
+                                </Box>
+                            </HStack>
+                        </TabPanel>
                     </TabPanels>
                 </Tabs>
             </Card>

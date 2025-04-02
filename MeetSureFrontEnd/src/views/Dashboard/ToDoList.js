@@ -110,7 +110,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
                         borderRadius="lg"
                         boxShadow="lg"
                     >
-                        <Text fontWeight="bold">即將刪除代辦事項</Text>
+                        <Text fontWeight="bold">即將刪除待辦事項</Text>
                         <Text fontSize="md">將在 3 秒後刪除，可取消勾選以保留</Text>
                     </Box>
                 ),
@@ -150,7 +150,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
                     <Icon as={MdAdd} boxSize={8} color="gray.500" cursor="pointer" onClick={onOpen} />
                 </Flex>
                 <Divider my="2" />
-                <Text fontSize="sm" color="gray.500">完成後 請勾選消除代辦事項</Text>
+                <Text fontSize="sm" color="gray.500">完成後 請勾選消除待辦事項</Text>
             </CardHeader>
 
             <VStack spacing={4} align="stretch">
@@ -158,7 +158,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
                 <Modal isOpen={isOpen} onClose={onClose}>
                     <ModalOverlay />
                     <ModalContent p={4} borderRadius="25px">
-                        <ModalHeader>新增代辦事項</ModalHeader>
+                        <ModalHeader>新增待辦事項</ModalHeader>
                         <ModalCloseButton />
                         <ModalBody>
                             <FormControl mb={3}>
@@ -228,7 +228,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
                     alignSelf="center"
                     mt="30px"
                 >
-                    查看更多代辦事項
+                    查看更多待辦事項
                     <Icon ml={2} as={MdSend} color="blue.500" boxSize={4} />
                 </Button>
             )}

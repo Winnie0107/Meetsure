@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from .models import Group, GroupMembership
 
 
 
@@ -64,8 +65,25 @@ def create_project(request):
     members_data = data.pop("members", [])
     tasks_data = data.pop("tasks", [])
 
-    # ✅ **確保不會創建重複的專案**
-    project, created = Project.objects.get_or_create(name=data["name"], defaults=data)
+    custom_user = Users.objects.filter(email=request.user.email).first()
+    if not custom_user:
+        return Response({"error": "找不到對應的使用者（Users）"}, status=400)
+
+    # ✅ 將 created_by 設定成 custom_user
+    project, created = Project.objects.get_or_create(
+        name=data["name"],
+        defaults={**data, "created_by": custom_user}
+    )
+
+    # ✅ 建立一個對應的群組（type: project）
+    group_name = f"{data['name']}"
+    group = Group.objects.create(name=group_name, owner=custom_user, type='project')
+
+    # ✅ 將所有成員加入群組
+    for user_id in set(members_data):
+        user = Users.objects.filter(ID=user_id).first()
+        if user:
+            GroupMembership.objects.get_or_create(group=group, user=user)
 
     # ✅ **確保不會重複加入 members**
     for user_id in set(members_data):
@@ -93,6 +111,10 @@ def delete_project(request, project_id):
         ProjectMember.objects.filter(project=project).delete()
         MeetingSchedule.objects.filter(project=project).delete()
         ToDoList.objects.filter(project=project).delete()  # 如果有的話
+        
+        # ✅ 刪除對應的群組（名稱為 `專案名稱_群組` 且 type='project'）
+        group_name = f"{project.name}"
+        Group.objects.filter(name=group_name, type='project').delete()
 
         # 🔥 最後刪除專案
         project.delete()
@@ -133,3 +155,41 @@ def get_project_members(request):
     users = [pm.user for pm in members]
     serializer = ProjectMemberUserSerializer(users, many=True)
     return Response(serializer.data)
+
+@api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def add_project_member(request):
+    print("📥 POST 請求資料：", request.data)  # 加上這行
+    project_id = request.data.get("project_id")
+    user_id = request.data.get("user_id")
+
+    if not project_id or not user_id:
+        return Response({"error": "缺少 project_id 或 user_id"}, status=400)
+
+    try:
+        project = Project.objects.get(id=project_id)
+        user = Users.objects.get(ID=user_id)
+        ProjectMember.objects.get_or_create(project=project, user=user)
+        return Response({"message": "已成功加入專案"}, status=201)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["DELETE"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def remove_project_member(request):
+    project_id = request.data.get("project_id")
+    user_email = request.data.get("user_email")
+
+    if not project_id or not user_email:
+        return Response({"error": "缺少 project_id 或 user_email"}, status=400)
+
+    try:
+        user = Users.objects.get(email=user_email)
+        ProjectMember.objects.filter(project_id=project_id, user=user).delete()
+        return Response({"message": "已成功移除成員"}, status=204)
+    except Users.DoesNotExist:
+        return Response({"error": "找不到使用者"}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
