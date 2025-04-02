@@ -4,48 +4,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
+from datetime import timedelta
 
 from .models import ToDoList,Users
 from .serializers import ToDoListSerializer
-from datetime import timedelta
-from django.utils import timezone
-from myapp.views_line import send_line_message
-from myapp.models import LineUser
-
-@api_view(["GET", "POST"])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def todo_list_create_view(request):
-    if request.method == "GET":
-        project_id = request.query_params.get("project_id")
-        if not project_id:
-            return Response({"error": "請提供 project_id"}, status=status.HTTP_400_BAD_REQUEST)
-
-        todos = ToDoList.objects.filter(project_id=project_id)
-        serializer = ToDoListSerializer(todos, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    elif request.method == "POST":
-        serializer = ToDoListSerializer(data=request.data)
-    if serializer.is_valid():
-        todo = serializer.save()
-
-        # 🔽 新增這段 LINE 通知的邏輯
-        try:
-            assigned_user = todo.assigned_to
-            auth_user = assigned_user.auth_user
-            line_user = LineUser.objects.get(user=auth_user)
-            message = f"📌 你有一個新的待辦事項：\n「{todo.name}」\n📁 所屬專案：{todo.project.name}"
-            send_line_message(line_user.line_user_id, message)
-        except LineUser.DoesNotExist:
-            pass
-        except Exception as e:
-            print(f"❌ LINE 通知失敗：{e}")
-
-        return Response(ToDoListSerializer(todo).data, status=status.HTTP_201_CREATED)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 #列出所有待辦事項
 @api_view(["GET"])
@@ -109,6 +72,26 @@ def recent_todos_view(request):
 
     return Response(data, status=status.HTTP_200_OK)
 
+@api_view(["GET", "POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def todo_list_create_view(request):
+    if request.method == "GET":
+        project_id = request.query_params.get("project_id")
+        if not project_id:
+            return Response({"error": "請提供 project_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        todos = ToDoList.objects.filter(project_id=project_id)
+        serializer = ToDoListSerializer(todos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == "POST":
+        serializer = ToDoListSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(["DELETE"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -119,4 +102,3 @@ def todo_delete_view(request, pk):
         return Response({"message": "任務已刪除"}, status=status.HTTP_204_NO_CONTENT)
     except ToDoList.DoesNotExist:
         return Response({"error": "任務不存在"}, status=status.HTTP_404_NOT_FOUND)
-
