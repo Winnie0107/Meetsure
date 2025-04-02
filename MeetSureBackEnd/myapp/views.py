@@ -745,3 +745,44 @@ def get_messages(request):
             })
 
     return JsonResponse({"messages": chat_history}, safe=False)
+
+
+@csrf_exempt
+def login_admin(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        email = data.get("email")
+        password = data.get("password")
+
+        user = Users.objects.filter(email=email).first()
+
+        if not user:
+            return JsonResponse({"error": "User not found"}, status=401)
+
+        if not check_password(password, user.password):  # 建議使用這種方式驗證
+            return JsonResponse({"error": "Invalid credentials"}, status=401)
+
+        if user.acco_level == "adminS":
+            role = "system_admin"
+        elif user.acco_level == "adminC":
+            role = "company_admin"
+        else:
+            return JsonResponse({"error": "Unauthorized role"}, status=403)
+
+        return JsonResponse(
+            {
+                "message": "Login successful",
+                "user_id": user.ID,
+                "role": role,
+                "redirect_url": "/#/backstage/admindashboard",
+            },
+            status=200,
+        )
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)

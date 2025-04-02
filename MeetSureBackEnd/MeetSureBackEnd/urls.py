@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages,get_progress,send_message, get_messages
+from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages,get_progress,send_message, get_messages,login_admin
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
@@ -39,6 +39,7 @@ urlpatterns = [
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),
     path("api/check-line-binding/", check_line_binding,name="check_line_binding"),
+    path('api/login/admin/', login_admin, name='login_admin'),  # 新增此行
 
     #friends
     path("api/friend_requests/", send_friend_request, name="send_friend_request"),
