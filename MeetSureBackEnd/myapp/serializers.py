@@ -1,6 +1,6 @@
 # myapp/serializers.py
 from rest_framework import serializers
-from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule ,ToDoList ,MeetingRecord,Group
+from .models import Users, Project, ProjectMember, ProjectTask, MeetingSchedule ,ToDoList ,MeetingRecord,Group,GanttTask
 
 class MeetingRecordSerializer(serializers.ModelSerializer):
     class Meta:
@@ -98,4 +98,20 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = "__all__"
+class GanttTaskSerializer(serializers.ModelSerializer):
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
 
+    class Meta:
+        model = GanttTask
+        fields = [
+            'id',
+            'name',
+            'start',
+            'end',
+            'progress',
+            'dependencies',
+            'project',
+            'created_by',
+            'created_by_username',
+        ]
+        read_only_fields = ['created_by_username']  # ✅ 拿掉 'created_by'

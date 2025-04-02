@@ -80,7 +80,6 @@ function ProjectManagement() {
                         <Tab><FaCalendarAlt size={22} /></Tab>
                         <Tab><FaTasks size={24} /></Tab>
                         <Tab><FaUsers size={26} /></Tab>
-                        <Tab><FaFileAlt size={22} /></Tab>
 
                     </TabList>
                     <TabPanels>
@@ -141,7 +140,7 @@ function ProjectManagement() {
                                         setTasks={setTasks}
                                     />
                                 </Box>
-                                <Box flex="7" maxW="75%" overflow="hidden">
+                                <Box flex="7" maxW="75%" overflow="hidden" >
                                     <GanttChart />
                                 </Box>
                             </HStack>
@@ -154,12 +153,6 @@ function ProjectManagement() {
                                     <ProjectTeamMember />
                                 </Box>
                             </HStack>
-                        </TabPanel>
-
-
-                        {/* 🚀 檔案管理頁面 */}
-                        <TabPanel>
-
                         </TabPanel>
                     </TabPanels>
                 </Tabs>
