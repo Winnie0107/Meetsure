@@ -11,6 +11,9 @@ import {
     TabPanels,
     Tab,
     TabPanel,
+    useDisclosure,
+    Tooltip,
+    IconButton,
 } from "@chakra-ui/react";
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
@@ -23,7 +26,9 @@ import ToDoList from "./ToDoList";
 import GanttChart from "./GanttChart";
 import MeetingDataList from "./MeetingDataList";
 import { useParams } from "react-router-dom";
-import axios from "axios"; // 🆕 引入 axios
+import axios from "axios";
+import { QuestionIcon } from "@chakra-ui/icons";
+import ProjectHelpModal from "./ProjectHelpModal"; // ✅ 你自己建立的 modal
 
 function ProjectManagement() {
     const textColor = useColorModeValue("gray.700", "white");
@@ -32,9 +37,8 @@ function ProjectManagement() {
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [meetings, setMeetings] = useState([]);
-    const token = localStorage.getItem("token");
     const [tasks, setTasks] = useState([]);
-
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     useEffect(() => {
         console.log("目前進入的專案 ID 是：", id);
@@ -48,7 +52,7 @@ function ProjectManagement() {
                 setLoading(false);
                 return;
             }
-    
+
             try {
                 const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
                     headers: {
@@ -63,14 +67,34 @@ function ProjectManagement() {
                 setLoading(false);
             }
         };
-    
+
         fetchProject();
     }, [id]);
-    
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
-            <Card w="100%" bg="#F9FAFC" boxShadow="lg" minHeight="780px" height="auto">
+            <Card
+                w="100%"
+                bg="#F9FAFC"
+                boxShadow="lg"
+                minHeight="780px"
+                height="auto"
+                position="relative" // ✅ 讓右上角 icon 可以定位
+            >
+                {/* 👉 使用指南問號 icon 吸附在右上角 */}
+                <Tooltip label="使用指南" hasArrow placement="left">
+                    <IconButton
+                        icon={<QuestionIcon />}
+                        variant="ghost"
+                        colorScheme="teal"
+                        aria-label="幫助"
+                        onClick={onOpen}
+                        position="absolute"
+                        top="4"
+                        right="4"
+                        zIndex="10"
+                    />
+                </Tooltip>
 
                 <Tabs index={tabIndex} onChange={(index) => setTabIndex(index)} variant="soft-rounded" colorScheme="teal">
                     <TabList pl="4">
@@ -79,10 +103,10 @@ function ProjectManagement() {
                         <Tab><FaTasks size={24} /></Tab>
                         <Tab><FaUsers size={26} /></Tab>
                         <Tab><FaFileAlt size={22} /></Tab>
-
                     </TabList>
+
                     <TabPanels>
-                        {/* 🚀 專案概覽頁面 */}
+                        {/* 🚀 專案概覽 */}
                         <TabPanel>
                             <CardHeader pb="4" pl="2">
                                 <Flex justify="space-between" align="center">
@@ -115,7 +139,7 @@ function ProjectManagement() {
                             </HStack>
                         </TabPanel>
 
-                        {/* 📅 會議紀錄頁面 */}
+                        {/* 📅 會議紀錄 */}
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch">
                                 <MeetingSchedule
@@ -128,7 +152,7 @@ function ProjectManagement() {
                             </HStack>
                         </TabPanel>
 
-                        {/* ✅ 任務管理頁面 */}
+                        {/* ✅ 任務管理 */}
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch" width="100%" maxWidth="1200px" mx="auto">
                                 <Box flex="3" maxW="25%" minW="250px">
@@ -145,18 +169,17 @@ function ProjectManagement() {
                             </HStack>
                         </TabPanel>
 
-                        {/* 🚀 組員管理頁面 */}
-                        <TabPanel>
+                        {/* 👥 組員管理 */}
+                        <TabPanel></TabPanel>
 
-                        </TabPanel>
-
-                        {/* 🚀 檔案管理頁面 */}
-                        <TabPanel>
-                            
-                        </TabPanel>
+                        {/* 📂 檔案管理 */}
+                        <TabPanel></TabPanel>
                     </TabPanels>
                 </Tabs>
             </Card>
+
+            {/* 👉 Modal 放這裡 */}
+            <ProjectHelpModal isOpen={isOpen} onClose={onClose} />
         </Flex>
     );
 }
