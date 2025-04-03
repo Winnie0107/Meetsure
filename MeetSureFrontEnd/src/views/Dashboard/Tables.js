@@ -158,22 +158,42 @@ function Tables() {
               </InputGroup>
 
               {/* 新增專案按鈕 */}
-              <Button
-                colorScheme="teal"
-                rightIcon={<Icon as={FiPlus} />}
-                size="md"
-                onClick={() => history.push("/admin/project")} // ✅ 導向 Project 頁面
-              >
-                新增專案
-              </Button>
 
             </Flex>
           </Flex>
         </CardHeader>
         <CardBody p="6px 0px 22px 16px">
-          {loading ? (
-            <Spinner size="lg" />
-          ) : (
+  {loading ? (
+    <Spinner size="lg" />
+  ) : filteredProjects.length === 0 ? (
+    <Flex
+      w="100%"
+      h="300px"
+      align="center"
+      justify="center"
+      border="2px dashed"
+      borderColor="gray.300"
+      borderRadius="lg"
+      p={8}
+    >
+      <Flex direction="column" align="center" textAlign="center">
+        <Text fontSize="xl" fontWeight="bold" mb={2}>
+          目前尚無專案
+        </Text>
+        <Text fontSize="md" color="gray.500" mb={6}>
+          點擊下方按鈕來建立你的第一個專案，開始你的管理之旅！
+        </Text>
+        <Button
+          colorScheme="teal"
+          rightIcon={<Icon as={FiPlus} />}
+          onClick={() => history.push("/admin/project")}
+        >
+          建立新專案
+        </Button>
+      </Flex>
+    </Flex>
+  ) : (
+            
             <Table variant="simple" color={textColor}>
               <Thead>
                 <Tr>
