@@ -1,3 +1,4 @@
+
 import {
     Flex,
     Box,
@@ -45,10 +46,16 @@ function SocialPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [chatMessages, setChatMessages] = useState({
         general: [],
-        "Meetsure機器人": [{ sender: "Meetsure機器人", content: "您好！請選擇您想問的問題：" },
-        ], // 新增一個MeetSure機器人的訊息數組
-
-    });
+        "Meetsure機器人": [
+          {
+            sender: "Meetsure機器人",
+            content:
+              "您好！請選擇您想問的問題，如果還是無法解答您，可以透過下方對話框輸入問題，得到客製化回覆～",
+          },
+        ],
+      });
+      
+      
     const [friendsList, setFriendsList] = useState([
         { name: "Meetsure機器人", status: "auto-reply" }, // 將MeetSure機器人加入
        
@@ -299,7 +306,8 @@ function SocialPage() {
     };
 
     const fetchMessages = () => {
-        if (!selectedFriend) return;
+        
+        if (!selectedFriend || selectedFriend === "Meetsure機器人") return;
 
         const conversationId = [userEmail, selectedFriend].sort().join("_");
         console.log("📡 準備查詢 conversation_id:", conversationId);
@@ -330,11 +338,22 @@ function SocialPage() {
 
     // 當 `selectedFriend` 改變時，自動載入聊天記錄
     useEffect(() => {
-        if (selectedFriend) {
-            fetchMessages();
+        if (selectedFriend === "Meetsure機器人") {
+          setChatMessages((prev) => ({
+            ...prev,
+            "Meetsure機器人": [
+              {
+                sender: "Meetsure機器人",
+                content:
+                  "您好！請選擇您想問的問題，如果還是無法解答您，可以透過下方對話框輸入問題，得到客製化回覆～",
+              },
+            ],
+          }));
+        } else if (selectedFriend) {
+          fetchMessages();
         }
-    }, [selectedFriend]);
-
+      }, [selectedFriend]);
+      
     // ✅ **確保 `fetchFriends` 和 `fetchFriendRequests` 會在 `userEmail` 變更時觸發**
     useEffect(() => {
         fetchFriends();
@@ -404,8 +423,8 @@ function SocialPage() {
                             _hover={{ bg: "gray.200" }}
                             justify="space-between"
                             cursor="pointer"
-                            onClick={() => setSelectedFriend(friend.email)}
-                        >
+                            onClick={() => setSelectedFriend(friend.email || friend.name)}
+                            >
                             <HStack>
                                 <FriendAvatar name={friend.name} img={friend.img} />
 
@@ -665,7 +684,8 @@ function SocialPage() {
                 ) : (
                     <VStack spacing={4} align="stretch">
                         {currentMessages.map((msg, index) => {
-                            const isMe = msg.sender === userEmail;
+                            const isMe = msg.sender === "You" || msg.sender === userEmail;
+
 
                             return (
                                 <VStack
@@ -684,7 +704,7 @@ function SocialPage() {
                                             borderTopRightRadius={isMe ? "0" : "md"}
                                             borderTopLeftRadius={isMe ? "md" : "0"}
                                         >
-                                            <Text fontSize="sm">{msg.message}</Text>
+                                        <Text fontSize="sm">{msg.message || msg.content}</Text>
                                         </Box>
                                     </Flex>
 
@@ -816,14 +836,15 @@ function SocialPage() {
 
         }
 
-        setChatMessages((prevMessages) => ({
-            ...prevMessages,
+        setChatMessages((prev) => ({
+            ...prev,
             "Meetsure機器人": [
-                ...prevMessages["Meetsure機器人"],
-                { sender: "You", content: question },
-                { sender: "Meetsure機器人", content: response },
+              ...(prev["Meetsure機器人"] || []),
+              { sender: "You", content: question },
+              { sender: "Meetsure機器人", content: response },
             ],
-        }));
+          }));
+          
     };
 
 
@@ -905,13 +926,14 @@ function SocialPage() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 isDisabled={!selectedFriend}
                             />
-                            <Button
-                                colorScheme="blue"
-                                onClick={handleSendMessage_F}
-                                isDisabled={!selectedFriend}
-                            >
-                                傳送
-                            </Button>
+<Button
+  colorScheme="blue"
+  onClick={selectedFriend === "Meetsure機器人" ? handleSendMessage : handleSendMessage_F}
+  isDisabled={!selectedFriend}
+>
+  傳送
+</Button>
+
                         </Flex>
                     </>
                 ) : selectedTab === "friends" ? (
