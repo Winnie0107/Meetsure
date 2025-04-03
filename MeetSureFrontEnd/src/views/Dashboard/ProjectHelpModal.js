@@ -36,10 +36,7 @@ function ProjectHelpModal({ isOpen, onClose }) {
         "這裡可以管理您的專案會議排程、里程碑與待辦事項以及進度追蹤。點擊下一步了解更多～",
       image: projecthelp,
     },
-    {
-      title: "編輯專案",
-      content: "點擊右上角的『編輯專案』按鈕可以修改專案名稱與描述。",
-    },
+   
     {
       title: "會議排程",
       content: "可查看會議時間與內容，點擊紅框標示處可新增會議。點擊藍框標示處可修改或刪除該會議",
@@ -95,20 +92,21 @@ function ProjectHelpModal({ isOpen, onClose }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
       <ModalOverlay />
-      <ModalContent p={4} borderRadius="25px">
+      <ModalContent p={4} borderRadius="25px" minH="480px">
       <ModalHeader>
   <HStack spacing={3} align="center">
     <Image
       src={MeetSureLogo}
       alt="MeetSure Logo"
-      height="28px" // ✅ 和字體高度差不多
+      height="28px"
       objectFit="contain"
     />
     <Text fontWeight="bold" fontSize="xl">
-      歡迎使用MeetSure專案管理
+      {steps[step].title} {/* ← 這裡改成動態標題 */}
     </Text>
   </HStack>
 </ModalHeader>
+
 
 
 
@@ -119,15 +117,16 @@ function ProjectHelpModal({ isOpen, onClose }) {
             {/* 左圖 */}
             {steps[step].image && (
               <Box w="50%">
-                <Image
-                  src={steps[step].image}
-                  alt={steps[step].title}
-                  borderRadius="lg"
-                  maxH="280px"
-                  objectFit="contain"
-                  boxShadow="md"
-                  mx="auto"
-                />
+              <Image
+  src={steps[step].image}
+  alt={steps[step].title}
+  borderRadius="lg"
+  h="240px"
+  objectFit="contain"
+  boxShadow="md"
+  mx="auto"
+/>
+
               </Box>
             )}
 
