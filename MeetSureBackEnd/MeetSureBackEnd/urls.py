@@ -15,7 +15,7 @@ from myapp.views_meetings import get_meetings, create_meeting,update_meeting,del
 from myapp.views_todolist import todo_list_create_view,todo_delete_view,all_todos_view,recent_todos_view
 from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
 from myapp.views_search_friends import search_users
-from myapp.views_group import get_user_groups,create_custom_group
+from myapp.views_group import get_user_groups,create_custom_group,get_group_join_notifications
 from myapp.views_ganttask import get_gantt_tasks,create_gantt_task,update_gantt_task,delete_gantt_task
 
 # API 路由
@@ -97,6 +97,8 @@ urlpatterns = [
     #group
     path("api/groups/", get_user_groups, name="get_user_groups"),
     path("api/groups/create/", create_custom_group, name="create_group"),
+    path('api/group_join_notifications/', get_group_join_notifications, name='group-join-notifications'),
+
     #
 
     #gantt
