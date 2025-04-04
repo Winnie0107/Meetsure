@@ -10,9 +10,10 @@ from myapp.views_line import LineWebhookView,line_webhook,generate_verification_
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from myapp.views_friends import send_friend_request, get_friend_requests, respond_to_friend_request, get_friends_list
-from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members
+from myapp.views_project import create_project,get_user_by_email,get_projects,get_project_detail,get_project_tasks,complete_task,get_project_members,delete_project
 from myapp.views_meetings import get_meetings, create_meeting,update_meeting,delete_meeting,get_user_related_meetings
-from myapp.views_todolist import todo_list_create_view
+from myapp.views_todolist import todo_list_create_view,todo_delete_view,all_todos_view,recent_todos_view
+from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
 
 # API 路由
 urlpatterns = [
@@ -60,6 +61,7 @@ urlpatterns = [
     path("api/projects/<int:project_id>/tasks/", get_project_tasks, name="get_project_tasks"),
     path("api/tasks/<int:task_id>/complete/", complete_task, name="complete_task"),
     path('api/project-members/', get_project_members, name='project-members'),
+    path('api/projects/<int:project_id>/delete/', delete_project, name='delete_project-members'),
     #
 
     #project meetings
@@ -67,12 +69,20 @@ urlpatterns = [
     path("api/meetings/create/", create_meeting, name="create_meeting"),  
     path("api/meetings/<int:meeting_id>/update/", update_meeting, name="update_meeting"),
     path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
+    path("api/save-meeting-record/", save_meeting_record, name="save_meeting_record"),
+    path("api/meeting-records/<int:project_id>/",get_meeting_records, name="get_meeting_records"),
+    path('api/meeting-records/delete/<int:record_id>/', delete_meeting_record, name='delete_meeting_record'),
+    path('api/meeting-records/update/<int:record_id>/', update_meeting_record, name='update_meeting_record'),
     path("api/meetings/get_user_related_meetings/", get_user_related_meetings,name="get_user_related_meetings"),
-    path("api/meetings/all_user_meetings/", get_all_user_meetings, name="get_all_user_meetings"),
 
+    #
 
     #todolist
     path("api/todos/", todo_list_create_view, name="todo-list-create"),
+    path("api/todos/<int:pk>/", todo_delete_view, name="todo_delete_view"), 
+    path("api/todos/recent/",recent_todos_view,name="recent_todos_view"),
+    path("api/todos/all/",all_todos_view,name="all_todos_view"),
+
     #
 ]
 

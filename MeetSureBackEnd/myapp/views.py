@@ -32,6 +32,19 @@ import uuid
 from firebase_admin import storage
 bucket = storage.bucket()
 
+import uuid
+from django.views.decorators.http import require_GET
+
+# 用來暫存進度資訊：task_id -> {current: x, total: y}
+progress_dict = {}
+
+
+
+import firebase_admin
+from firebase_admin import firestore
+db = firestore.client()  # 不用再 initialize_app
+
+
 #顯示用戶列表
 def user_list(request):
     users = User.objects.all().values()
@@ -256,6 +269,7 @@ def user_list(request):
     return JsonResponse(list(users), safe=False)
 
 
+
 # 使用 `try-except` 確保不強制要求 TensorFlow 或 PyTorch
 try:
     import torch
@@ -299,6 +313,9 @@ def transcribe_audio(request):
         segments = split_audio(audio_data, samplerate, segment_length=30)
         transcription_result = []
 
+        task_id = str(uuid.uuid4())[:8]  # 短 task id
+        progress_dict[task_id] = {"current": 0, "total": len(segments)}  # 初始化進度
+
         for i, segment in enumerate(segments):
             print(f"🌀 正在處理第 {i+1}/{len(segments)} 段...")
             transcription = whisper({
@@ -306,14 +323,28 @@ def transcribe_audio(request):
                 "sampling_rate": samplerate
             })
             transcription_result.append(transcription["text"])
-
+            # ✅ 更新進度
+            progress_dict[task_id]["current"] = i + 1
 
         # 合併所有片段的結果，並以換行符分隔每個段落
         full_transcription = "\n\n".join(transcription_result)
 
-        return JsonResponse({"text": full_transcription}, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse({"task_id": task_id,"text": full_transcription}, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+#進度資訊
+@require_GET
+def get_progress(request):
+    task_id = request.GET.get("task_id")
+    if not task_id:
+        return JsonResponse({"error": "缺少 task_id"}, status=400)
+
+    progress = progress_dict.get(task_id)
+    if not progress:
+        return JsonResponse({"error": "找不到此任務"}, status=404)
+
+    return JsonResponse(progress)
 
 @csrf_exempt
 def login_user(request):
