@@ -45,7 +45,7 @@ function ProjectManagement() {
                 setLoading(false);
                 return;
             }
-    
+
             try {
                 const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
                     headers: {
@@ -60,10 +60,10 @@ function ProjectManagement() {
                 setLoading(false);
             }
         };
-    
+
         fetchProject();
     }, [id]);
-    
+
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
@@ -122,13 +122,14 @@ function ProjectManagement() {
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch" width="100%" maxWidth="1200px" mx="auto">
                                 <Box flex="3" maxW="25%" minW="250px">
-                                    <ToDoList />
+                                    <ToDoList projectId={id} />  
                                 </Box>
                                 <Box flex="7" maxW="75%" overflow="hidden">
                                     <GanttChart />
                                 </Box>
                             </HStack>
                         </TabPanel>
+
 
                         {/* 🚀 組員管理頁面 */}
                         <TabPanel></TabPanel>

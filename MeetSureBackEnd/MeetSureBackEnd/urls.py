@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages
+from myapp.views import user_list, get_meetings_indi, get_all_user_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
@@ -21,7 +21,7 @@ urlpatterns = [
     path('api/register', register_user, name='register_user'),  # 註冊用戶
     path('api/users/', user_list, name='user_list'),  # 用戶列表
     path('api/meetings/add/', add_meeting, name='add_meeting'),  # 新增會議
-    path('api/meetings/', get_meetings, name='get_meetings'),  # 獲取會議列表
+    path("api/meetings/", get_meetings_indi, name="get_meetings_indi"),
     path('api/transcribe/', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
     path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
@@ -62,14 +62,14 @@ urlpatterns = [
     path('api/project-members/', get_project_members, name='project-members'),
     #
 
-    #meetings
+    #project meetings
     path("api/meetings/<int:project_id>/", get_meetings, name="get_meetings"),
     path("api/meetings/create/", create_meeting, name="create_meeting"),  
     path("api/meetings/<int:meeting_id>/update/", update_meeting, name="update_meeting"),
     path("api/meetings/<int:meeting_id>/delete/", delete_meeting, name="delete_meeting"),
     path("api/meetings/get_user_related_meetings/", get_user_related_meetings,name="get_user_related_meetings"),
+    path("api/meetings/all_user_meetings/", get_all_user_meetings, name="get_all_user_meetings"),
 
-    #
 
     #todolist
     path("api/todos/", todo_list_create_view, name="todo-list-create"),
