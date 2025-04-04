@@ -151,10 +151,29 @@ def get_project_members(request):
     if not project_id:
         return Response({"error": "project_id is required"}, status=400)
 
-    members = ProjectMember.objects.filter(project_id=project_id).select_related('user')
-    users = [pm.user for pm in members]
-    serializer = ProjectMemberUserSerializer(users, many=True)
-    return Response(serializer.data)
+    try:
+        project = Project.objects.select_related('created_by').get(id=project_id)
+    except Project.DoesNotExist:
+        return Response({"error": "Project not found"}, status=404)
+
+    members = ProjectMember.objects.filter(project=project).select_related('user')
+
+    member_list = []
+    for pm in members:
+        user = pm.user
+        if not user:
+            continue
+
+        member_list.append({
+            "id": user.ID,
+            "name": user.name,
+            "email": user.email,
+            "img": getattr(user.img, 'url', None),
+           "is_owner": user.ID == project.created_by_id,
+        })
+
+    return Response(member_list)
+
 
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
