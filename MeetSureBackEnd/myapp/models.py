@@ -21,15 +21,6 @@ class Users(models.Model):
     class Meta:
         db_table = 'users'  # 確保資料表名稱為 'user'
 
-        
-class Meeting(models.Model):
-    date = models.DateField()
-    time = models.TimeField()
-    description = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = 'meetings'
-
 
 class Company(models.Model):
     ID = models.AutoField(primary_key=True)
@@ -163,8 +154,7 @@ class Project(models.Model):
     def __str__(self):
         return self.name
     
-    class Meta:
-        db_table = 'project'
+
 
 class ProjectMember(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="members")

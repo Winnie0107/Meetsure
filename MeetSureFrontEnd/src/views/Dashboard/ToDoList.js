@@ -22,9 +22,9 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
     const deleteTimeouts = useRef({});
     const toast = useToast();
 
-    // 🎯 載入任務清單
-    useEffect(() => {
-        if (!projectId) return;
+  // 🎯 載入任務清單
+  useEffect(() => {
+    if (!projectId) return;
 
         const token = localStorage.getItem("token");
         axios

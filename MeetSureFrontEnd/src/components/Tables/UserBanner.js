@@ -14,6 +14,7 @@ import {
     Input 
   } from "@chakra-ui/react";
 import { FaEdit } from "react-icons/fa";
+import getAvatarUrl from "components/Icons/getAvatarUrl";
 
 function UserBanner({
     name,
@@ -61,7 +62,14 @@ function UserBanner({
     >
       {/* 左側：使用者頭像與資訊 */}
       <Flex align="center">
-        <Avatar src={img?.startsWith("data:image") ? img : `http://localhost:8000/media/${img}`} w="120px" h="120px" borderRadius="full" mb="20px" />
+        <Avatar
+          src={getAvatarUrl(img)}
+          w="120px"
+          h="120px"
+          borderRadius="full"
+          mb="20px"
+        />
+
         <Flex direction="column" ml="20px">
           <Text fontSize="23px" fontWeight="bold" color={textColor}>{name || "Name"}</Text>
           <Text fontSize="18px" color="gray.400">{email}</Text>

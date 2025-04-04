@@ -37,3 +37,6 @@ logs/
 Thumbs.db
 ehthumbs.db
 desktop.ini
+
+__pycache__/
+*.pyc
