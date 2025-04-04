@@ -35,7 +35,7 @@ import GroupSection from "./GroupSection";
 
 
 
-import { FaPlusCircle, FaExclamationTriangle, FaTools,FaThumbtack} from "react-icons/fa";
+import { FaPlusCircle, FaExclamationTriangle, FaTools, FaThumbtack } from "react-icons/fa";
 
 function SocialPage() {
     const backgroundColor = useColorModeValue("white");
@@ -48,18 +48,18 @@ function SocialPage() {
     const [chatMessages, setChatMessages] = useState({
         general: [],
         "Meetsure機器人": [
-          {
-            sender: "Meetsure機器人",
-            content:
-              "您好！請選擇您想問的問題，如果還是無法解答您，可以透過下方對話框輸入問題，得到客製化回覆～",
-          },
+            {
+                sender: "Meetsure機器人",
+                content:
+                    "您好！請選擇您想問的問題，如果還是無法解答您，可以透過下方對話框輸入問題，得到客製化回覆～",
+            },
         ],
-      });
-      
-      
+    });
+
+
     const [friendsList, setFriendsList] = useState([
         { name: "Meetsure機器人", status: "auto-reply" }, // 將MeetSure機器人加入
-       
+
     ]);
     const [inputValue, setInputValue] = useState("");
     const [friendRequests, setFriendRequests] = useState([]);
@@ -80,8 +80,8 @@ function SocialPage() {
         if (window.location.hash === "#friends") {
             setSelectedTab("friends");
         }
-      }, []);
-          // ✅ **獲取好友列表**
+    }, []);
+    // ✅ **獲取好友列表**
     const fetchFriends = async () => {
         try {
             const response = await axios.get(`http://127.0.0.1:8000/api/friends/?user_email=${userEmail}`);
@@ -158,22 +158,22 @@ function SocialPage() {
     };
 
     // ✅ **發送訊息給MeetSure機器人**
-   const handleSendMessage = async () => {
+    const handleSendMessage = async () => {
         if (inputValue.trim() === "") return;
-    
+
         // 這是用戶原本輸入的訊息（UI 顯示）
         const userMessage = { sender: "You", content: inputValue };
-    
+
         // 如果是傳送給 "Meetsure機器人"，則在訊息後面加上 "用中文回答"
-        const botMessageText = selectedFriend === "Meetsure機器人" 
+        const botMessageText = selectedFriend === "Meetsure機器人"
             ? `${inputValue} 用中文回答`
             : inputValue;
-    
+
         setChatMessages((prevMessages) => ({
             ...prevMessages,
             [selectedFriend || "general"]: [...prevMessages[selectedFriend || "general"], userMessage],
         }));
-    
+
         if (selectedFriend === "Meetsure機器人") {
             try {
                 const response = await fetch("http://localhost:3001/api/v1/workspace/zhi-workspace/chat", {
@@ -189,10 +189,10 @@ function SocialPage() {
                         sessionId: "same-session-id",
                     }),
                 });
-    
+
                 const data = await response.json();
                 const botMessage = { sender: "Meetsure機器人", content: data.textResponse };
-    
+
                 setChatMessages((prevMessages) => ({
                     ...prevMessages,
                     "Meetsure機器人": [...prevMessages["Meetsure機器人"], botMessage],
@@ -205,12 +205,12 @@ function SocialPage() {
                 }));
             }
         }
-    
+
         setInputValue("");
     };
 
 
-    
+
 
     // ✅ **發送好友邀請**
     const handleSendFriendRequest = async () => {
@@ -339,7 +339,7 @@ function SocialPage() {
     };
 
     const fetchMessages = () => {
-        
+
         if (!selectedFriend || selectedFriend === "Meetsure機器人") return;
 
         const conversationId = [userEmail, selectedFriend].sort().join("_");
@@ -372,21 +372,21 @@ function SocialPage() {
     // 當 `selectedFriend` 改變時，自動載入聊天記錄
     useEffect(() => {
         if (selectedFriend === "Meetsure機器人") {
-          setChatMessages((prev) => ({
-            ...prev,
-            "Meetsure機器人": [
-              {
-                sender: "Meetsure機器人",
-                content:
-                  "您好！請選擇您想問的問題，如果還是無法解答您，可以透過下方對話框輸入問題，得到客製化回覆～",
-              },
-            ],
-          }));
+            setChatMessages((prev) => ({
+                ...prev,
+                "Meetsure機器人": [
+                    {
+                        sender: "Meetsure機器人",
+                        content:
+                            "您好！請選擇您想問的問題，如果還是無法解答您，可以透過下方對話框輸入問題，得到客製化回覆～",
+                    },
+                ],
+            }));
         } else if (selectedFriend) {
-          fetchMessages();
+            fetchMessages();
         }
-      }, [selectedFriend]);
-      
+    }, [selectedFriend]);
+
     // ✅ **確保 `fetchFriends` 和 `fetchFriendRequests` 會在 `userEmail` 變更時觸發**
     useEffect(() => {
         fetchFriends();
@@ -457,7 +457,7 @@ function SocialPage() {
                             justify="space-between"
                             cursor="pointer"
                             onClick={() => setSelectedFriend(friend.email || friend.name)}
-                            >
+                        >
                             <HStack>
                                 <FriendAvatar name={friend.name} img={friend.img} />
 
@@ -480,22 +480,22 @@ function SocialPage() {
                             </HStack>
                             {friend.name === "Meetsure機器人" && (
                                 <IconButton
-  size="sm"
-  icon={
-    <FaThumbtack
-      style={{
-        transform: "rotate(45deg)",
-        color: "#f44336", // 可改成你想要的紅
-        fontSize: "20px", // 放大圖示
-        filter: "drop-shadow(0 0 1px black)", // 加黑邊
-      }}
-    />
-  }
-  aria-label="Pin to top"
-  bg="transparent"
-  _hover={{ bg: "transparent" }}
-  variant="ghost"
-/>
+                                    size="sm"
+                                    icon={
+                                        <FaThumbtack
+                                            style={{
+                                                transform: "rotate(45deg)",
+                                                color: "#f44336", // 可改成你想要的紅
+                                                fontSize: "20px", // 放大圖示
+                                                filter: "drop-shadow(0 0 1px black)", // 加黑邊
+                                            }}
+                                        />
+                                    }
+                                    aria-label="Pin to top"
+                                    bg="transparent"
+                                    _hover={{ bg: "transparent" }}
+                                    variant="ghost"
+                                />
 
                             )}
                         </HStack>
@@ -740,7 +740,7 @@ function SocialPage() {
                                             borderTopRightRadius={isMe ? "0" : "md"}
                                             borderTopLeftRadius={isMe ? "md" : "0"}
                                         >
-                                        <Text fontSize="sm">{msg.message || msg.content}</Text>
+                                            <Text fontSize="sm">{msg.message || msg.content}</Text>
                                         </Box>
                                     </Flex>
 
@@ -772,74 +772,74 @@ function SocialPage() {
                 {selectedFriend === "Meetsure機器人" && (
                     <Box
 
->
-<HStack spacing={6} justify="center" p={5}>
-  {/* 建立專案 */}
-  <Box
-    as="button"
-    onClick={() => handleQuestionSelect("我要如何建立專案？")}
-    w="250px"
-    h="220px"
-    borderRadius="xl"
-    boxShadow="md"
-    bg="white"
-    textAlign="center"
-    _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
-    transition="all 0.2s"
-  >
-    <VStack spacing={4} justify="center" h="100%">
-      <Icon as={FaPlusCircle} w={12} h={12} color="teal.500" />
-      <Text fontWeight="bold" fontSize="md" color="gray.800">
-        我要如何建立專案？
-      </Text>
-    </VStack>
-  </Box>
+                    >
+                        <HStack spacing={6} justify="center" p={5}>
+                            {/* 建立專案 */}
+                            <Box
+                                as="button"
+                                onClick={() => handleQuestionSelect("我要如何建立專案？")}
+                                w="250px"
+                                h="220px"
+                                borderRadius="xl"
+                                boxShadow="md"
+                                bg="white"
+                                textAlign="center"
+                                _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+                                transition="all 0.2s"
+                            >
+                                <VStack spacing={4} justify="center" h="100%">
+                                    <Icon as={FaPlusCircle} w={12} h={12} color="teal.500" />
+                                    <Text fontWeight="bold" fontSize="md" color="gray.800">
+                                        我要如何建立專案？
+                                    </Text>
+                                </VStack>
+                            </Box>
 
-  {/* 上傳失敗 */}
-  <Box
-    as="button"
-    onClick={() => handleQuestionSelect("我的影音檔案上傳失敗？")}
-    w="250px"
-    h="220px"
-    borderRadius="xl"
-    boxShadow="md"
-    bg="white"
-    textAlign="center"
-    _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
-    transition="all 0.2s"
-  >
-    <VStack spacing={4} justify="center" h="100%">
-      <Icon as={FaExclamationTriangle} w={12} h={12} color="orange.400" />
-      <Text fontWeight="bold" fontSize="md" color="gray.800">
-        我的影音檔案上傳失敗？
-      </Text>
-    </VStack>
-  </Box>
+                            {/* 上傳失敗 */}
+                            <Box
+                                as="button"
+                                onClick={() => handleQuestionSelect("我的影音檔案上傳失敗？")}
+                                w="250px"
+                                h="220px"
+                                borderRadius="xl"
+                                boxShadow="md"
+                                bg="white"
+                                textAlign="center"
+                                _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+                                transition="all 0.2s"
+                            >
+                                <VStack spacing={4} justify="center" h="100%">
+                                    <Icon as={FaExclamationTriangle} w={12} h={12} color="orange.400" />
+                                    <Text fontWeight="bold" fontSize="md" color="gray.800">
+                                        我的影音檔案上傳失敗？
+                                    </Text>
+                                </VStack>
+                            </Box>
 
-  {/* 網站功能 */}
-  <Box
-    as="button"
-    onClick={() => handleQuestionSelect("MeetSure網站有什麼主要功能？")}
-    w="250px"
-    h="220px"
-    borderRadius="xl"
-    boxShadow="md"
-    bg="white"
-    textAlign="center"
-    _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
-    transition="all 0.2s"
-  >
-    <VStack spacing={4} justify="center" h="100%">
-      <Icon as={FaTools} w={12} h={12} color="blue.500" />
-      <Text fontWeight="bold" fontSize="md" color="gray.800">
-        MeetSure網站有什麼主要功能？
-      </Text>
-    </VStack>
-  </Box>
-</HStack>
+                            {/* 網站功能 */}
+                            <Box
+                                as="button"
+                                onClick={() => handleQuestionSelect("MeetSure網站有什麼主要功能？")}
+                                w="250px"
+                                h="220px"
+                                borderRadius="xl"
+                                boxShadow="md"
+                                bg="white"
+                                textAlign="center"
+                                _hover={{ transform: "scale(1.05)", boxShadow: "lg" }}
+                                transition="all 0.2s"
+                            >
+                                <VStack spacing={4} justify="center" h="100%">
+                                    <Icon as={FaTools} w={12} h={12} color="blue.500" />
+                                    <Text fontWeight="bold" fontSize="md" color="gray.800">
+                                        MeetSure網站有什麼主要功能？
+                                    </Text>
+                                </VStack>
+                            </Box>
+                        </HStack>
 
 
-</Box>
+                    </Box>
 
                 )}
             </Box>
@@ -875,12 +875,12 @@ function SocialPage() {
         setChatMessages((prev) => ({
             ...prev,
             "Meetsure機器人": [
-              ...(prev["Meetsure機器人"] || []),
-              { sender: "You", content: question },
-              { sender: "Meetsure機器人", content: response },
+                ...(prev["Meetsure機器人"] || []),
+                { sender: "You", content: question },
+                { sender: "Meetsure機器人", content: response },
             ],
-          }));
-          
+        }));
+
     };
 
 
@@ -962,13 +962,13 @@ function SocialPage() {
                                 onChange={(e) => setInputValue(e.target.value)}
                                 isDisabled={!selectedFriend}
                             />
-<Button
-  colorScheme="blue"
-  onClick={selectedFriend === "Meetsure機器人" ? handleSendMessage : handleSendMessage_F}
-  isDisabled={!selectedFriend}
->
-  傳送
-</Button>
+                            <Button
+                                colorScheme="blue"
+                                onClick={selectedFriend === "Meetsure機器人" ? handleSendMessage : handleSendMessage_F}
+                                isDisabled={!selectedFriend}
+                            >
+                                傳送
+                            </Button>
 
                         </Flex>
                     </>
