@@ -35,7 +35,6 @@ import GroupSection from "./GroupSection";
 
 
 
-
 import { FaPlusCircle, FaExclamationTriangle, FaTools,FaThumbtack} from "react-icons/fa";
 
 function SocialPage() {
