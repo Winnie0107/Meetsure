@@ -40,15 +40,6 @@ import {
 
 var dashRoutes = [
   {
-    path: "/profile",
-    name: "個人檔案",
-    rtlName: "Profile",
-    icon: <PersonIcon color='inherit' />,
-    secondaryNavbar: true,
-    component: Profile,
-    layout: "/admin",
-  },
-  {
     path: "/dashboard",
     name: "主控版",
     rtlName: "Dashboard",

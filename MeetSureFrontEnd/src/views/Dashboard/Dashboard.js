@@ -1,6 +1,6 @@
 // Chakra imports
 /* eslint-disable no-unused-vars */
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import {
   Avatar,
@@ -35,6 +35,9 @@ import {
   useColorModeValue,
   useDisclosure,
   useToast,
+  FormControl,
+  FormLabel,
+  Textarea,
 } from "@chakra-ui/react";
 // Custom components
 
@@ -54,7 +57,7 @@ import {
   ChatIcon,
   PenIcon
 } from "components/Icons/Icons.js";
-import { CheckIcon} from '@chakra-ui/icons';
+import { CheckIcon } from '@chakra-ui/icons';
 
 // Variables
 import {
@@ -65,7 +68,6 @@ import {
 } from "variables/charts";
 import { pageVisits, socialTraffic } from "variables/general";
 
-// Assets
 import avatar2 from "assets/img/avatars/avatar2.png";
 import avatar3 from "assets/img/avatars/avatar3.png";
 import avatar4 from "assets/img/avatars/avatar4.png";
@@ -80,8 +82,11 @@ import {
 } from "react-icons/fa";
 import { IoDocumentsSharp } from "react-icons/io5";
 import RightPanelWithCalendar from './RightPanelWithCalendar';
+import MeetingSchedule from "./MeetingSchedule";
+
 import axios from "axios";
-import { FaClipboardList, FaCalendarAlt, FaBell, FaCheckCircle,FaMagic } from "react-icons/fa";
+import { FaClipboardList, FaCalendarAlt, FaBell, FaCheckCircle, FaMagic } from "react-icons/fa";
+import LineLogo from "assets/img/LineLogo.png";
 
 import UserBanner from "../../components/Tables/UserBanner";
 import LineLogo from "assets/img/LineLogo.png"; 
@@ -102,7 +107,13 @@ export default function Dashboard() {
   const [isOpen, setIsOpen] = useState(false); // 控制彈窗開關
   const [generatedImg, setGeneratedImg] = useState(""); // 存放 AI 生成的頭貼
   const userId = localStorage.getItem("user_id"); // 取得用戶 ID
-
+  const [newMeeting, setNewMeeting] = useState({
+    name: "",
+    datetime: "",
+    location: "",
+    details: ""
+  });
+  
   const { isOpen: isNameOpen, onOpen: onNameOpen, onClose: onNameClose } = useDisclosure();
   const { isOpen: isPasswordOpen, onOpen: onPasswordOpen, onClose: onPasswordClose } = useDisclosure();
 
@@ -122,7 +133,60 @@ export default function Dashboard() {
   }, [userId]);
 
 
-
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewMeeting((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  const handleSubmit = async (onClose) => {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("user_id");
+  
+    if (!newMeeting.name || !newMeeting.datetime || !userId) {
+      alert("請填寫完整資訊");
+      return;
+    }
+  
+    try {
+      const token = localStorage.getItem("token");
+    
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/meetings/add/",
+        {
+          name: newMeeting.name,
+          date: newMeeting.datetime.split("T")[0],     // yyyy-mm-dd
+          time: newMeeting.datetime.split("T")[1],     // hh:mm
+          location: newMeeting.location,
+          description: newMeeting.details,
+          user_id: userId,
+        },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+    
+  
+      console.log("✅ 成功新增會議", response.data);
+  
+      // 清空表單
+      setNewMeeting({ name: "", datetime: "", location: "", details: "" });
+  
+      // 關閉 Modal
+      if (onClose) onClose();
+  
+      // 🔁 重新載入或更新前端資料
+      // 你可以加入 setMeetings([...meetings, response.data]) 或 refetch
+  
+    } catch (error) {
+      console.error("❌ 會議新增失敗：", error);
+      alert("新增會議失敗，請再試一次");
+    }
+  };
+    
   // **請求 OpenAI 生成 AI 頭貼**
   const handleGenerateAvatar = async () => {
     try {
@@ -159,13 +223,13 @@ export default function Dashboard() {
       const response = await fetch("http://localhost:8000/api/update_avatar/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, img_base64: generatedImg }),
+        body: JSON.stringify({ user_id: userId, img_base64: generatedImg }), // 包含 base64 前綴
       });
 
       const data = await response.json();
-      if (data.success) {
-        setImg(generatedImg); // ✅ 更新 UI 頭貼
-        handleCloseModal();  // ✅ 關閉 Modal
+      if (data.success && data.img_url) {
+        setImg(data.img_url); // ✅ 更新 img 為 Firebase 的 URL
+        handleCloseModal();
       } else {
         console.error("❌ 更新頭貼失敗:", data.error);
       }
@@ -173,6 +237,7 @@ export default function Dashboard() {
       console.error("❌ 請求錯誤:", error);
     }
   };
+  
 
 
   // **更新名稱**
@@ -253,48 +318,8 @@ export default function Dashboard() {
   const infoModal = useDisclosure();  // 管理資訊 Modal
   const meetingModal = useDisclosure();  // 管理新增會議 Modal
   const [selectedModalContent, setSelectedModalContent] = useState("");
-  const [newMeeting, setNewMeeting] = useState({
-    date: "",
-    time: "",
-    name: "",            // ✅ 新增：會議名稱欄位
-    description: "",
-  });
   const lineModal = useDisclosure();
   const [isLineBound, setIsLineBound] = useState(true);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewMeeting({ ...newMeeting, [name]: value });
-  };
-
-  const handleSubmit = async (onClose) => {
-    try {
-      if (!newMeeting.date || !newMeeting.time || !newMeeting.description) {
-        alert("All fields are required.");
-        return;
-      }
-      const datetime = `${newMeeting.date} ${newMeeting.time}`;  // ✅ 這裡要正確定義
-      const response = await axios.post("http://127.0.0.1:8000/api/meetings/add/", {
-        date: newMeeting.date,
-        time: newMeeting.time,
-        name: newMeeting.name,
-        description: newMeeting.description,
-        user_id: userId
-      });
-      console.log("送出的資料：", {
-        datetime,
-        name: newMeeting.name,
-        description: newMeeting.description,
-        user_id: userId,
-      });
-      
-  
-      // 其餘代碼保持不變
-    } catch (error) {
-      console.error("Error adding meeting:", error.response?.data || error);
-      alert(`Failed to add meeting. Error: ${error.message}`);
-    }
-  };
 
 
   // ✅ 檢查是否綁定 LINE
@@ -318,7 +343,6 @@ export default function Dashboard() {
     checkLineBinding();
   }, []);
 
-  
 
 
 
@@ -425,65 +449,65 @@ export default function Dashboard() {
         </ModalContent>
       </Modal>
 
- {/* ✅ 尚未綁定 LINE 的提示 Modal */}
- <Modal isOpen={lineModal.isOpen} onClose={lineModal.onClose} isCentered>
-  <ModalOverlay />
-  <ModalContent borderRadius="xl" p={6} boxShadow="lg">
-    <ModalHeader fontSize="2xl" fontWeight="bold" textAlign="center" color="teal.600">
-      尚未綁定 LINE 帳號
-    </ModalHeader>
-    <ModalCloseButton />
-    <ModalBody>
-      <Flex direction="column" align="center" textAlign="center">
-        <Image src={LineLogo} alt="LINE" boxSize="64px" mb={4} />
-        <Text fontSize="md" mb={4} lineHeight="1.8">
-          為了讓您能夠即時收到會議通知與提醒，<br />我們建議您綁定 LINE 帳號。
-        </Text>
-        <Box
-  textAlign="left"
-  fontSize="sm"
-  color="gray.700"
-  bg="gray.50"
-  p={5}
-  borderRadius="lg"
-  w="100%"
-  boxShadow="sm"
->
-  <Text fontWeight="semibold" mb={3}>綁定後你可以：</Text>
+      {/* ✅ 尚未綁定 LINE 的提示 Modal */}
+      <Modal isOpen={lineModal.isOpen} onClose={lineModal.onClose} isCentered>
+        <ModalOverlay />
+        <ModalContent borderRadius="xl" p={6} boxShadow="lg">
+          <ModalHeader fontSize="2xl" fontWeight="bold" textAlign="center" color="teal.600">
+            尚未綁定 LINE 帳號
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Flex direction="column" align="center" textAlign="center">
+              <Image src={LineLogo} alt="LINE" boxSize="64px" mb={4} />
+              <Text fontSize="md" mb={4} lineHeight="1.8">
+                為了讓您能夠即時收到會議通知與提醒，<br />我們建議您綁定 LINE 帳號。
+              </Text>
+              <Box
+                textAlign="left"
+                fontSize="sm"
+                color="gray.700"
+                bg="gray.50"
+                p={5}
+                borderRadius="lg"
+                w="100%"
+                boxShadow="sm"
+              >
+                <Text fontWeight="semibold" mb={3}>綁定後你可以：</Text>
 
-  <Flex align="center" mb={2}>
-    <CheckIcon color="teal.500" mr={2} />
-    <Text>會議建立、修改、自動提醒</Text>
-  </Flex>
+                <Flex align="center" mb={2}>
+                  <CheckIcon color="teal.500" mr={2} />
+                  <Text>會議建立、修改、自動提醒</Text>
+                </Flex>
 
-  <Flex align="center" mb={2}>
-    <Icon as={FaBell} color="teal.500" mr={2} />
-    <Text>即時 LINE 通知，免登入也能查訊息</Text>
-  </Flex>
+                <Flex align="center" mb={2}>
+                  <Icon as={FaBell} color="teal.500" mr={2} />
+                  <Text>即時 LINE 通知，免登入也能查訊息</Text>
+                </Flex>
 
-  <Flex align="center">
-    <Icon as={FaMagic} color="teal.500" mr={2} />
-    <Text>更多智慧整合功能開發中</Text>
-  </Flex>
-</Box>
+                <Flex align="center">
+                  <Icon as={FaMagic} color="teal.500" mr={2} />
+                  <Text>更多智慧整合功能開發中</Text>
+                </Flex>
+              </Box>
 
-      </Flex>
-    </ModalBody>
-    <ModalFooter justifyContent="center">
-      <Button
-        colorScheme="teal"
-        px={8}
-        size="md"
-        borderRadius="md"
-        boxShadow="sm"
-        _hover={{ boxShadow: "md", transform: "translateY(-1px)" }}
-        onClick={lineModal.onClose}
-      >
-        確認
-      </Button>
-    </ModalFooter>
-  </ModalContent>
-</Modal>
+            </Flex>
+          </ModalBody>
+          <ModalFooter justifyContent="center">
+            <Button
+              colorScheme="teal"
+              px={8}
+              size="md"
+              borderRadius="md"
+              boxShadow="sm"
+              _hover={{ boxShadow: "md", transform: "translateY(-1px)" }}
+              onClick={lineModal.onClose}
+            >
+              確認
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
 
 
@@ -619,54 +643,47 @@ export default function Dashboard() {
             </Flex>
           </CardBody>
           {/* 新增會議的模態框 */}
-          <Modal isOpen={meetingModal.isOpen} onClose={meetingModal.onClose} isCentered>
+          {/* ✅ 新會議記錄 Modal（取代原本的新增會議） */}
+          {/* ✅ 新增會議 Modal（簡化版，只保留新增） */}
+          <Modal isOpen={meetingModal.isOpen} onClose={meetingModal.onClose}>
             <ModalOverlay />
-            <ModalContent>
+            <ModalContent p={4} borderRadius="25px" minW="600px">
               <ModalHeader>新增會議</ModalHeader>
-              <ModalCloseButton />
+              <ModalCloseButton mt="4" mr="4" />
               <ModalBody>
-                <Text mb="8px">會議名稱：</Text>
-                <Input
-                  type="text"
-                  name="name"
-                  placeholder="輸入會議名稱"
-                  value={newMeeting.name}
-                  onChange={handleInputChange}
-                  mb="16px"
-                />
-                <Text mb="8px">日期：</Text>
-                <Input
-                  type="date"
-                  name="date"
-                  value={newMeeting.date}
-                  onChange={handleInputChange}
-                  mb="16px"
-                />
-                <Text mb="8px">時間：</Text>
-                <Input
-                  type="time"
-                  name="time"
-                  value={newMeeting.time}
-                  onChange={handleInputChange}
-                  mb="16px"
-                />
-                <Text mb="8px">描述：</Text>
-                <Input
-                  type="text"
-                  name="description"
-                  placeholder="輸入會議描述"
-                  value={newMeeting.description}
-                  onChange={handleInputChange}
-                />
+                <FormControl mb={3}>
+                  <FormLabel>會議名稱</FormLabel>
+                  <Input name="name" value={newMeeting.name} onChange={handleInputChange} placeholder="輸入會議名稱..." />
+                </FormControl>
+
+                <FormControl mb={3}>
+                  <FormLabel>選擇會議時間</FormLabel>
+                  <Input
+                    type="datetime-local"
+                    name="datetime"
+                    value={newMeeting.datetime}
+                    onChange={handleInputChange}
+                  />
+                </FormControl>
+
+                <FormControl mb={3}>
+                  <FormLabel>會議地點</FormLabel>
+                  <Input name="location" value={newMeeting.location} onChange={handleInputChange} placeholder="輸入會議地點..." />
+                </FormControl>
+
+                <FormControl mb={3}>
+                  <FormLabel>會議連結或其他資訊</FormLabel>
+                  <Textarea name="details" value={newMeeting.details} onChange={handleInputChange} placeholder="輸入您的資訊..." minHeight="110px" resize="vertical" />
+                </FormControl>
               </ModalBody>
               <ModalFooter>
-                <Button colorScheme="teal" mr={3} onClick={() => handleSubmit(meetingModal.onClose)}>
-                  提交
-                </Button>
-                <Button onClick={meetingModal.onClose}>取消</Button>
+                <Button colorScheme="gray" mr={3} onClick={meetingModal.onClose}>取消</Button>
+                <Button colorScheme="teal" onClick={() => handleSubmit(meetingModal.onClose)}>確認新增</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>
+
+
 
         </Card>
       </Grid>

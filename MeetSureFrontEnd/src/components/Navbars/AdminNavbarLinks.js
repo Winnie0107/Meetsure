@@ -17,6 +17,8 @@ import { ProfileIcon, SettingsIcon } from "components/Icons/Icons";
 import NotificationDropdown from "components/Navbars/NotificationDropdown";
 import MeetingNotification from "components/Navbars/MeetingNotification";
 import axios from "axios";
+import getAvatarUrl from "components/Icons/getAvatarUrl";
+
 
 export default function HeaderLinks(props) {
   const { colorMode } = useColorMode();
@@ -145,7 +147,7 @@ export default function HeaderLinks(props) {
               {userImg === "black.png" ? (
                 <ProfileIcon w="22px" h="22px" me="10px" />
               ) : (
-                <Avatar src={`http://localhost:8000/media/${userImg}`} w="40px" h="40px" me="10px" />
+                <Avatar src={getAvatarUrl(userImg)} w="40px" h="40px" me="10px" />
               )}
               <Text color="white">{userName}，您好！</Text>
             </Flex>
