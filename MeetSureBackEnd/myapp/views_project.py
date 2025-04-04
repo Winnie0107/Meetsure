@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view,permission_classes,authentication_classes, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Project, Users, ProjectMember, ProjectTask
+from .models import Project, Users, ProjectMember, ProjectTask,MeetingSchedule,ToDoList
 from .serializers import ProjectSerializer,ProjectTaskSerializer,ProjectMemberUserSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -81,7 +81,32 @@ def create_project(request):
     return Response({"message": "專案已成功儲存！"}, status=status.HTTP_201_CREATED)
 
 
+@api_view(["DELETE"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_project(request, project_id):
+    try:
+        project = Project.objects.get(id=project_id)
+
+        # 🔥 刪除相關 ProjectMember、Task、Meeting、Todo（有就刪）
+        ProjectTask.objects.filter(project=project).delete()
+        ProjectMember.objects.filter(project=project).delete()
+        MeetingSchedule.objects.filter(project=project).delete()
+        ToDoList.objects.filter(project=project).delete()  # 如果有的話
+
+        # 🔥 最後刪除專案
+        project.delete()
+
+        return Response({"message": "Project and related data deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+    except Project.DoesNotExist:
+        return Response({"error": "Project not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @csrf_exempt
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_user_by_email(request):
     email = request.GET.get("email")
     if not email:

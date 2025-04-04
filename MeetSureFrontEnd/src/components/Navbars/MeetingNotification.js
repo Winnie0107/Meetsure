@@ -93,7 +93,11 @@ export default function MeetingNotification() {
 
   return (
     <Menu>
-      <MenuButton as={Box} position="relative" ml="12px">
+      <MenuButton as={Box} position="relative" display="flex"
+  alignItems="center"
+  justifyContent="center"
+  w="36px"
+  h="36px">
         <motion.div
           animate={{ rotate: [0, -10, 10, -10, 0] }}
           transition={{ duration: 0.5, repeat: 2 }}
@@ -102,6 +106,9 @@ export default function MeetingNotification() {
             icon={<CalendarIcon w={7} h={7} color="white" />}
             variant="ghost"
             _hover={{ bg: "gray.600" }}
+            size="sm"
+    p="0"
+    minW="auto"
           />
         </motion.div>
 

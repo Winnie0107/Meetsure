@@ -119,7 +119,7 @@ def get_friends_list(request):
         {
             "email": friend.email,
             "name": friend.name,
-            "img": f"media/{friend.img.replace('\\', '/')}" if friend.img else None
+            #"img": f"media/{friend.img.replace('\\', '/')}" if friend.img else None
         }
         for friend in friends
     ]

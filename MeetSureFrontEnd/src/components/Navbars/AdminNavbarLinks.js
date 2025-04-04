@@ -17,6 +17,7 @@ import { ProfileIcon, SettingsIcon } from "components/Icons/Icons";
 import NotificationDropdown from "components/Navbars/NotificationDropdown";
 import MeetingNotification from "components/Navbars/MeetingNotification";
 import axios from "axios";
+import ToDoNotifications from "components/Navbars/ToDoNotifications";
 import getAvatarUrl from "components/Icons/getAvatarUrl";
 
 
@@ -135,9 +136,10 @@ export default function HeaderLinks(props) {
       alignItems="center"
       flexDirection="row"
     >
-      <Flex alignItems="center" gap="10px">
+      <Flex alignItems="center" gap="16px">
+      <NotificationDropdown userEmail={userEmail} />
         <MeetingNotification userEmail={userEmail} />
-        <NotificationDropdown userEmail={userEmail} />
+        <ToDoNotifications userEmail={userEmail} />
       </Flex>
 
       {userEmail ? (

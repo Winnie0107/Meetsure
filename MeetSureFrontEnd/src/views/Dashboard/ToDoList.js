@@ -1,198 +1,239 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
-  Flex, Box, Icon, VStack, HStack, Text, Divider, Button, Modal, ModalOverlay, ModalContent,
-  ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Input, useDisclosure, FormControl, FormLabel, Checkbox, Select
+    Flex, Box, Icon, VStack, HStack, Text, Divider, Button, Modal, ModalOverlay, ModalContent, useToast,
+    ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Input, useDisclosure, FormControl, FormLabel, Checkbox, Select
 } from "@chakra-ui/react";
 import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
-import { MdAdd } from "react-icons/md";
+import { MdAdd, MdSend } from "react-icons/md";
 import axios from "../../api/axios";
-import { useParams } from "react-router-dom";
 
-const ToDoList = () => {
-  const { id: projectId } = useParams(); // ✅ 從 URL 中取得 projectId
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [tasks, setTasks] = useState([]);
-  const [members, setMembers] = useState([]);
-  const [newTaskName, setNewTaskName] = useState("");
-  const [newAssignedTo, setNewAssignedTo] = useState("");
-  const [taskColors, setTaskColors] = useState({});
+// 預設顏色對應表（可依需求調整）
+const predefinedColors = [
+    "#EEFFF7", "#FFEEFF", "#EFF7FF", "#FFF9C4", "#FFF4EE", "#E6F0FF", "#FBE8E7", "#E7F5E6"
+];
 
-  // 隨機顏色生成器
-  const getRandomColor = () => {
-    const pastelColors = ["#EEFFF7", "#FFEEFF", "#EFF7FF", "#FFF9C4", "#FFF4EE"];
-    return pastelColors[Math.floor(Math.random() * pastelColors.length)];
-  };
+const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) => {
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [members, setMembers] = useState([]);
+    const [newTaskName, setNewTaskName] = useState("");
+    const [newAssignedTo, setNewAssignedTo] = useState("");
+    const [taskColors, setTaskColors] = useState({});
+    const deleteTimeouts = useRef({});
+    const toast = useToast();
 
   // 🎯 載入任務清單
   useEffect(() => {
     if (!projectId) return;
 
-    const token = localStorage.getItem("token");
-    axios
-      .get(`http://127.0.0.1:8000/api/todos/?project_id=${projectId}`, {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-      })
-      .then((res) => {
-        setTasks(res.data);
-        const newColors = {};
-        res.data.forEach((task) => {
-          if (!newColors[task.assigned_to_name]) {
-            newColors[task.assigned_to_name] = getRandomColor();
-          }
-        });
-        setTaskColors(newColors);
-      });
-  }, [projectId]);
+        const token = localStorage.getItem("token");
+        axios
+            .get(`http://127.0.0.1:8000/api/todos/?project_id=${projectId}`, {
+                headers: { Authorization: `Token ${token}` },
+            })
+            .then((res) => {
+                setTasks(res.data);
+            });
+    }, [projectId]);
 
-  // 🎯 載入專案成員清單
-  useEffect(() => {
-    if (!projectId) return;
+    // 🎯 載入專案成員並設定顏色對應
+    useEffect(() => {
+        if (!projectId) return;
+        const token = localStorage.getItem("token");
 
-    const token = localStorage.getItem("token");
+        const fetchMembers = async () => {
+            try {
+                const res = await axios.get(`http://127.0.0.1:8000/api/project-members/?project_id=${projectId}`, {
+                    headers: { Authorization: `Token ${token}` },
+                });
+                setMembers(res.data);
 
-    const fetchMembers = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/project-members/?project_id=${projectId}`, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
-        setMembers(response.data);
-      } catch (error) {
-        console.error("❌ 專案成員抓取失敗:", error);
-      }
+                // 固定分配顏色
+                const colorMap = {};
+                res.data.forEach((member, index) => {
+                    colorMap[member.name] = predefinedColors[index % predefinedColors.length];
+                });
+                setTaskColors(colorMap);
+            } catch (err) {
+                console.error("❌ 成員載入失敗：", err);
+            }
+        };
+
+        fetchMembers();
+    }, [projectId]);
+
+    // ✅ 新增任務
+    const addTask = () => {
+        if (!newTaskName || !newAssignedTo) return;
+        const token = localStorage.getItem("token");
+
+        axios
+            .post("http://127.0.0.1:8000/api/todos/", {
+                name: newTaskName,
+                assigned_to: newAssignedTo,
+                project: projectId,
+                completed: false,
+            }, {
+                headers: { Authorization: `Token ${token}` },
+            })
+            .then((res) => {
+                const task = res.data;
+                const assignedUser = members.find((m) => String(m.ID) === String(task.assigned_to));
+                task.assigned_to_name = assignedUser?.name || "未知";
+
+                setTasks((prev) => [...prev, task]);
+                setNewTaskName("");
+                setNewAssignedTo("");
+                onClose();
+            });
     };
 
-    fetchMembers();
-  }, [projectId]);
+    // ✅ 勾選切換與 3 秒後刪除
+    const toggleTaskCompletion = (id) => {
+        setTasks(prev =>
+            prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t)
+        );
 
-  // ✅ 新增任務
-  const addTask = () => {
-    if (!newTaskName || !newAssignedTo) return;
+        const isNowChecked = !tasks.find(t => t.id === id)?.completed;
 
-    const token = localStorage.getItem("token");
+        if (isNowChecked) {
+            toast({
+                position: "top",
+                duration: 3000,
+                isClosable: true,
+                render: () => (
+                    <Box
+                        bg="teal.400"
+                        color="white"
+                        px={8}
+                        py={6}
+                        borderRadius="lg"
+                        boxShadow="lg"
+                    >
+                        <Text fontWeight="bold">即將刪除代辦事項</Text>
+                        <Text fontSize="md">將在 3 秒後刪除，可取消勾選以保留</Text>
+                    </Box>
+                ),
+            });
 
-    axios
-      .post(
-        "http://127.0.0.1:8000/api/todos/",
-        {
-          name: newTaskName,
-          assigned_to: newAssignedTo,
-          project: projectId,
-          completed: false,
-        },
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
+            deleteTimeouts.current[id] = setTimeout(() => deleteTask(id), 3000);
+        } else {
+            clearTimeout(deleteTimeouts.current[id]);
+            delete deleteTimeouts.current[id];
         }
-      )
-      .then((res) => {
-        const task = res.data;
-        const assignedUser = members.find((m) => String(m.ID) === String(task.assigned_to));
-        task.assigned_to_name = assignedUser?.name || "未知";
+    };
 
-        setTasks([...tasks, task]);
-        setTaskColors((prev) => ({
-          ...prev,
-          [task.assigned_to_name]: prev[task.assigned_to_name] || getRandomColor(),
-        }));
-        setNewTaskName("");
-        setNewAssignedTo("");
-        onClose();
-      });
-  };
+    const deleteTask = async (id) => {
+        const token = localStorage.getItem("token");
+        try {
+            await axios.delete(`http://127.0.0.1:8000/api/todos/${id}/`, {
+                headers: { Authorization: `Token ${token}` },
+            });
+            setTasks(prev => prev.filter(task => task.id !== id));
+        } catch (err) {
+            console.error("❌ 刪除失敗", err);
+        }
+    };
 
-  // ✅ 切換完成狀態
-  const toggleTaskCompletion = (id) => {
-    setTasks(tasks.map(task => task.id === id ? { ...task, completed: !task.completed } : task));
-  };
+    // 清除 timeout
+    useEffect(() => {
+        return () => {
+            Object.values(deleteTimeouts.current).forEach(clearTimeout);
+        };
+    }, []);
 
-  return (
-    <Card flex="1" p="6" bg="white" boxShadow="lg" height="535px">
-      <CardHeader pb="4">
-        <Flex justify="space-between" align="center">
-          <Text fontSize="lg" fontWeight="bold">待辦事項</Text>
-          <Icon as={MdAdd} boxSize={8} color="gray.500" cursor="pointer" onClick={onOpen} />
-        </Flex>
-        <Divider my="2" />
-      </CardHeader>
+    return (
+        <Card flex="1" p="6" bg="white" boxShadow="lg" minHeight="535px">
+            <CardHeader pb="4">
+                <Flex justify="space-between" align="center">
+                    <Text fontSize="lg" fontWeight="bold">待辦事項</Text>
+                    <Icon as={MdAdd} boxSize={8} color="gray.500" cursor="pointer" onClick={onOpen} />
+                </Flex>
+                <Divider my="2" />
+                <Text fontSize="sm" color="gray.500">完成後 請勾選消除代辦事項</Text>
+            </CardHeader>
 
-      <VStack spacing={4} align="stretch">
-        {/* 📌 Modal - 新增任務 */}
-        <Modal isOpen={isOpen} onClose={onClose}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>新增代辦事項</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <FormControl mb={3}>
-                <FormLabel>任務名稱</FormLabel>
-                <Input
-                  placeholder="輸入任務名稱..."
-                  value={newTaskName}
-                  onChange={(e) => setNewTaskName(e.target.value)}
-                />
-              </FormControl>
+            <VStack spacing={4} align="stretch">
+                {/* Modal */}
+                <Modal isOpen={isOpen} onClose={onClose}>
+                    <ModalOverlay />
+                    <ModalContent p={4} borderRadius="25px">
+                        <ModalHeader>新增代辦事項</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            <FormControl mb={3}>
+                                <FormLabel>任務名稱</FormLabel>
+                                <Input
+                                    placeholder="輸入任務名稱..."
+                                    value={newTaskName}
+                                    onChange={(e) => setNewTaskName(e.target.value)}
+                                />
+                            </FormControl>
+                            <FormControl mb={3}>
+                                <FormLabel>選擇執行人員</FormLabel>
+                                <Select
+                                    placeholder="選擇一位成員"
+                                    value={String(newAssignedTo)}
+                                    onChange={(e) => setNewAssignedTo(e.target.value)}
+                                >
+                                    {members.map((member) => (
+                                        <option key={member.ID} value={String(member.ID)}>
+                                            {member.name}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button colorScheme="gray" mr={3} onClick={onClose}>取消</Button>
+                            <Button colorScheme="teal" onClick={addTask}>確認新增</Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
 
-              <FormControl mb={3}>
-                <FormLabel>選擇執行人員</FormLabel>
-                <Select
-                  placeholder="選擇一位成員"
-                  value={String(newAssignedTo)}
-                  onChange={(e) => setNewAssignedTo(e.target.value)}
+                {/* 代辦事項清單 */}
+                {(limit ? tasks.slice(0, 4) : tasks).map((task) => (
+                    <Box
+                        key={task.id}
+                        p="6"
+                        bg={taskColors[task.assigned_to_name] || "white"}
+                        borderRadius="lg"
+                        boxShadow="md"
+                    >
+                        <HStack justify="space-between">
+                            <HStack>
+                                <Checkbox
+                                    isChecked={task.completed}
+                                    onChange={() => toggleTaskCompletion(task.id)}
+                                    colorScheme="teal"
+                                    borderColor="gray"
+                                    mr="10px"
+                                />
+                                <Text fontSize="md" fontWeight="bold" textDecoration={task.completed ? "line-through" : "none"}>
+                                    {task.name}
+                                </Text>
+                            </HStack>
+                            <Text fontSize="md" color="gray.600">{task.assigned_to_name}</Text>
+                        </HStack>
+                    </Box>
+                ))}
+            </VStack>
+
+            {/* 查看更多按鈕 */}
+            {tasks.length > 4 && setTabIndex && limit && (
+                <Button
+                    onClick={() => setTabIndex(2)}
+                    variant="ghost"
+                    colorScheme="blue"
+                    alignSelf="center"
+                    mt="30px"
                 >
-                  {members.map((member) => (
-                    <option key={member.ID} value={String(member.ID)}>
-                      {member.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-            </ModalBody>
-            <ModalFooter>
-              <Button colorScheme="gray" mr={3} onClick={onClose}>取消</Button>
-              <Button colorScheme="teal" onClick={addTask}>確認新增</Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-
-        {/* 📌 任務列表 */}
-        {tasks.map((task) => (
-          <Box
-            key={task.id}
-            p="6"
-            bg={taskColors[task.assigned_to_name] || "white"}
-            borderRadius="lg"
-            boxShadow="md"
-          >
-            <HStack justify="space-between">
-              <HStack>
-                <Checkbox
-                  isChecked={task.completed}
-                  onChange={() => toggleTaskCompletion(task.id)}
-                  colorScheme="teal"
-                  borderColor="grey"
-                  mr="10px"
-                />
-                <Text
-                  fontSize="md"
-                  fontWeight="bold"
-                  textDecoration={task.completed ? "line-through" : "none"}
-                >
-                  {task.name}
-                </Text>
-              </HStack>
-              <Text fontSize="sm" color="gray.600">{task.assigned_to_name}</Text>
-            </HStack>
-          </Box>
-        ))}
-      </VStack>
-    </Card>
-  );
+                    查看更多代辦事項
+                    <Icon ml={2} as={MdSend} color="blue.500" boxSize={4} />
+                </Button>
+            )}
+        </Card>
+    );
 };
 
 export default ToDoList;

@@ -1,191 +1,118 @@
-// Chakra Imports
-/* eslint-disable no-unused-vars */
-
+import React, { useState } from "react";
 import {
-  Box,
-  Button,
   Drawer,
-  DrawerBody,
-  DrawerCloseButton,
+  DrawerOverlay,
   DrawerContent,
   DrawerHeader,
-  Flex, Link,
-  Switch,
+  DrawerBody,
+  Input,
+  Button,
+  VStack,
   Text,
-  useColorMode,
-  useColorModeValue
+  Box,
+  IconButton,
+  Flex,
+  useColorModeValue,
+  Image,
 } from "@chakra-ui/react";
-import { HSeparator } from "components/Separator/Separator";
-import React, { useState } from "react";
-import GitHubButton from "react-github-btn";
-import { FaFacebook, FaTwitter } from "react-icons/fa";
+import { CloseIcon } from "@chakra-ui/icons";
+import MeetSureLogo from "assets/img/MeetSureLogo.png";
 
-export default function Configurator(props) {
-  const {
-    sidebarVariant,
-    setSidebarVariant,
-    secondary,
-    isOpen,
-    onClose,
-    fixed,
-    ...rest
-  } = props;
-  const [switched, setSwitched] = useState(props.isChecked);
+export default function ChatDrawer({ isOpen, onClose }) {
+  const [messages, setMessages] = useState([
+    { sender: "Meetsure機器人", content: "您好！請輸入您的問題。" },
+  ]);
+  const [inputValue, setInputValue] = useState("");
 
-  const { colorMode, toggleColorMode } = useColorMode();
+  const botMessageBg = useColorModeValue("gray.100", "gray.700");
+  const userMessageBg = useColorModeValue("teal.500", "teal.500");
+  const userTextColor = "white";
+  const textColor = useColorModeValue("black", "white");
+  const drawerBg = useColorModeValue("white", "gray.800");
+  const sendButtonColor = "teal.500";
 
-  let bgButton = useColorModeValue(
-    "linear-gradient(81.62deg, #313860 2.25%, #151928 79.87%)",
-    "white"
-  );
-  let colorButton = useColorModeValue("white", "gray.700");
-  const secondaryButtonBg = useColorModeValue("white", "transparent");
-  const secondaryButtonBorder = useColorModeValue("gray.700", "white");
-  const secondaryButtonColor = useColorModeValue("gray.700", "white");
-  const bgDrawer = useColorModeValue("white", "navy.800");
-  const settingsRef = React.useRef();
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const newMessage = { sender: "You", content: inputValue };
+    setMessages((prev) => [...prev, newMessage]);
+
+    try {
+      const response = await fetch("http://localhost:3001/api/v1/workspace/zhi-workspace/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer 06JBKJC-TPJ46K5-KCRNVPS-M66G24D",
+          "accept": "application/json",
+        },
+        body: JSON.stringify({
+          message: inputValue,
+          mode: "chat",
+          sessionId: "same-session-id",
+        }),
+      });
+      const data = await response.json();
+      
+      const botMessage = { sender: "Meetsure機器人", content: data.textResponse };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error("Error fetching bot response:", error);
+      setMessages((prev) => [...prev, { sender: "Meetsure機器人", content: "發送請求失敗，請稍後再試。" }]);
+    }
+
+    setInputValue("");
+  };
+
   return (
-    <>
-      <Drawer
-        isOpen={props.isOpen}
-        onClose={props.onClose}
-        placement={document.documentElement.dir === "rtl" ? "left" : "right"}
-        finalFocusRef={settingsRef}
-        blockScrollOnMount={false}
-      >
-        <DrawerContent bg={bgDrawer}>
-          <DrawerHeader pt="24px" px="24px">
-            <DrawerCloseButton />
-            <Text fontSize="xl" fontWeight="bold" mt="16px">
-              Argon Chakra Configurator
-            </Text>
-            <Text fontSize="md" mb="16px">
-              See your dashboard options.
-            </Text>
-            <HSeparator />
-          </DrawerHeader>
-          <DrawerBody w="340px" ps="24px" pe="40px">
-            <Flex flexDirection="column">
-              <Flex justifyContent="space-between " mb="16px">
-                <Text fontSize="md" fontWeight="600" mb="4px">
-                  Navbar Fixed
-                </Text>
-                <Switch
-                  colorScheme="blue"
-                  isChecked={switched}
-                  onChange={() => {
-                    if (switched === true) {
-                      props.onSwitch(false);
-                      setSwitched(false);
-                    } else {
-                      props.onSwitch(true);
-                      setSwitched(true);
-                    }
-                  }}
-                />
-              </Flex>
-              <Flex
-                justifyContent="space-between"
-                alignItems="center"
-                mb="24px"
-              >
-                <Text fontSize="md" fontWeight="600" mb="4px">
-                  Dark/Light
-                </Text>
-                <Button
-                  onClick={toggleColorMode}
-                  color={colorMode === "light" ? "Dark" : "Light"}
-                >
-                  Toggle {colorMode === "light" ? "Dark" : "Light"}
-                </Button>
-              </Flex>
+    <Drawer isOpen={isOpen} onClose={onClose} placement="right" size="sm">
+      <DrawerOverlay />
+      <DrawerContent bg={drawerBg} borderLeftRadius="md">
+        {/* Header 排版修正 */}
+        <DrawerHeader display="flex" alignItems="center" borderBottom="1px solid #E2E8F0" py={3}>
+          <Flex align="center">
+            {/* ✅ 修正圖片比例，確保不變形 */}
+            <Image src={MeetSureLogo} alt="MeetSure Logo" height="36px" width="auto" mr={3} flexShrink={0} />
+            <Text fontWeight="bold" fontSize="lg">Meetsure自動回覆</Text>
+          </Flex>
+          {/* ✅ 讓關閉按鈕自動對齊右側 */}
+          <IconButton icon={<CloseIcon />} size="sm" onClick={onClose} variant="ghost" ml="auto" />
+        </DrawerHeader>
 
-              <HSeparator />
-              <Box mt="24px">
-                <Box>
-                  <Link
-                    href="https://www.creative-tim.com/product/argon-dashboard-chakra?ref=creativetim-pud"
-                    w="100%"
-                    mb="16px"
-                  >
-                    <Button
-                      w="100%"
-                      mb="16px"
-                      bg={bgButton}
-                      color={colorButton}
-                      fontSize="xs"
-                      variant="no-effects"
-                      px="30px"
-                    >
-                      Free Download
-                    </Button>
-                  </Link>
-                  <Link
-                    href="https://demos.creative-tim.com/docs-argon-dashboard-chakra/?ref=creativetim-pud"
-                    w="100%"
-                  >
-                    <Button
-                      w="100%"
-                      bg={secondaryButtonBg}
-                      border="1px solid"
-                      borderColor={secondaryButtonBorder}
-                      color={secondaryButtonColor}
-                      fontSize="xs"
-                      variant="no-effects"
-                      px="20px"
-                      mb="16px"
-                    >
-                      <Text textDecorationColor="none">Documentation</Text>
-                    </Button>
-                  </Link>
-                </Box>
-                <Flex
-                  justifyContent="center"
-                  alignItems="center"
-                  w="100%"
-                  mb="16px"
-                >
-                  <GitHubButton
-                    href="https://github.com/creativetimofficial/argon-dashboard-chakra"
-                    data-icon="octicon-star"
-                    data-show-count="true"
-                    aria-label="Star creativetimofficial/argon-dashboard-chakra on GitHub"
-                  >
-                    Star
-                  </GitHubButton>
-                </Flex>
-                <Box w="100%">
-                  <Text mb="6px" textAlign="center">
-                    Thank you for sharing!
-                  </Text>
-                  <Flex justifyContent="center" alignContent="center">
-                    <Link
-                      isExternal="true"
-                      href="https://twitter.com/intent/tweet?url=https://www.creative-tim.com/product/argon-dashboard-chakra/&text=Check%20Argon%20Dashboard%20Chakra%20made%20by%20@simmmple_web%20and%20@CreativeTim"
-                    >
-                      <Button
-                        colorScheme="twitter"
-                        leftIcon={<FaTwitter />}
-                        me="10px"
-                      >
-                        <Text>Tweet</Text>
-                      </Button>
-                    </Link>
-                    <Link
-                      isExternal="true"
-                      href="https://www.facebook.com/sharer/sharer.php?u=https://www.creative-tim.com/product/argon-dashboard-chakra/"
-                    >
-                      <Button colorScheme="facebook" leftIcon={<FaFacebook />}>
-                        <Text>Share</Text>
-                      </Button>
-                    </Link>
-                  </Flex>
-                </Box>
+        {/* Message Body */}
+        <DrawerBody>
+          <VStack spacing={4} align="stretch">
+            {messages.map((msg, index) => (
+              <Box
+                key={index}
+                alignSelf={msg.sender === "You" ? "flex-end" : "flex-start"}
+                bg={msg.sender === "You" ? userMessageBg : botMessageBg}
+                color={msg.sender === "You" ? userTextColor : textColor}
+                px={4}
+                py={3}
+                borderRadius="lg"
+                boxShadow="md"
+                maxWidth="75%"
+              >
+                <Text>{msg.content}</Text>
               </Box>
-            </Flex>
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
-    </>
+            ))}
+          </VStack>
+        </DrawerBody>
+
+        {/* Input Area */}
+        <Flex p={4} borderTop="1px solid #E2E8F0" alignItems="center">
+          <Input
+            placeholder="輸入訊息..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            flex={1}
+            borderRadius="md"
+          />
+          <Button ml={2} bg={sendButtonColor} color="white" _hover={{ bg: "teal.600" }} onClick={handleSendMessage} borderRadius="md">
+            傳送
+          </Button>
+        </Flex>
+      </DrawerContent>
+    </Drawer>
   );
 }
