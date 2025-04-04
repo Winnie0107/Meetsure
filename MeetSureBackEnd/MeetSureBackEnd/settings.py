@@ -16,7 +16,6 @@ import requests
 import firebase_admin
 from firebase_admin import credentials, firestore, initialize_app
 
-OPENAI_API_KEY = "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"
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,9 +25,13 @@ FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "MeetSureBackEnd", "meetsure-
 
 if not firebase_admin._apps:
     cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
-    firebase_app = initialize_app(cred)
+    firebase_app = initialize_app(cred, {
+    "storageBucket": "meetsure-new.firebasestorage.app"
+    })
+
     db = firestore.client()
 
+OPENAI_API_KEY = "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"
 
 try:
     import torch
@@ -37,12 +40,7 @@ except ImportError:
     torch = None
     print("❌ PyTorch is not installed.")
 
-try:
-    import tensorflow as tf
-    print("✅ TensorFlow is available!")
-except ImportError:
-    tf = None
-    print("❌ TensorFlow is not installed.")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 

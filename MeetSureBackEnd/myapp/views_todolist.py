@@ -14,12 +14,16 @@ from .serializers import ToDoListSerializer
 def todo_list_create_view(request):
     if request.method == "GET":
         project_id = request.query_params.get("project_id")
-        if not project_id:
-            return Response({"error": "請提供 project_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            project_id = int(project_id)
+        except (ValueError, TypeError):
+            return Response({"error": "無效的 project_id"}, status=status.HTTP_400_BAD_REQUEST)
 
         todos = ToDoList.objects.filter(project_id=project_id)
         serializer = ToDoListSerializer(todos, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     elif request.method == "POST":
         serializer = ToDoListSerializer(data=request.data)
