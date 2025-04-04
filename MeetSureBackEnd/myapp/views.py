@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password,check_password
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import User, Users, MeetingSchedule, UserToken,Company,CompanyRepresentative, Group, GroupMembership, Project
+from .models import User, Users, MeetingSchedule, UserToken,Company,CompanyRepresentative, Group, GroupMembership, Project,ProjectMember
 from .serializers import UserSerializer
 from datetime import datetime
 from pytz import timezone
@@ -27,11 +27,10 @@ from django.conf import settings
 import os
 import openai
 
+import uuid
 
-import firebase_admin
-from firebase_admin import firestore
-db = firestore.client()  # 不用再 initialize_app
-
+from firebase_admin import storage
+bucket = storage.bucket()
 
 import uuid
 from django.views.decorators.http import require_GET
@@ -128,52 +127,49 @@ def register_user(request):
 
 
 
+
 @csrf_exempt
 def add_meeting(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            print("接收到的資料：", data)
-
-            data = json.loads(request.body)
-            date = data.get("date")  # 從前端獲取日期
-            time = data.get("time")   # 從前端獲取時間
+            date = data.get("date")
+            time = data.get("time")
             details = data.get("description")
             user_id = data.get("user_id")
             name = data.get("name", "未命名會議")
 
-            # 合併日期和時間
-            datetime_str = f"{date} {time}"
-
-            if not date or not time or not details or not user_id:
+            if not date or not time or not user_id:
                 return JsonResponse({"error": "Missing fields"}, status=400)
 
-            datetime_obj = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
-            user = Users.objects.get(ID=user_id)
+            datetime_str = f"{date} {time}"
+            local_dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M")
+            local_tz = timezone("Asia/Taipei")
+            datetime_obj = local_tz.localize(local_dt).astimezone(timezone("UTC"))
 
-            # 預設使用第一個專案，或者讓前端傳專案ID
+            user = Users.objects.get(ID=user_id)
             default_project = Project.objects.first()
 
             meeting_data = {
                 "name": name,
                 "datetime": datetime_obj,
-                "details": details,
+                "location": data.get("location", ""),
+                "details": details or "",
                 "created_by": user,
-                "project": default_project  # 新增這行
+                "project": None
             }
 
             MeetingSchedule.objects.create(**meeting_data)
-
             return JsonResponse({"message": "Meeting added successfully"}, status=201)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
-    
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
 # 返回符合日期的會議
 @csrf_exempt
-def get_meetings(request):
+def get_meetings_indi(request):
     try:
         date_str = request.GET.get('date')
         user_id = request.GET.get('user_id')
@@ -181,33 +177,88 @@ def get_meetings(request):
         if not date_str or not user_id:
             return JsonResponse({"error": "Missing date or user_id"}, status=400)
 
-        # 轉換日期
         date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
-        # 撈出該使用者在指定日期的所有會議（不論是否有指定專案）
-        meetings = MeetingSchedule.objects.filter(
-            datetime__date=date,
-            created_by_id=user_id
-        ).order_by('datetime')
+        # 取得該 user 物件
+        user = Users.objects.get(ID=user_id)
 
-        # 回傳資料（附加 project_id，如果有的話）
+        # 撈出 user 參與的專案們
+        user_projects = Project.objects.filter(members__user=user)
+
+        # 撈出該 user 的會議（個人建立的）
+        personal_meetings = MeetingSchedule.objects.filter(
+            created_by=user,
+            datetime__date=date
+        )
+
+        # 撈出 user 所屬專案中的所有會議
+        project_meetings = MeetingSchedule.objects.filter(
+            project__in=user_projects,
+            datetime__date=date
+        )
+
+        # 合併兩者，避免重複資料（使用 union() 會過濾重複）
+        all_meetings = personal_meetings.union(project_meetings).order_by("datetime")
+
         data = [
             {
-                "name": meeting.name,
-                "datetime": meeting.datetime.isoformat(),
-                "date": meeting.datetime.strftime("%Y-%m-%d"),
-                "time": meeting.datetime.strftime("%H:%M"),
-                "description": meeting.details,
-                "location": meeting.location,
-                "project_id": meeting.project.id if meeting.project else None
+                "id": m.id,
+                "name": m.name,
+                "datetime": m.datetime.isoformat(),
+                "date": m.datetime.strftime("%Y-%m-%d"),
+                "time": m.datetime.strftime("%H:%M"),
+                "description": m.details,
+                "location": m.location,
+                "project_id": m.project.id if m.project else None
             }
-            for meeting in meetings
+            for m in all_meetings
         ]
 
         return JsonResponse({"meetings": data}, safe=False)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+@csrf_exempt
+def get_all_user_meetings(request):
+    """撈出個人 + 所屬專案的所有會議"""
+    user_id = request.GET.get("user_id")
+
+    if not user_id:
+        return JsonResponse({"error": "Missing user_id"}, status=400)
+
+    try:
+        user = Users.objects.get(ID=user_id)
+
+        # 個人行程
+        personal_meetings = MeetingSchedule.objects.filter(created_by=user)
+
+        # 專案行程
+        project_ids = ProjectMember.objects.filter(user=user).values_list("project_id", flat=True)
+        project_meetings = MeetingSchedule.objects.filter(project_id__in=project_ids)
+
+        # 合併 & 回傳
+        combined = personal_meetings.union(project_meetings).order_by("datetime")
+
+        data = [
+            {
+                "id": m.id,
+                "name": m.name,
+                "datetime": m.datetime.isoformat(),
+                "date": m.datetime.strftime("%Y-%m-%d"),
+                "time": m.datetime.strftime("%H:%M"),
+                "description": m.details,
+                "location": m.location,
+                "project_id": m.project.id if m.project else None,
+                "project_name": m.project.name if m.project else None,  # ✅ 加上 project name
+            }
+            for m in combined
+        ]
+
+        return JsonResponse({"meetings": data}, status=200)
+
+    except Users.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
 
     # 時區設置
 LOCAL_TIMEZONE = timezone("Asia/Taipei")  # 設定你想要的當地時區
@@ -505,7 +556,7 @@ def update_profile(request):
     return JsonResponse({"message": "Profile updated successfully"}, status=200)
 
 
-openai_client = openai.OpenAI(api_key="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")
+openai_client = openai.OpenAI(api_key="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")
 
 @csrf_exempt
 def generate_avatar(request):
@@ -545,6 +596,8 @@ def generate_avatar(request):
             return JsonResponse({"base64_img": image_data}, status=200)
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()  # 👈 加這個印出完整錯誤
             return JsonResponse({"error": f"伺服器錯誤: {e}"}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
@@ -552,7 +605,7 @@ def generate_avatar(request):
 
 @csrf_exempt
 def update_avatar(request):
-    """ 更新用戶頭貼 """
+    """ 更新用戶頭貼（上傳 Firebase） """
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -562,35 +615,34 @@ def update_avatar(request):
             if not user_id or not img_base64:
                 return JsonResponse({"error": "Missing data"}, status=400)
 
-            try:
-                user = Users.objects.get(ID=user_id)
-            except Users.DoesNotExist:
-                return JsonResponse({"error": "User not found"}, status=404)
+            user = Users.objects.get(ID=user_id)
 
-            # ✅ **將 Base64 轉換為圖片**
-            format, img_str = img_base64.split(';base64,')  # 分割 Base64 前綴
-            ext = format.split('/')[-1]  # 取得副檔名 (如 png)
-            
-            img_data = base64.b64decode(img_str)  # 解碼 Base64
-            img_filename = f"avatar_{user_id}.png"  # 統一用 PNG 儲存
-            img_path = os.path.join("avatars", img_filename)  # 儲存到 avatars 資料夾
+            # 移除 base64 前綴
+            if ";base64," in img_base64:
+                img_base64 = img_base64.split(";base64,")[1]
 
-            # ✅ **儲存圖片到 media/avatars**
-            full_path = os.path.join(settings.MEDIA_ROOT, img_path)
-            with open(full_path, "wb") as f:
-                f.write(img_data)
+            img_data = base64.b64decode(img_base64)
 
-            # ✅ **更新資料庫**
-            user.img = img_path  # 儲存相對路徑
+            # 上傳到 Firebase Storage
+            filename = f"avatars/avatar_{user_id}_{uuid.uuid4().hex[:8]}.png"
+            bucket = storage.bucket()
+            blob = bucket.blob(filename)
+            blob.upload_from_string(img_data, content_type="image/png")
+            blob.make_public()
+            # 更新資料庫中的 img 欄位為下載 URL
+            user.img = blob.public_url
             user.save()
 
-            return JsonResponse({"success": True, "img_url": f"/media/{img_path}"}, status=200)
+            return JsonResponse({"success": True, "img_url": user.img}, status=200)
 
+        except Users.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return JsonResponse({"error": f"伺服器錯誤: {e}"}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
-
 @csrf_exempt
 def update_name(request):
     """ 更新使用者名稱 """
