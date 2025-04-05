@@ -34,8 +34,7 @@ const Backstage = () => {
     const navItems = [
         { icon: AiOutlineHome, text: "基本營運狀況", link: "/backstage/admindashboard" },
         { icon: AiOutlineGlobal, text: "用戶/權限管理", link: "/backstage/account-management" },
-        { icon: AiOutlineCheckCircle, text: "批准公司帳號申請", link: "/backstage/company-apply" },
-        { icon: AiOutlineUpload, text: "錯誤訊息檢視", link: "/backstage/error-logs" },
+      
         { icon: AiOutlineLogout, text: "登出", action: () => handleLogout() },
     ];
 
