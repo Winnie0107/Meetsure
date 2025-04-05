@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import TemplateView
-from myapp.views import user_list, get_meetings_indi, get_all_user_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages
+from myapp.views import user_list, get_meetings_indi, get_all_user_meetings, register_user, add_meeting, transcribe_audio, register_company,register_representative,get_companies,get_representatives,get_profile, update_profile, generate_avatar, update_name, update_password,update_avatar,send_message, get_messages,login_admin
 from django.conf import settings
 from django.conf.urls.static import static
 from myapp.views import login_user  
@@ -15,7 +15,7 @@ from myapp.views_meetings import get_meetings, create_meeting,update_meeting,del
 from myapp.views_todolist import todo_list_create_view,todo_delete_view,all_todos_view,recent_todos_view
 from myapp.views_meeting_record import save_meeting_record,get_meeting_records,delete_meeting_record,update_meeting_record
 from myapp.views_search_friends import search_users
-from myapp.views_group import get_user_groups,create_custom_group
+from myapp.views_group import get_user_groups,create_custom_group,get_group_join_notifications
 from myapp.views_ganttask import get_gantt_tasks,create_gantt_task,update_gantt_task,delete_gantt_task
 
 # API 路由
@@ -39,6 +39,7 @@ urlpatterns = [
     path("api/get-ngrok-url/", get_ngrok_url, name="get-ngrok-url"),  # ✅ 讓前端取得最新的 ngrok URL
     path("webhook/line/", webhook_line, name="webhook_line"),
     path("api/check-line-binding/", check_line_binding,name="check_line_binding"),
+    path('api/login/admin/', login_admin, name='login_admin'),  # 新增此行
 
     #friends
     path("api/friend_requests/", send_friend_request, name="send_friend_request"),
@@ -97,6 +98,8 @@ urlpatterns = [
     #group
     path("api/groups/", get_user_groups, name="get_user_groups"),
     path("api/groups/create/", create_custom_group, name="create_group"),
+    path('api/group_join_notifications/', get_group_join_notifications, name='group-join-notifications'),
+
     #
 
     #gantt
