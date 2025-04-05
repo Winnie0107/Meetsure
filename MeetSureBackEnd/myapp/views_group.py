@@ -4,8 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import status
-from .models import Group, GroupMembership, Users
+from .models import Group, GroupMembership, Users,LineUser
 from .serializers import GroupSerializer  # 稍後我們會定義這個 serializer
+from myapp.views_line import send_line_message
 
 
 @api_view(["GET"])
@@ -60,4 +61,42 @@ def create_custom_group(request):
         if u and u != user:
             GroupMembership.objects.get_or_create(group=group, user=u)
 
+            # ✅ 發送 LINE 通知
+            try:
+                line_user = LineUser.objects.get(user=u.auth_user)
+                msg = f"{user.name} 將你加入自創群組「{group.name}」"
+                send_line_message(line_user.line_user_id, msg)
+            except LineUser.DoesNotExist:
+                print(f"❌ {u.email} 尚未綁定 LINE，跳過通知")
+
     return Response({"message": "群組建立成功"}, status=201)
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_group_join_notifications(request):
+    user_email = request.query_params.get("user_email")
+    user = Users.objects.filter(email=user_email).first()
+
+    if not user:
+        return Response({"error": "用戶不存在"}, status=400)
+
+    memberships = GroupMembership.objects.filter(user=user).select_related("group").order_by("-created_at")
+    notifications = []
+
+    for m in memberships:
+        group = m.group
+        if group.owner != user:  # 不顯示自己創的群組
+            label = "自創群組" if group.type == "custom" else "專案小組"
+            notifications.append({
+                "id": m.id,
+                "group_name": group.name,
+                "group_type": label,
+                "owner_name": group.owner.name,
+                "owner_email": group.owner.email,
+                "created_at": m.created_at,
+                "type": "group"
+            })
+
+    return Response(notifications)
+

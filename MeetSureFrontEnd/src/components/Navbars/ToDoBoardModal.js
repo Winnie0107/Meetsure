@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -13,10 +13,12 @@ import {
   Spinner,
   HStack,
   Checkbox,
-  Tag
+  Tag,
+  useToast,
 } from "@chakra-ui/react";
 import { FaClipboardList } from "react-icons/fa";
 import { MdNewReleases, MdLoop, MdDoneAll } from "react-icons/md";
+import axios from "axios";
 
 const getPriority = (createdAt) => {
   const now = new Date();
@@ -70,36 +72,37 @@ const TaskCard = ({ task, onToggle }) => {
 };
 
 const TaskColumn = ({ title, icon, tasks, bg, onToggle }) => (
-    <Box
-      flex="1"
-      px={4}
-      py={3}
-      borderRadius="xl"
-      minH="300px"
-      bg={`${bg}`}
-      style={{ backgroundColor: `${bg}40` }}
-    >
-      <Flex align="center" mb={4} gap={2} color="gray.700" fontWeight="bold">
-        {icon}
-        <Text fontSize="lg">{title}</Text>
-        <Text fontSize="sm" color="gray.500">({tasks.length})</Text>
-      </Flex>
-      {tasks.length === 0 ? (
-        <Text fontSize="sm" color="gray.400">無任務</Text>
-      ) : (
-        <Box maxH="360px" overflowY="auto" pr={2}>
-          {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onToggle={onToggle} />
-          ))}
-        </Box>
-      )}
-    </Box>
-  );
-  
+  <Box
+    flex="1"
+    px={4}
+    py={3}
+    borderRadius="xl"
+    minH="300px"
+    bg={`${bg}`}
+    style={{ backgroundColor: `${bg}40` }}
+  >
+    <Flex align="center" mb={4} gap={2} color="gray.700" fontWeight="bold">
+      {icon}
+      <Text fontSize="lg">{title}</Text>
+      <Text fontSize="sm" color="gray.500">({tasks.length})</Text>
+    </Flex>
+    {tasks.length === 0 ? (
+      <Text fontSize="sm" color="gray.400">無任務</Text>
+    ) : (
+      <Box maxH="360px" overflowY="auto" pr={2}>
+        {tasks.map((task) => (
+          <TaskCard key={task.id} task={task} onToggle={onToggle} />
+        ))}
+      </Box>
+    )}
+  </Box>
+);
 
 export default function ToDoBoardModal({ isOpen, onClose }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const deleteTimeouts = useRef({});
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,10 +119,60 @@ export default function ToDoBoardModal({ isOpen, onClose }) {
   }, [isOpen]);
 
   const toggleCompletion = (id) => {
-    setTasks(prev => prev.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    const isNowChecked = !tasks.find((t) => t.id === id)?.completed;
+
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, completed: !t.completed } : t
+      )
+    );
+
+    if (isNowChecked) {
+      toast({
+        position: "top",
+        duration: 3000,
+        isClosable: true,
+        render: () => (
+          <Box
+            bg="teal.400"
+            color="white"
+            px={8}
+            py={6}
+            borderRadius="lg"
+            boxShadow="lg"
+          >
+            <Text fontWeight="bold">即將刪除代辦事項</Text>
+            <Text fontSize="md">將在 3 秒後刪除，可取消勾選以保留</Text>
+          </Box>
+        ),
+      });
+
+      // 進行 3 秒後刪除
+      deleteTimeouts.current[id] = setTimeout(() => deleteTask(id), 3000);
+    } else {
+      // 當勾選被取消時清除刪除的計時器
+      clearTimeout(deleteTimeouts.current[id]);
+      delete deleteTimeouts.current[id];
+    }
   };
+
+  const deleteTask = async (id) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/todos/${id}/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setTasks((prev) => prev.filter((task) => task.id !== id));
+    } catch (err) {
+      console.error("❌ 刪除失敗", err);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      Object.values(deleteTimeouts.current).forEach(clearTimeout);
+    };
+  }, []);
 
   const now = new Date();
   const oneDay = 24 * 60 * 60 * 1000;
@@ -160,20 +213,15 @@ export default function ToDoBoardModal({ isOpen, onClose }) {
                   bg="#fefcbf"
                   onToggle={toggleCompletion}
                 />
-                <TaskColumn
-                  title="已完成"
-                  icon={<MdDoneAll size={18} />}
-                  tasks={completed}
-                  bg="#c6f6d5"
-                  onToggle={toggleCompletion}
-                />
+                
               </Flex>
-              <HStack spacing={2} mt={2} alignItems="center">
-                <Text fontSize="sm" color="gray.600">系統推薦優先順序：</Text>
-                <Badge colorScheme="red">High</Badge>
-                <Badge colorScheme="yellow">Medium</Badge>
-                <Badge colorScheme="green">Low</Badge>
-              </HStack>
+              <HStack spacing={4} mt={4} alignItems="center">
+  <Text fontSize="md" color="gray.600">系統推薦優先順序：</Text>
+  <Badge colorScheme="red" fontSize="lg">High</Badge>
+  <Badge colorScheme="yellow" fontSize="lg">Medium</Badge>
+  <Badge colorScheme="green" fontSize="lg">Low</Badge>
+</HStack>
+
             </>
           )}
         </ModalBody>
