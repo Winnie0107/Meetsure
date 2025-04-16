@@ -8,6 +8,8 @@ from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from .models import Group, GroupMembership
+from myapp.models import LineUser
+from myapp.views_line import send_line_message
 
 
 
@@ -57,6 +59,8 @@ def get_projects(request):
     serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -69,29 +73,30 @@ def create_project(request):
     if not custom_user:
         return Response({"error": "找不到對應的使用者（Users）"}, status=400)
 
-    # ✅ 將 created_by 設定成 custom_user
     project, created = Project.objects.get_or_create(
         name=data["name"],
         defaults={**data, "created_by": custom_user}
     )
 
-    # ✅ 建立一個對應的群組（type: project）
     group_name = f"{data['name']}"
     group = Group.objects.create(name=group_name, owner=custom_user, type='project')
 
-    # ✅ 將所有成員加入群組
     for user_id in set(members_data):
         user = Users.objects.filter(ID=user_id).first()
         if user:
             GroupMembership.objects.get_or_create(group=group, user=user)
-
-    # ✅ **確保不會重複加入 members**
-    for user_id in set(members_data):
-        user = Users.objects.filter(ID=user_id).first()
-        if user:
             ProjectMember.objects.get_or_create(project=project, user=user)
 
-    # ✅ **確保不會重複加入 tasks**
+            # ✅ 發送 LINE 通知（排除創建者）
+            if user != custom_user:
+                try:
+                    line_user = LineUser.objects.get(user=user.auth_user)
+                    msg = f"{custom_user.name} 將你加入專案小組「{group.name}」"
+                    send_line_message(line_user.line_user_id, msg)
+                except LineUser.DoesNotExist:
+                    print(f"❌ {user.email} 尚未綁定 LINE，跳過通知")
+
+    # 建立任務
     for task_data in set(tuple(t.items()) for t in tasks_data):
         task_data = dict(task_data)
         ProjectTask.objects.get_or_create(project=project, name=task_data["name"], defaults=task_data)
