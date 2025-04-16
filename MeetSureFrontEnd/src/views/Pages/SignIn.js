@@ -8,9 +8,11 @@ import {
   Input,
   Text,
   useColorModeValue,
+  Image,
 } from "@chakra-ui/react";
 import axios from "axios";
 import BgSignUp from "assets/img/BgSignUp.png";
+import MeetSureLogo from "assets/img/MeetSureLogo.png";
 
 function SignIn() {
   const textColor = useColorModeValue("gray.700", "white");
@@ -30,14 +32,10 @@ function SignIn() {
       });
 
       if (response.data.success) {
-        
-        // 🔥 存儲 email
-        localStorage.setItem("token", response.data.token);  
-
-        localStorage.setItem("user_email", response.data.email); 
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user_email", response.data.email);
         localStorage.setItem("user_id", response.data.user_id);
- 
-        // ✅ 直接使用 window.location.href 進行跳轉
+
         window.location.href = response.data.redirect_url;
       } else {
         setErrorMessage(response.data.message);
@@ -84,28 +82,52 @@ function SignIn() {
           p="40px"
           mx={{ base: "100px" }}
           bg={bgForm}
-          boxShadow="0px 5px 14px rgba(0, 0, 0, 0.05)">
-          <Text fontSize="2xl" color="black" fontWeight="bold" textAlign="center" mb="22px">
-            請輸入以下資料
-          </Text>
+          boxShadow="0px 5px 14px rgba(0, 0, 0, 0.05)"
+          transition="all 0.3s ease"
+          _hover={{
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
+            transform: "translateY(-4px)",
+          }}
+          align="center"
+        >
+          {/* Logo + 標題 */}
+       
+<Flex direction="column" alignItems="center" mb="6">
+  <Box maxW="100px" mb="4">
+    <Image
+      src={MeetSureLogo}
+      alt="MeetSure Logo"
+      height="70px"
+      width="auto"
+      objectFit="contain"
+      mx="auto"
+    />
+  </Box>
+  <Text fontSize="2xl" color="black" fontWeight="bold" textAlign="center">
+    請輸入以下資料
+  </Text>
+</Flex>
 
-          <FormControl mb="24px">
+
+          <FormControl mb="24px" w="100%">
             <FormLabel>Gmail</FormLabel>
             <Input
               type="text"
               placeholder="Your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              focusBorderColor="teal.500"
             />
           </FormControl>
 
-          <FormControl mb="24px">
+          <FormControl mb="24px" w="100%">
             <FormLabel>密碼</FormLabel>
             <Input
               type="password"
               placeholder="Your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              focusBorderColor="teal.500"
             />
           </FormControl>
 
@@ -115,7 +137,7 @@ function SignIn() {
             </Text>
           )}
 
-          <Button colorScheme="blue" w="100%" mt="6" onClick={handleLogin}>
+          <Button colorScheme="teal" w="100%" mt="6" onClick={handleLogin}>
             登入
           </Button>
         </Flex>
