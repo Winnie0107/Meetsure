@@ -1,28 +1,12 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import "../../assets/css/CalendarStyles.css"; // ⬅️ 自訂樣式
 import {
-  Box,
-  Text,
-  List,
-  ListItem,
-  Spinner,
-  Flex,
-  Tag,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  useDisclosure,
-  useToast,
+  Box, Text, List, ListItem, Spinner, Flex,
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton,
+  ModalBody, ModalFooter, Button, FormControl, FormLabel, Input,
+  Textarea, useDisclosure, useToast,
 } from "@chakra-ui/react";
 import moment from "moment-timezone";
 import axios from "axios";
@@ -32,6 +16,7 @@ import "react-datepicker/dist/react-datepicker.css";
 const RightPanelWithCalendar = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [meetings, setMeetings] = useState([]);
+  const [allMeetings, setAllMeetings] = useState([]); // ⬅️ 全部會議
   const [loading, setLoading] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
@@ -50,13 +35,15 @@ const RightPanelWithCalendar = () => {
         headers: { Authorization: `Token ${token}` },
       });
 
-      const filtered = (response.data.meetings || []).filter(
+      const all = response.data.meetings || [];
+      setAllMeetings(all); // 儲存全部會議
+
+      const filtered = all.filter(
         (m) => moment(m.datetime).tz("Asia/Taipei").format("YYYY-MM-DD") === formattedDate
       );
 
       filtered.sort((a, b) =>
-        moment(a.datetime).tz("Asia/Taipei").toDate() -
-        moment(b.datetime).tz("Asia/Taipei").toDate()
+        moment(a.datetime).tz("Asia/Taipei").toDate() - moment(b.datetime).tz("Asia/Taipei").toDate()
       );
 
       setMeetings(filtered);
@@ -85,17 +72,14 @@ const RightPanelWithCalendar = () => {
         `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/update/`,
         selectedMeeting,
         {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
+          headers: { Authorization: `Token ${token}` },
         }
       );
-      toast({ title: "已儲存變更", status: "success", duration: 2000, isClosable: true });
+      toast({ title: "已儲存變更", status: "success" });
       onDetailClose();
       fetchMeetings();
     } catch (err) {
-      toast({ title: "儲存失敗", status: "error", duration: 3000, isClosable: true });
-      console.error("Update failed", err);
+      toast({ title: "儲存失敗", status: "error" });
     } finally {
       setModalLoading(false);
     }
@@ -108,20 +92,42 @@ const RightPanelWithCalendar = () => {
       await axios.delete(`http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`, {
         headers: { Authorization: `Token ${token}` },
       });
-      toast({ title: "已刪除會議", status: "info", duration: 2000, isClosable: true });
+      toast({ title: "已刪除會議", status: "info" });
       onDetailClose();
       fetchMeetings();
     } catch (err) {
-      toast({ title: "刪除失敗", status: "error", duration: 3000, isClosable: true });
-      console.error("Delete failed", err);
+      toast({ title: "刪除失敗", status: "error" });
     } finally {
       setModalLoading(false);
     }
   };
 
   return (
-    <Box border="1px solid lightgray" borderRadius="15px" h="100%" p="20px" bg="linear-gradient(to bottom, rgba(255, 255, 255, 0.8),rgba(120, 220, 230, 1))">
-      <Calendar onChange={(date) => setSelectedDate(moment(date).tz("Asia/Taipei").toDate())} value={selectedDate} />
+    <Box
+      border="1px solid #E2E8F0 "
+      borderRadius="15px"
+      h="100%"
+      p="20px"
+      bg="#F5F5F5"
+    >
+
+      <Calendar
+        onChange={(date) => setSelectedDate(moment(date).tz("Asia/Taipei").toDate())}
+        value={selectedDate}
+        tileClassName={({ date, view }) => {
+          if (view === 'month') {
+            const formatted = moment(date).tz("Asia/Taipei").format("YYYY-MM-DD");
+            const today = moment().tz("Asia/Taipei").format("YYYY-MM-DD");
+
+            if (formatted === today) return "today-tile";
+
+            const hasMeeting = allMeetings.some(
+              (m) => moment(m.datetime).tz("Asia/Taipei").format("YYYY-MM-DD") === formatted
+            );
+            return hasMeeting ? "has-meeting" : null;
+          }
+        }}
+      />
 
       <Text mt="20px" fontWeight="bold" fontSize="lg" color="gray.700" align="center">
         Meetings on {selectedDate.toDateString()}
@@ -135,25 +141,25 @@ const RightPanelWithCalendar = () => {
             meetings.map((meeting, index) => (
               <ListItem key={index} onClick={() => handleMeetingClick(meeting)} cursor="pointer">
                 <Box
-                  bg="rgba(255, 255, 255, 0.8)"
-                  borderRadius="10px"
+                  bg="#D1E4E2" // ✅ 柔綠背景
+                  borderRadius="15px"
                   px="25px"
                   py="10px"
-                  textAlign="left"
-                  _hover={{ bg: "#f0f0f0" }}
+                  _hover={{ bg: "#cbe0de" }}
                 >
-                  <Flex align="center" justify="space-between" wrap="wrap">
-                    <Text fontSize="md" color="black" fontWeight="bold">
+
+                  <Flex justify="space-between" wrap="wrap">
+                    <Text fontSize="md" fontWeight="bold">
                       {moment(meeting.datetime).tz("Asia/Taipei").format("HH:mm")} - {meeting.name}
                     </Text>
-                    {meeting.project_name && (
-                      <Box bg="gray.200" px={2} py={0.5} borderRadius="md" fontSize="14px" color="gray.700">
-                        {meeting.project_name}
-                      </Box>
-                    )}
                   </Flex>
+                  {meeting.project_name && (
+                    <Box bg="white" px={2} borderRadius="md" fontSize="14px" mb="2" mt="2">
+                      {meeting.project_name}
+                    </Box>
+                  )}
                   {meeting.location && (
-                    <Text fontSize="sm" color="gray.600" mt={1}>{meeting.location}</Text>
+                    <Text fontSize="sm" fontWeight="bold" color="gray.600" mt={1}>{meeting.location}</Text>
                   )}
                 </Box>
               </ListItem>
@@ -168,7 +174,7 @@ const RightPanelWithCalendar = () => {
         <ModalOverlay />
         <ModalContent p={4} borderRadius="25px" minW="600px">
           <ModalHeader>會議資訊</ModalHeader>
-          <ModalCloseButton mt="4" mr="4" />
+          <ModalCloseButton />
           <ModalBody>
             {selectedMeeting && (
               <>
@@ -185,9 +191,9 @@ const RightPanelWithCalendar = () => {
                     selected={new Date(selectedMeeting.datetime)}
                     onChange={(date) => setSelectedMeeting({ ...selectedMeeting, datetime: date })}
                     showTimeSelect
+                    dateFormat="yyyy/MM/dd HH:mm"
                     timeFormat="HH:mm"
                     timeIntervals={15}
-                    dateFormat="yyyy/MM/dd HH:mm"
                     customInput={<Input />}
                   />
                 </FormControl>
@@ -209,10 +215,10 @@ const RightPanelWithCalendar = () => {
             )}
           </ModalBody>
           <ModalFooter>
-            <Button isLoading={modalLoading} colorScheme="red" variant="outline" mr={3} onClick={handleDeleteMeeting}>
+            <Button colorScheme="red" variant="outline" mr={3} isLoading={modalLoading} onClick={handleDeleteMeeting}>
               刪除會議
             </Button>
-            <Button isLoading={modalLoading} colorScheme="teal" onClick={handleUpdateMeeting}>
+            <Button colorScheme="teal" isLoading={modalLoading} onClick={handleUpdateMeeting}>
               儲存變更
             </Button>
           </ModalFooter>

@@ -80,7 +80,7 @@ urlpatterns = [
     path('api/meeting-records/delete/<int:record_id>/', delete_meeting_record, name='delete_meeting_record'),
     path('api/meeting-records/update/<int:record_id>/', update_meeting_record, name='update_meeting_record'),
     path("api/meetings/get_user_related_meetings/", get_user_related_meetings,name="get_user_related_meetings"),
-
+    path("api/meetings/all_user_meetings/", get_all_user_meetings, name="get_all_user_meetings"),
     #
 
     #todolist

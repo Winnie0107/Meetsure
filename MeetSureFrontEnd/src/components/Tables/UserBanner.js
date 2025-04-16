@@ -1,46 +1,46 @@
 import React from "react";
-import { 
-    Avatar, 
-    Button, 
-    Flex, 
-    Text, 
-    useColorModeValue, 
-    Modal, 
-    ModalOverlay, 
-    ModalContent, 
-    ModalHeader, 
-    ModalBody, 
-    ModalFooter, 
-    Input 
-  } from "@chakra-ui/react";
+import {
+  Avatar,
+  Button,
+  Flex,
+  Text,
+  useColorModeValue,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input
+} from "@chakra-ui/react";
 import { FaEdit } from "react-icons/fa";
 import getAvatarUrl from "components/Icons/getAvatarUrl";
 
 function UserBanner({
-    name,
-    email,
-    img,
-    isNameOpen,
-    onNameOpen,
-    onNameClose,
-    newName,
-    setNewName,
-    handleUpdateName,
-    isPasswordOpen,
-    onPasswordOpen,
-    onPasswordClose,
-    newPassword,
-    setNewPassword,
-    confirmPassword,
-    setConfirmPassword,
-    handleUpdatePassword,
-    isOpen,  
-    handleOpenModal,
-    handleCloseModal,
-    generatedImg,
-    handleGenerateAvatar,
-    handleConfirmAvatar,   
-  }) {
+  name,
+  email,
+  img,
+  isNameOpen,
+  onNameOpen,
+  onNameClose,
+  newName,
+  setNewName,
+  handleUpdateName,
+  isPasswordOpen,
+  onPasswordOpen,
+  onPasswordClose,
+  newPassword,
+  setNewPassword,
+  confirmPassword,
+  setConfirmPassword,
+  handleUpdatePassword,
+  isOpen,
+  handleOpenModal,
+  handleCloseModal,
+  generatedImg,
+  handleGenerateAvatar,
+  handleConfirmAvatar,
+}) {
   const textColor = useColorModeValue("gray.700", "white");
   const bgProfile = useColorModeValue("hsla(0, 0.1%, 100.00%, 0.87)", "navy.800");
   const borderProfileColor = useColorModeValue("white", "transparent");
@@ -78,36 +78,36 @@ function UserBanner({
 
       {/* 右側：按鈕列 */}
       <Flex direction="row" gap="10px">
-        <Button leftIcon={<FaEdit />} variant="outline" colorScheme="gray" bg="rgba(45, 187, 189, 0.67)" color="gray.800" onClick={onNameOpen}>
+        <Button leftIcon={<FaEdit />} variant="outline" colorScheme="gray" bg="teal.500" color="white" onClick={onNameOpen}>
           修改名稱
         </Button>
-        <Button leftIcon={<i className="fas fa-key"></i>} variant="outline" colorScheme="gray" bg="rgba(45, 187, 189, 0.67)" color="gray.800" onClick={onPasswordOpen}>
+        <Button leftIcon={<i className="fas fa-key"></i>} variant="outline" colorScheme="gray" bg="teal.500" color="white" onClick={onPasswordOpen}>
           修改密碼
         </Button>
-        <Button leftIcon={<i className="fas fa-user-circle"></i>} variant="outline" colorScheme="gray" bg="rgba(45, 187, 189, 0.67)" color="gray.800" onClick={handleOpenModal}>
+        <Button leftIcon={<i className="fas fa-user-circle"></i>} variant="outline" colorScheme="gray" bg="teal.500" color="white" onClick={handleOpenModal}>
           修改頭貼
         </Button>
       </Flex>
-      
-        {/* AI 頭貼選擇的 Modal 彈窗 */}
-        <Modal isOpen={isOpen} onClose={handleCloseModal}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>選擇你的 AI 頭貼</ModalHeader>
-            <ModalBody>
-              {generatedImg ? (
-                <Avatar src={generatedImg} w="150px" h="150px" />
-              ) : (
-                <Text>點擊「生成頭貼」來試試！</Text>
-              )}
-            </ModalBody>
-            <ModalFooter>
-              <Button onClick={handleGenerateAvatar}>生成頭貼</Button>
-              <Button onClick={handleConfirmAvatar} isDisabled={!generatedImg}>確認</Button>
 
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+      {/* AI 頭貼選擇的 Modal 彈窗 */}
+      <Modal isOpen={isOpen} onClose={handleCloseModal}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>選擇你的 AI 頭貼</ModalHeader>
+          <ModalBody>
+            {generatedImg ? (
+              <Avatar src={generatedImg} w="150px" h="150px" />
+            ) : (
+              <Text>點擊「生成頭貼」來試試！</Text>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={handleGenerateAvatar}>生成頭貼</Button>
+            <Button onClick={handleConfirmAvatar} isDisabled={!generatedImg}>確認</Button>
+
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* 修改名稱的 Modal */}
       <Modal isOpen={isNameOpen} onClose={onNameClose}>
