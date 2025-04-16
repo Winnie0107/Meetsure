@@ -44,48 +44,25 @@ import {
 import Card from "components/Card/Card.js";
 import CardBody from "components/Card/CardBody";
 import CardHeader from "components/Card/CardHeader";
-import BarChart from "components/Charts/BarChart";
-import LineChart from "components/Charts/LineChart";
-import IconBox from "components/Icons/IconBox";
+import "../../assets/css/CalendarStyles.css";
 
 // Custom icons
-import {
-  CartIcon,
-  DocumentIcon,
-  GlobeIcon,
-  WalletIcon,
-  ChatIcon,
-  PenIcon
-} from "components/Icons/Icons.js";
 import { CheckIcon } from '@chakra-ui/icons';
 
-// Variables
-import {
-  barChartData,
-  barChartOptions,
-  lineChartData,
-  lineChartOptions,
-} from "variables/charts";
-import { pageVisits, socialTraffic } from "variables/general";
 
 import avatar2 from "assets/img/avatars/avatar2.png";
 import avatar3 from "assets/img/avatars/avatar3.png";
 import avatar4 from "assets/img/avatars/avatar4.png";
-import avatar5 from "assets/img/avatars/avatar5.png";
 import avatar6 from "assets/img/avatars/avatar6.png";
-import ImageArchitect1 from "assets/img/ImageArchitect1.png";
-import ImageArchitect2 from "assets/img/ImageArchitect2.png";
-import ImageArchitect3 from "assets/img/ImageArchitect3.png";
+import projectimg from "assets/img/buildproject.png";
 
 import {
   FaPlus,
 } from "react-icons/fa";
-import { IoDocumentsSharp } from "react-icons/io5";
 import RightPanelWithCalendar from './RightPanelWithCalendar';
-import MeetingSchedule from "./MeetingSchedule";
 
 import axios from "axios";
-import { FaClipboardList, FaCalendarAlt, FaBell, FaCheckCircle, FaMagic } from "react-icons/fa";
+import { FaBell, FaCheckCircle, FaMagic } from "react-icons/fa";
 import LineLogo from "assets/img/LineLogo.png";
 
 import UserBanner from "../../components/Tables/UserBanner";
@@ -112,7 +89,7 @@ export default function Dashboard() {
     location: "",
     details: ""
   });
-  
+
   const { isOpen: isNameOpen, onOpen: onNameOpen, onClose: onNameClose } = useDisclosure();
   const { isOpen: isPasswordOpen, onOpen: onPasswordOpen, onClose: onPasswordClose } = useDisclosure();
 
@@ -142,15 +119,15 @@ export default function Dashboard() {
   const handleSubmit = async (onClose) => {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("user_id");
-  
+
     if (!newMeeting.name || !newMeeting.datetime || !userId) {
       alert("請填寫完整資訊");
       return;
     }
-  
+
     try {
       const token = localStorage.getItem("token");
-    
+
       const response = await axios.post(
         "http://127.0.0.1:8000/api/meetings/add/",
         {
@@ -167,25 +144,25 @@ export default function Dashboard() {
           },
         }
       );
-    
-  
+
+
       console.log("✅ 成功新增會議", response.data);
-  
+
       // 清空表單
       setNewMeeting({ name: "", datetime: "", location: "", details: "" });
-  
+
       // 關閉 Modal
       if (onClose) onClose();
-  
+
       // 🔁 重新載入或更新前端資料
       // 你可以加入 setMeetings([...meetings, response.data]) 或 refetch
-  
+
     } catch (error) {
       console.error("❌ 會議新增失敗：", error);
       alert("新增會議失敗，請再試一次");
     }
   };
-    
+
   // **請求 OpenAI 生成 AI 頭貼**
   const handleGenerateAvatar = async () => {
     try {
@@ -217,14 +194,14 @@ export default function Dashboard() {
 
   const handleConfirmAvatar = async () => {
     if (!generatedImg || !userId) return;
-  
+
     try {
       const response = await fetch("http://localhost:8000/api/update_avatar/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, img_base64: generatedImg }), // 包含 base64 前綴
       });
-  
+
       const data = await response.json();
       if (data.success && data.img_url) {
         setImg(data.img_url); // ✅ 更新 img 為 Firebase 的 URL
@@ -236,7 +213,7 @@ export default function Dashboard() {
       console.error("❌ 請求錯誤:", error);
     }
   };
-  
+
 
 
   // **更新名稱**
@@ -297,21 +274,7 @@ export default function Dashboard() {
   const handleCloseModal = () => setIsOpen(false);
 
   // Chakra Color Mode
-  const iconteal = useColorModeValue("teal.500", "teal.500");
-  const iconBoxInside = useColorModeValue("white", "white");
   const textColor = useColorModeValue("gray.700", "white");
-  const tableRowColor = useColorModeValue("#F7FAFC", "navy.900");
-  const borderColor = useColorModeValue("gray.200", "gray.600");
-  const textTableColor = useColorModeValue("gray.500", "white");
-
-  const { colorMode } = useColorMode();
-
-  const cards = [
-    { title: "待辦事項", icon: FaClipboardList, content: "查看並管理你的待辦事項。" },
-    { title: "重要會議", icon: FaCalendarAlt, content: "查看即將到來的會議安排。" },
-    { title: "通知提醒", icon: FaBell, content: "查看最新的通知與消息。" },
-    { title: "目標追蹤", icon: FaCheckCircle, content: "檢視你的長期目標進度。" },
-  ];
 
   // 新增的邏輯狀態和處理函數
   const infoModal = useDisclosure();  // 管理資訊 Modal
@@ -344,7 +307,6 @@ export default function Dashboard() {
 
 
 
-
   return (
     <Flex flexDirection='column' pt={{ base: "120px", md: "75px" }}>
       <UserBanner
@@ -373,66 +335,6 @@ export default function Dashboard() {
         handleGenerateAvatar={handleGenerateAvatar}
         handleConfirmAvatar={handleConfirmAvatar}
       />
-      <SimpleGrid columns={{ sm: 1, md: 2, xl: 4 }} spacing="24px" mb="20px">
-        {cards.map((card, index) => (
-          <Card
-            key={index}
-            bg="white"
-            color="gray.800"
-            p={6}
-            borderRadius="2xl"
-            overflow="hidden"
-            boxShadow="lg"
-            transition="all 0.3s ease-in-out"
-            _hover={{
-              transform: "translateY(-5px)",
-              boxShadow: "2xl",
-              transition: "all 0.3s ease-in-out",
-            }}
-            onClick={() => {
-              setSelectedModalContent(card.content);
-              infoModal.onOpen();
-            }}
-          >
-            <CardHeader pb={3}>
-              <Flex align="center">
-                {/* Icon 保持獨立 */}
-                <Flex
-                  w={12}
-                  h={12}
-                  borderRadius="full"
-                  bg="teal.500"
-                  align="center"
-                  justify="center"
-                  mr={4}
-                  boxShadow="sm"
-                  transition="0.2s ease-in-out"
-                  _hover={{ bg: "teal.600" }}
-                >
-                  <Icon as={card.icon} w={6} h={6} color="white" />
-                </Flex>
-                {/* 標題保持左對齊 */}
-                <Text fontSize="xl" fontWeight="bold" letterSpacing="wide">
-                  {card.title}
-                </Text>
-              </Flex>
-            </CardHeader>
-            <CardBody>
-              <Text
-                fontSize="sm"
-                color="gray.500"
-                ml={4} // ⭐ 讓內文稍微向左
-                whiteSpace="nowrap" // ⭐ 確保內容不換行
-                overflow="hidden" // ⭐ 避免超出卡片
-                textOverflow="clip" // ⭐ 溢出時直接截斷 (可改為 ellipsis 顯示 "...")
-                display="block"
-              >
-                {card.content}
-              </Text>
-            </CardBody>
-          </Card>
-        ))}
-      </SimpleGrid>
 
       <Modal isOpen={infoModal.isOpen} onClose={infoModal.onClose}>
         <ModalOverlay />
@@ -515,108 +417,122 @@ export default function Dashboard() {
         {/* 左側卡片：Main Projects Card */}
         <Card p="16px" my="24px">
           <CardHeader p="12px 5px" mb="12px">
-            <Flex direction="column">
-              <Text fontSize="lg" color={textColor} fontWeight="bold">
-                Projects
-              </Text>
-              <Text fontSize="sm" color="gray.400" fontWeight="400">
-                正在進行分析的項目
-              </Text>
+            <Flex justify="space-between" align="center" w="100%">
+              <Box>
+                <Text fontSize="lg" color={textColor} fontWeight="bold">
+                  Projects
+                </Text>
+                <Text fontSize="sm" color="gray.400" fontWeight="400">
+                  正在進行中的專案
+                </Text>
+              </Box>
+              <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9"
+              >
+                View All Projects
+              </Button>
             </Flex>
           </CardHeader>
+
+
           <CardBody px="5px" h="100%">
-            <Grid templateColumns="repeat(2, 1fr)" gap="16px" h="100%">
-              {/* 左側按鈕 */}
+            <Grid templateColumns="repeat(3, 1fr)" gap="16px">
+              {/* Create Project Button */}
               <Button
                 p="0px"
-                bg="transparent"
+                bg="gray.50"
                 border="1px solid lightgray"
                 borderRadius="15px"
                 h="100%"
+                minH="270px"
+                _hover={{ bg: "gray.100" }}
               >
                 <Flex direction="column" justifyContent="center" align="center">
-                  <Icon as={FaPlus} color={textColor} fontSize="md" mb="8px" />
+                  <Icon as={FaPlus} color={textColor} fontSize="xl" mb="8px" />
                   <Text fontSize="md" color={textColor} fontWeight="bold">
                     Create a New Project
                   </Text>
                 </Flex>
               </Button>
 
-              {/* 右側項目清單 */}
-              <Flex direction="column" gap="12px" h="100%">
-                {/* Project #1 */}
-                <Flex direction="column" border="1px solid lightgray" borderRadius="15px" p="10px" h="100%">
-                  <Box mb="12px" position="relative" borderRadius="15px" overflow="hidden">
-                    <Image src={ImageArchitect1} borderRadius="15px" w="100%" h="120px" />
-                    <Box
-                      position="absolute"
-                      top="0"
-                      left="0"
-                      w="100%"
-                      h="100%"
-                      bg="linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8))"
-                      borderRadius="15px"
-                      zIndex="1"
-                    />
-                  </Box>
-                  <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">
-                    Project #1
-                  </Text>
-                  <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">
-                    Modern
-                  </Text>
-                  <Text fontSize="sm" color="gray.400" fontWeight="400" mb="12px">
-                    Internal management turmoil description here.
-                  </Text>
-                  <Flex justifyContent="space-between" alignItems="center">
-                    <Button variant="dark" minW="90px" h="30px">
-                      VIEW ALL
-                    </Button>
-                    <AvatarGroup size="xs">
-                      <Avatar name="Ryan Florence" src={avatar6} />
-                      <Avatar name="Segun Adebayo" src={avatar2} />
-                    </AvatarGroup>
-                  </Flex>
+              {/* Project #1 */}
+              <Flex direction="column" border="1px solid lightgray" borderRadius="15px" p="10px" minH="270px">
+                <Box position="relative" borderRadius="15px" overflow="hidden" w="100%" pt="100%">
+                  <Image
+                    src={projectimg}
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    borderRadius="15px"
+                  />
+                  <Box
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    w="100%"
+                    h="100%"
+                    bg="linear-gradient(to bottom, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.1))"
+                    borderRadius="15px"
+                    zIndex="1"
+                  />
+                </Box>
+                <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">Project #1</Text>
+                <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">會議MeetSure</Text>
+                <Text fontSize="sm" color="gray.400" fontWeight="400" mb="12px">
+                  以Speech-to-text為核心技術開發的專案管理平台
+                </Text>
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Button variant="dark" minW="90px" h="30px">VIEW ALL</Button>
+                  <AvatarGroup size="xs">
+                    <Avatar name="Ryan Florence" src={avatar6} />
+                    <Avatar name="Segun Adebayo" src={avatar2} />
+                  </AvatarGroup>
                 </Flex>
+              </Flex>
 
-                {/* Project #2 */}
-                <Flex direction="column" border="1px solid lightgray" borderRadius="15px" p="10px" h="100%">
-                  <Box mb="12px" position="relative" borderRadius="15px">
-                    <Image src={ImageArchitect2} borderRadius="15px" w="100%" h="120px" />
-                    <Box
-                      position="absolute"
-                      top="0"
-                      left="0"
-                      w="100%"
-                      h="100%"
-                      bg="linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8))"
-                      borderRadius="15px"
-                      zIndex="1"
-                    />
-                  </Box>
-                  <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">
-                    Project #2
-                  </Text>
-                  <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">
-                    Scandinavian
-                  </Text>
-                  <Text fontSize="sm" color="gray.400" fontWeight="400" mb="12px">
-                    Music-specific opinions description here.
-                  </Text>
-                  <Flex justifyContent="space-between" alignItems="center">
-                    <Button variant="dark" minW="90px" h="30px">
-                      VIEW ALL
-                    </Button>
-                    <AvatarGroup size="xs">
-                      <Avatar name="Kent Dodds" src={avatar3} />
-                      <Avatar name="Prosper Otemuyiwa" src={avatar4} />
-                    </AvatarGroup>
-                  </Flex>
+              {/* Project #2 */}
+              <Flex direction="column" border="1px solid lightgray" borderRadius="15px" p="10px" minH="270px">
+                <Box position="relative" borderRadius="15px" overflow="hidden" w="100%" pt="100%">
+                  <Image
+                    src={projectimg}
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    borderRadius="15px"
+                  />
+                  <Box
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    w="100%"
+                    h="100%"
+                    bg="linear-gradient(to bottom, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.1))"
+                    borderRadius="15px"
+                    zIndex="1"
+                  />
+                </Box>
+                <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">Project #2</Text>
+                <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">Test Project</Text>
+                <Text fontSize="sm" color="gray.400" fontWeight="400" mb="28px">
+                  Test Project For demonstration.
+                </Text>
+                <Flex justifyContent="space-between" alignItems="center">
+                  <Button variant="dark" minW="90px" h="30px">VIEW ALL</Button>
+                  <AvatarGroup size="xs">
+                    <Avatar name="Kent Dodds" src={avatar3} />
+                    <Avatar name="Prosper Otemuyiwa" src={avatar4} />
+                  </AvatarGroup>
                 </Flex>
               </Flex>
             </Grid>
           </CardBody>
         </Card>
+
 
         {/* 右側卡片：RightPanelWithCalendar */}
         <Card p="16px" my="24px">
@@ -681,16 +597,8 @@ export default function Dashboard() {
               </ModalFooter>
             </ModalContent>
           </Modal>
-
-
-
         </Card>
       </Grid>
-
-
-
-
-
     </Flex>
   );
 }

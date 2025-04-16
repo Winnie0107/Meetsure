@@ -36,7 +36,7 @@ if not firebase_admin._apps:
 
     db = firestore.client()
 
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 
 try:
     import torch

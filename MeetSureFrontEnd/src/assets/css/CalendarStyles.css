@@ -1,0 +1,81 @@
+.react-calendar__tile {
+    width: 36px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    font-size: 14px !important;
+    font-weight: 600;
+    padding: 0 !important;
+    margin: auto !important;
+    line-height: 1 !important;
+    transition: background 0.2s ease;
+}
+
+/* ✅ 有任務 */
+.has-meeting {
+    background-color: #D2E4E2 !important;
+    color: #1A202C !important;
+}
+
+/* ✅ 今天 */
+.today-tile {
+    background-color: #2B6F71 !important;
+    color: white !important;
+}
+
+.react-calendar {
+    border-radius: 20px !important;
+    overflow: hidden;
+    border: 1px solid #E2E8F0 !important;
+    /* 淡灰邊框 */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    /* 輕微陰影 */
+}
+
+.react-calendar__tile--active {
+    background: #2B6F71 !important;
+    color: white !important;
+    border-radius: 50% !important;
+}
+
+/* 若你的日曆是星期一開始的（ISO 8601） */
+.react-calendar__month-view__weekdays__weekday:nth-child(6),
+/* Saturday */
+.react-calendar__month-view__weekdays__weekday:nth-child(7)
+
+/* Sunday */
+    {
+    color: #2B6F71 !important;
+}
+
+/* 每週的格子中，週六（第6格）與週日（第7格） */
+.react-calendar__month-view__days__day:nth-child(7n+6),
+.react-calendar__month-view__days__day:nth-child(7n+7) {
+    color: #2B6F71 !important;
+}
+
+/* 當有會議的 tile 被選中時，也要白字 */
+.react-calendar__tile--active.has-meeting {
+    color: white !important;
+}
+
+/* 被選中狀態優先白色字，即使是週六週日 */
+.react-calendar__tile--active,
+.react-calendar__tile--active.has-meeting,
+.react-calendar__tile--active.react-calendar__month-view__days__day:nth-child(7n+6),
+.react-calendar__tile--active.react-calendar__month-view__days__day:nth-child(7n+7) {
+    color: white !important;
+}
+
+/* ✅ 今天被點擊時維持深綠背景與白字 */
+.react-calendar__tile--active.today-tile {
+    background-color: #2B6F71 !important;
+    color: white !important;
+}
+
+/* 保證今天的 tile 字體是白色，不管是不是週末 */
+.react-calendar__tile.today-tile {
+    color: white !important;
+}

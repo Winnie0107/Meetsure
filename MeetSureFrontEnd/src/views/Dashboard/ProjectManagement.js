@@ -131,7 +131,7 @@ function ProjectManagement() {
 
                         {/* ✅ 任務管理頁面 */}
                         <TabPanel>
-                            <HStack spacing="6" mt="6" align="stretch" width="100%" maxWidth="1200px" mx="auto">
+                            <HStack spacing="6" mt="6" align="stretch">
                                 <Box flex="3" maxW="25%" minW="250px">
                                     <ToDoList
                                         projectId={id}

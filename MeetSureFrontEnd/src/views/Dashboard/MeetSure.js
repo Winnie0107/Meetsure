@@ -19,7 +19,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Spinner } from "@chakra-ui/react"; // 引入 Spinner 元件
 
-function MeetSure({ onCancel, onSuccess, projectId }) {
+function MeetSure({ onCancel, onSuccess, projectId, mode = "full" }) {
     const textColor = useColorModeValue("gray.700", "white");
     const borderColor = useColorModeValue("gray.200", "gray.600");
     const toast = useToast();
@@ -276,30 +276,32 @@ function MeetSure({ onCancel, onSuccess, projectId }) {
     return (
         <Flex direction="column" pt={{ base: "120px", md: "35px" }}>
             {/* 📌 會議基本資訊欄位 */}
-            <Card mb="24px">
-                <Flex mb="4" gap="4" px="4" align="center">
-                    <Box flex="1">
-                        <Text fontSize="xl" color={textColor} fontWeight="bold" mb="10px">
-                            會議名稱
-                        </Text>
-                        <Input
-                            placeholder="請輸入會議名稱"
-                            value={meetingTitle}
-                            onChange={(e) => setMeetingTitle(e.target.value)}
-                        />
-                    </Box>
-                    <Box flex="1">
-                        <Text fontSize="xl" color={textColor} fontWeight="bold" mb="10px">
-                            會議時間
-                        </Text>
-                        <Input
-                            type="datetime-local"
-                            value={meetingDatetime}
-                            onChange={(e) => setMeetingDatetime(e.target.value)}
-                        />
-                    </Box>
-                </Flex>
-            </Card>
+            {mode === "full" && (
+                <Card mb="24px">
+                    <Flex mb="4" gap="4" px="4" align="center">
+                        <Box flex="1">
+                            <Text fontSize="xl" color={textColor} fontWeight="bold" mb="10px">
+                                會議名稱
+                            </Text>
+                            <Input
+                                placeholder="請輸入會議名稱"
+                                value={meetingTitle}
+                                onChange={(e) => setMeetingTitle(e.target.value)}
+                            />
+                        </Box>
+                        <Box flex="1">
+                            <Text fontSize="xl" color={textColor} fontWeight="bold" mb="10px">
+                                會議時間
+                            </Text>
+                            <Input
+                                type="datetime-local"
+                                value={meetingDatetime}
+                                onChange={(e) => setMeetingDatetime(e.target.value)}
+                            />
+                        </Box>
+                    </Flex>
+                </Card>
+            )}
             {/* Add Meeting Link Card */}
             <Grid templateColumns="1fr" gap="24px" mb="24px">
                 <Card>
@@ -456,37 +458,40 @@ function MeetSure({ onCancel, onSuccess, projectId }) {
                     </Card>
                 </Flex>
             </Grid>
-            <Grid templateColumns="1fr" gap="24px" mb="24px">
-                <Card>
-                    <CardHeader p="6px 0px 22px 0px">
-                        <Flex justify="space-between" alignItems="center">
-                            <Text fontSize="xl" color={textColor} fontWeight="bold">
-                                相關連結或資訊補充
-                            </Text>
-                        </Flex>
-                    </CardHeader>
-                    <CardBody>
-                        <Flex mb="4" alignItems="center">
-                            <Textarea
-                                placeholder="請輸入您的補充內容"
-                                minHeight="100px"
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                            />
-                        </Flex>
-                    </CardBody>
-                </Card>
-            </Grid>
+            {mode === "full" && (
+                <Grid templateColumns="1fr" gap="24px" mb="24px">
+                    <Card>
+                        <CardHeader p="6px 0px 22px 0px">
+                            <Flex justify="space-between" alignItems="center">
+                                <Text fontSize="xl" color={textColor} fontWeight="bold">
+                                    相關連結或資訊補充
+                                </Text>
+                            </Flex>
+                        </CardHeader>
+                        <CardBody>
+                            <Flex mb="4" alignItems="center">
+                                <Textarea
+                                    placeholder="請輸入您的補充內容"
+                                    minHeight="100px"
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                />
+                            </Flex>
+                        </CardBody>
+                    </Card>
+                </Grid>
+            )}
             {/* Footer 按鈕搬進來 */}
-            <Flex justify="flex-end" mt="4" px="4">
-                <Button colorScheme="gray" mr={3} onClick={onCancel}>
-                    取消
-                </Button>
-                <Button colorScheme="teal" onClick={handleSaveMeetingRecord}>
-                    確認新增
-                </Button>
-            </Flex>
-
+            {mode === "full" && (
+                <Flex justify="flex-end" mt="4" px="4">
+                    <Button colorScheme="gray" mr={3} onClick={onCancel}>
+                        取消
+                    </Button>
+                    <Button colorScheme="teal" onClick={handleSaveMeetingRecord}>
+                        確認新增
+                    </Button>
+                </Flex>
+            )}
         </Flex>
     );
 }
