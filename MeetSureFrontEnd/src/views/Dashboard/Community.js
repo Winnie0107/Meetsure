@@ -79,30 +79,41 @@ function SocialPage() {
     useEffect(() => {
         if (window.location.hash === "#friends") {
             setSelectedTab("friends");
+        } else {
+            setSelectedTab("chat");
+            setSelectedFriend("Meetsure機器人");  // ✅ 預設選擇 AI 機器人
         }
     }, []);
     // ✅ **獲取好友列表**
     const fetchFriends = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/friends/?user_email=${userEmail}`);
-            console.log("🔥 來自 API 的好友列表:", response.data);
-
-            if (response.data.friends) {
-                setFriendsList([
-                    { name: "Meetsure機器人", status: "auto-reply", img: null },
-                    ...response.data.friends.map(friend => ({
-                        ...friend,
-                        img: friend.img || null // 加入頭像資料
-                    }))
-                ]);
-            }
-            console.log("🔥 朋友資料:", response.data.friends);
-
+          const response = await axios.get(`http://127.0.0.1:8000/api/friends/?user_email=${userEmail}`);
+          console.log("🔥 來自 API 的好友列表:", response.data);
+      
+          if (response.data.friends) {
+            const formattedFriends = [
+              {
+                name: "Meetsure機器人",
+                email: "Meetsure機器人",
+                status: "auto-reply",
+                img: MeetSureLogo, // ✅ 指定 logo 圖片
+              },
+              ...response.data.friends.map(friend => ({
+                name: friend.name,
+                email: friend.email,
+                status: "online",
+                img: friend.img || null,
+              }))
+            ];
+      
+            console.log("🧾 friendsList 組裝後:", formattedFriends); // ✅ debug 用
+            setFriendsList(formattedFriends);
+          }
         } catch (error) {
-            console.error("❌ 獲取好友列表失敗:", error);
+          console.error("❌ 獲取好友列表失敗:", error);
         }
-    };
-
+      };
+      
     // ✅ **獲取待確認的好友邀請**
     const fetchFriendRequests = async () => {
         try {
@@ -138,13 +149,17 @@ function SocialPage() {
     // ✅ **獲取用戶的群組清單**
     const fetchGroups = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/groups/?user_email=${userEmail}`);
+            const token = localStorage.getItem("token");  // ✅ 加上這行
+            const response = await axios.get(`http://127.0.0.1:8000/api/groups/?user_email=${userEmail}`, {
+                headers: { Authorization: `Token ${token}` }  // ✅ 加上 headers
+            });
             console.log("🔥 來自 API 的群組列表:", response.data);
-            setGroupsList(response.data.groups || []);
+            setGroupsList(response.data || []);
         } catch (error) {
             console.error("❌ 獲取群組列表失敗:", error);
         }
     };
+
 
     // ✅ **獲取群組邀請**
     const fetchGroupInvites = async () => {
@@ -268,39 +283,6 @@ function SocialPage() {
 
 
 
-    // ✅ **創建群組**
-    const handleCreateGroup = async () => {
-        if (!newGroupName.trim()) {
-            alert("請輸入群組名稱");
-            return;
-        }
-
-        const selectedMemberEmails = selectedFriends.map(friend => friend.email);
-
-        if (selectedMemberEmails.length === 0) {
-            alert("請選擇至少一位好友來創建群組");
-            return;
-        }
-
-        try {
-            await axios.post("http://127.0.0.1:8000/api/groups/", {
-                group_name: newGroupName,
-                owner_email: userEmail,
-                members: selectedFriends.map(friend => friend.email),  // ✅ 確保 `selectedFriends` 被使用
-            });
-
-            alert("群組建立成功！");
-            setNewGroupName("");  // ✅ 清空輸入框
-            setSelectedFriends([]);  // ✅ 清空已選擇的好友
-
-            // ✅ 立即更新 UI
-            await fetchGroups();
-
-        } catch (error) {
-            console.error("❌ 創建群組失敗:", error.response?.data);
-            alert(error.response?.data?.error || "創建群組失敗");
-        }
-    };
 
     // ✅ **接受/拒絕好友邀請**
     const handleRespondToRequest = async (requestId, status) => {
@@ -339,11 +321,10 @@ function SocialPage() {
     };
 
     const fetchMessages = () => {
-
         if (!selectedFriend || selectedFriend === "Meetsure機器人") return;
 
-        const conversationId = [userEmail, selectedFriend].sort().join("_");
-        console.log("📡 準備查詢 conversation_id:", conversationId);
+        const isGroup = groupsList.some(group => group.name === selectedFriend);
+        const conversationId = isGroup ? selectedFriend : [userEmail, selectedFriend].sort().join("_");
 
         const q = query(
             collection(db, "meetsure"),
@@ -357,8 +338,6 @@ function SocialPage() {
                 ...doc.data()
             }));
 
-            console.log("📥 取得訊息：", messages);  // ✅ 加這一行
-
             setChatMessages(prevMessages => ({
                 ...prevMessages,
                 [selectedFriend]: messages
@@ -368,8 +347,22 @@ function SocialPage() {
         return () => unsubscribe();
     };
 
+    // ✅ 初始化聊天室視圖（從 localStorage 抓取 tab 與 friend）只執行一次
+    useEffect(() => {
+        const tab = localStorage.getItem("selected_tab") || "chat";
+        const friend = localStorage.getItem("selected_friend");
 
-    // 當 `selectedFriend` 改變時，自動載入聊天記錄
+        setSelectedTab(tab);
+        if (friend) {
+            setSelectedFriend(friend);
+        }
+
+        // ✅ 用完後清除，避免干擾未來邏輯
+        localStorage.removeItem("selected_tab");
+        localStorage.removeItem("selected_friend");
+    }, []);
+
+    // ✅ 每當 selectedFriend 改變，就抓取聊天記錄或顯示機器人訊息
     useEffect(() => {
         if (selectedFriend === "Meetsure機器人") {
             setChatMessages((prev) => ({
@@ -387,20 +380,21 @@ function SocialPage() {
         }
     }, [selectedFriend]);
 
-    // ✅ **確保 `fetchFriends` 和 `fetchFriendRequests` 會在 `userEmail` 變更時觸發**
+    // ✅ 當 userEmail 改變時，刷新好友、群組與邀請清單
     useEffect(() => {
         fetchFriends();
         fetchFriendRequests();
-        fetchGroups();  // ✅ 新增獲取群組的函式
+        fetchGroups();
         fetchGroupInvites();
     }, [userEmail]);
 
 
-
-
-
     const handleSendMessage_F = async () => {
         if (!inputValue.trim() || !selectedFriend) return;
+
+        const isGroup = groupsList.some(group => group.name === selectedFriend);
+        const conversationType = isGroup ? "group" : "individual";
+        const conversationId = isGroup ? selectedFriend : [userEmail, selectedFriend].sort().join("_");
 
         try {
             const response = await fetch("http://127.0.0.1:8000/send_message/", {
@@ -410,8 +404,10 @@ function SocialPage() {
                 },
                 body: JSON.stringify({
                     sender: userEmail,
-                    receiver: selectedFriend,
+                    receiver: isGroup ? undefined : selectedFriend,
                     message: inputValue,
+                    conversation_id: conversationId,
+                    conversation_type: conversationType,
                 }),
             });
 
@@ -428,6 +424,22 @@ function SocialPage() {
 
 
 
+    const chatTargets = [
+        ...friendsList,  // friendsList 已經有 { name: "Meetsure機器人", email: "Meetsure機器人", img: null }
+        ...groupsList.map(group => ({
+            name: group.name,
+            email: group.name,
+            status: "group",
+            img: group.owner?.img || null
+        }))
+    ];
+
+
+    const getUserNameByEmail = (email) => {
+        const allUsers = [...friendsList, ...groupsList]; // or chatTargets
+        const found = allUsers.find(u => u.email === email);
+        return found?.name || email; // 找不到就顯示 email
+    };
 
 
     //左側好友聊天室顯示
@@ -447,7 +459,7 @@ function SocialPage() {
 
 
                 <VStack spacing={4} align="stretch">
-                    {friendsList.map((friend) => (
+                    {chatTargets.map((friend) => (
                         <HStack
                             key={friend.name}
                             p="10px"
@@ -469,13 +481,26 @@ function SocialPage() {
                                         {friend.name}
                                     </Text>
                                     {/* 根據名稱顯示不同狀態 */}
-                                    <Badge
-                                        colorScheme={
-                                            friend.name === "Meetsure機器人" ? "gray" : friend.status === "online" ? "green" : "gray"
-                                        }
-                                    >
-                                        {friend.name === "Meetsure機器人" ? "自動回覆" : friend.status === "online" ? "在線" : "離線"}
-                                    </Badge>
+                                    {friend.status === "group" ? (
+                                        <Badge colorScheme="purple" fontSize="xs">群組</Badge>
+                                    ) : (
+                                        <Badge
+                                            colorScheme={
+                                                friend.name === "Meetsure機器人"
+                                                    ? "gray"
+                                                    : friend.status === "online"
+                                                        ? "green"
+                                                        : "gray"
+                                            }
+                                        >
+                                            {friend.name === "Meetsure機器人"
+                                                ? "自動回覆"
+                                                : friend.status === "online"
+                                                    ? "在線"
+                                                    : "離線"}
+                                        </Badge>
+                                    )}
+
                                 </Box>
                             </HStack>
                             {friend.name === "Meetsure機器人" && (
@@ -586,17 +611,17 @@ function SocialPage() {
                                         <HStack>
                                             <IconButton
                                                 size="md"
-                                                colorScheme="blue"
+                                                bg="rgba(49, 130, 206, 0.67)"
                                                 icon={<ChatIcon />}
                                                 aria-label="聊天"
                                                 onClick={() => {
                                                     setSelectedTab("chat");
-                                                    setSelectedFriend(friend.name);
+                                                    setSelectedFriend(friend.email || friend.name);
                                                 }}
                                             />
                                             <IconButton
                                                 size="md"
-                                                colorScheme="red"
+                                                bg="rgba(206, 57, 49, 0.67)"
                                                 icon={<DeleteIcon />}
                                                 aria-label="刪除好友"
                                                 onClick={() => {
@@ -706,6 +731,7 @@ function SocialPage() {
 
     const renderChatContent = () => {
         const currentMessages = chatMessages[selectedFriend] || [];
+        const isGroupChat = chatTargets.find(f => f.email === selectedFriend)?.status === "group";
 
         return (
             <Box flex="1" p="20px" overflowY="auto">
@@ -721,15 +747,38 @@ function SocialPage() {
                     <VStack spacing={4} align="stretch">
                         {currentMessages.map((msg, index) => {
                             const isMe = msg.sender === "You" || msg.sender === userEmail;
+                            const getUserAvatarByEmail = (email) => {
+                                const found = chatTargets.find(user => user.email === email || user.name === email);
+                                return found?.img || null;
+                            };
 
+                            // ✅ 這裡加上 debug：看 msg.sender 是否為 email，找出來的 img 是不是正確
+                            console.log("🧪 msg.sender:", msg.sender);
+                            console.log("🧪 對應的頭像 URL:", getUserAvatarByEmail(msg.sender));
 
                             return (
+
                                 <VStack
                                     key={index}
                                     align={isMe ? "flex-end" : "flex-start"}
                                     spacing={1}
                                     w="100%"
                                 >
+                                    {/* ✅ 顯示發話者名稱（非自己才顯示） */}
+                                    {isGroupChat && !isMe && (
+                                        <HStack align="center" pl="5px">
+                                            <FriendAvatar
+                                                name={getUserNameByEmail(msg.sender)}
+                                                img={getUserAvatarByEmail(msg.sender)}
+                                            />
+                                            <Text fontSize="sm" fontWeight="bold" color="gray.600">
+                                                {getUserNameByEmail(msg.sender)}
+                                            </Text>
+                                        </HStack>
+                                    )}
+
+
+
                                     <Flex justify={isMe ? "flex-end" : "flex-start"} w="100%">
                                         <Box
                                             maxW="60%"
@@ -744,6 +793,7 @@ function SocialPage() {
                                         </Box>
                                     </Flex>
 
+                                    {/* 時間 */}
                                     {msg.timestamp && (
                                         <Text
                                             fontSize="xs"
@@ -763,6 +813,7 @@ function SocialPage() {
                                         </Text>
                                     )}
                                 </VStack>
+
                             );
                         })}
                     </VStack>
@@ -843,6 +894,7 @@ function SocialPage() {
 
                 )}
             </Box>
+
         );
     };
 
@@ -939,9 +991,21 @@ function SocialPage() {
 
 
 
-                                    <Text fontWeight="bold" fontSize="lg">
-                                        {friendsList.find(f => f.email === selectedFriend)?.name}（{selectedFriend}）
-                                    </Text>
+                                    {(() => {
+                                        const friend = chatTargets.find(f => f.email === selectedFriend);
+
+                                        if (!friend) return null;
+                                        if (friend.status === "group") {
+                                            return <Text fontWeight="bold" fontSize="lg">{friend.name}</Text>;
+                                        } else {
+                                            return (
+                                                <Text fontWeight="bold" fontSize="lg">
+                                                    {friend.name}（{friend.email || selectedFriend}）
+                                                </Text>
+                                            );
+                                        }
+                                    })()}
+
 
                                 </HStack>
                                 <IconButton
@@ -975,7 +1039,7 @@ function SocialPage() {
                 ) : selectedTab === "friends" ? (
                     renderFriendsList()
                 ) : (
-                    <GroupSection userEmail={userEmail} />
+                    <GroupSection userEmail={userEmail} onGroupCreated={fetchGroups} />
                 )}
 
 

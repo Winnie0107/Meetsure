@@ -1,6 +1,8 @@
 // Chakra imports
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
+
 
 import {
   Avatar,
@@ -50,14 +52,10 @@ import "../../assets/css/CalendarStyles.css";
 import { CheckIcon } from '@chakra-ui/icons';
 
 
-import avatar2 from "assets/img/avatars/avatar2.png";
-import avatar3 from "assets/img/avatars/avatar3.png";
-import avatar4 from "assets/img/avatars/avatar4.png";
-import avatar6 from "assets/img/avatars/avatar6.png";
 import projectimg from "assets/img/buildproject.png";
 
 import {
-  FaPlus,
+  FaPlus, FaFolderPlus
 } from "react-icons/fa";
 import RightPanelWithCalendar from './RightPanelWithCalendar';
 
@@ -66,11 +64,13 @@ import { FaBell, FaCheckCircle, FaMagic } from "react-icons/fa";
 import LineLogo from "assets/img/LineLogo.png";
 
 import UserBanner from "../../components/Tables/UserBanner";
+import getAvatarUrl from "components/Icons/getAvatarUrl";
 
 
 
 export default function Dashboard() {
   const toast = useToast();
+  const history = useHistory();
 
   // 用戶資料狀態
   const [email, setEmail] = useState("");
@@ -90,6 +90,10 @@ export default function Dashboard() {
     details: ""
   });
 
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+
   const { isOpen: isNameOpen, onOpen: onNameOpen, onClose: onNameClose } = useDisclosure();
   const { isOpen: isPasswordOpen, onOpen: onPasswordOpen, onClose: onPasswordClose } = useDisclosure();
 
@@ -101,12 +105,31 @@ export default function Dashboard() {
       .then((res) => {
         setEmail(res.data.email || "");
         setName(res.data.name || "");
-        setImg(res.data.img && res.data.img !== "null" ? res.data.img : "default-profile.png"); // ✅ 確保不會是 null
+        setImg(res.data.img && res.data.img !== "null" ? res.data.img : null); // ✅ 確保不會是 null
       })
       .catch((err) => {
         console.error("Failed to fetch profile:", err);
       });
   }, [userId]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/projects/get/", {
+          headers: { Authorization: `Token ${token}` }
+        });
+        setProjects(response.data);
+      } catch (error) {
+        console.error("❌ 無法獲取專案列表:", error);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
 
   const handleInputChange = (e) => {
@@ -266,6 +289,9 @@ export default function Dashboard() {
       });
   };
 
+  const myProjects = projects.filter((project) =>
+    project.members_name?.some((member) => member.user_id === parseInt(userId))
+  );
 
 
   // **開啟彈窗**
@@ -426,10 +452,20 @@ export default function Dashboard() {
                   正在進行中的專案
                 </Text>
               </Box>
-              <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9"
+              <Button
+                bg="teal.500"
+                color="white"
+                variant="solid"
+                p="10px"
+                margin="7px"
+                _hover={{ bg: "teal.400" }}
+                opacity="0.9"
+                onClick={() => history.push("/admin/tables")}
               >
                 View All Projects
               </Button>
+
+
             </Flex>
           </CardHeader>
 
@@ -441,94 +477,108 @@ export default function Dashboard() {
                 p="0px"
                 bg="gray.50"
                 border="1px solid lightgray"
-                borderRadius="15px"
+                borderRadius="lg"
                 h="100%"
                 minH="270px"
-                _hover={{ bg: "gray.100" }}
+                boxShadow="sm"
+                transition="all 0.3s"
+                _hover={{ boxShadow: "md" }}
+                onClick={() => history.push("/admin/project")}
               >
                 <Flex direction="column" justifyContent="center" align="center">
-                  <Icon as={FaPlus} color={textColor} fontSize="xl" mb="8px" />
+                  <Icon as={FaPlus} color={textColor} fontSize="sm" mb="8px" />
                   <Text fontSize="md" color={textColor} fontWeight="bold">
-                    Create a New Project
+                    Create New Project
                   </Text>
                 </Flex>
               </Button>
 
-              {/* Project #1 */}
-              <Flex direction="column" border="1px solid lightgray" borderRadius="15px" p="10px" minH="270px">
-                <Box position="relative" borderRadius="15px" overflow="hidden" w="100%" pt="100%">
-                  <Image
-                    src={projectimg}
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    borderRadius="15px"
-                  />
-                  <Box
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    w="100%"
-                    h="100%"
-                    bg="linear-gradient(to bottom, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.1))"
-                    borderRadius="15px"
-                    zIndex="1"
-                  />
-                </Box>
-                <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">Project #1</Text>
-                <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">會議MeetSure</Text>
-                <Text fontSize="sm" color="gray.400" fontWeight="400" mb="12px">
-                  以Speech-to-text為核心技術開發的專案管理平台
-                </Text>
-                <Flex justifyContent="space-between" alignItems="center">
-                  <Button variant="dark" minW="90px" h="30px">VIEW ALL</Button>
-                  <AvatarGroup size="xs">
-                    <Avatar name="Ryan Florence" src={avatar6} />
-                    <Avatar name="Segun Adebayo" src={avatar2} />
-                  </AvatarGroup>
-                </Flex>
-              </Flex>
+              {loadingProjects ? (
+                <Text>載入中...</Text>
+              ) : myProjects.length === 0 ? (
 
-              {/* Project #2 */}
-              <Flex direction="column" border="1px solid lightgray" borderRadius="15px" p="10px" minH="270px">
-                <Box position="relative" borderRadius="15px" overflow="hidden" w="100%" pt="100%">
-                  <Image
-                    src={projectimg}
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    borderRadius="15px"
-                  />
-                  <Box
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    w="100%"
-                    h="100%"
-                    bg="linear-gradient(to bottom, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.1))"
-                    borderRadius="15px"
-                    zIndex="1"
-                  />
-                </Box>
-                <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">Project #2</Text>
-                <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">Test Project</Text>
-                <Text fontSize="sm" color="gray.400" fontWeight="400" mb="28px">
-                  Test Project For demonstration.
-                </Text>
-                <Flex justifyContent="space-between" alignItems="center">
-                  <Button variant="dark" minW="90px" h="30px">VIEW ALL</Button>
-                  <AvatarGroup size="xs">
-                    <Avatar name="Kent Dodds" src={avatar3} />
-                    <Avatar name="Prosper Otemuyiwa" src={avatar4} />
-                  </AvatarGroup>
+                <Flex
+                  w="100%"
+                  h="300px"
+                  align="center"
+                  justify="center"
+                  border="1px solid lightgray"
+                  borderRadius="lg"
+                  p={8}
+                  flexDirection="column"
+                  textAlign="center"
+                  bg="gray.50"
+                  boxShadow="sm"
+                  transition="all 0.3s"
+                  _hover={{ boxShadow: "md" }}
+                >
+                  {/* 添加空狀態插圖 */}
+                  <Box mb={4}>
+                    <Icon as={FaFolderPlus} fontSize="5xl" color="teal.400" />
+                  </Box>
+
+                  <Text fontSize="xl" fontWeight="600" mb={2}>
+                    目前尚無專案
+                  </Text>
+
+                  <Text fontSize="md" color="gray.500" mb={6}>
+                    建立你的第一個專案，開始組織你的工作並提升團隊協作效率！
+                  </Text>
+
                 </Flex>
-              </Flex>
+              ) : (
+                myProjects.map((project) => (
+                  <Flex key={project.id} direction="column" border="1px solid lightgray" borderRadius="15px" p="10px" minH="270px">
+                    <Box position="relative" borderRadius="15px" overflow="hidden" w="100%" pt="100%">
+                      <Image
+                        src={projectimg}
+                        position="absolute"
+                        top="0"
+                        left="0"
+                        w="100%"
+                        h="100%"
+                        objectFit="cover"
+                        borderRadius="15px"
+                      />
+                      <Box
+                        position="absolute"
+                        top="0"
+                        left="0"
+                        w="100%"
+                        h="100%"
+                        bg="linear-gradient(to bottom, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.1))"
+                        borderRadius="15px"
+                        zIndex="1"
+                      />
+                    </Box>
+
+                    {/* 專案名稱與描述 */}
+                    <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">
+                      {`Project #${project.id}`}
+                    </Text>
+                    <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">
+                      {project.name}
+                    </Text>
+                    <Text fontSize="sm" color="gray.400" fontWeight="400" mb="12px">
+                      {project.description || "尚無描述"}
+                    </Text>
+
+                    <Flex justifyContent="space-between" alignItems="center">
+                      <Button fontSize="sm" variant="dark" minW="90px" h="30px" onClick={() => history.push(`/admin/projectmanagement/${project.id}`)}>
+                        查看
+                      </Button>
+                      <AvatarGroup size="xs">
+                        {/* 顯示參與者頭像（最多2個） */}
+                        {project.members_name?.slice(0, 2).map((member) => (
+                          <Avatar src={getAvatarUrl(img)} />
+                        ))}
+                      </AvatarGroup>
+                    </Flex>
+                  </Flex>
+                ))
+              )}
+
+
             </Grid>
           </CardBody>
         </Card>
