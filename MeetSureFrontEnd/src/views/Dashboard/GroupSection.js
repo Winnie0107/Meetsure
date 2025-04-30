@@ -133,13 +133,18 @@ const GroupSection = () => {
                         </Text>
                     </HStack>
                     <IconButton
+                        size="md"
+                        bg="rgba(49, 130, 206, 0.67)"
                         icon={<ChatIcon />}
-                        size="sm"
                         aria-label="聊天"
-                        variant="ghost"
                         onClick={(e) => {
                             e.stopPropagation();
-                            toast({ title: `開啟與 ${group.name} 的聊天`, status: "info" });
+                            // ✅ 將群組名稱寫入 localStorage，讓 Community.js 載入時抓到
+                            localStorage.setItem("selected_tab", "chat");
+                            localStorage.setItem("selected_friend", group.name);
+
+                            // ✅ 觸發網址 hash 變更，強制 SocialPage 重設為 chat 模式
+                            window.location.hash = "#chat";
                         }}
                     />
                 </HStack>

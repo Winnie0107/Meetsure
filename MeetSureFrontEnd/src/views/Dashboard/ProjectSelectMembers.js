@@ -22,6 +22,7 @@ import Card from "components/Card/Card.js";
 import CardHeader from "components/Card/CardHeader.js";
 import CardBody from "components/Card/CardBody.js";
 import BuildProjectImage from "assets/img/buildproject.png";
+import getAvatarUrl from "components/Icons/getAvatarUrl";
 
 function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectData, setProjectData, userEmail }) {
     const textColor = useColorModeValue("gray.700", "white");

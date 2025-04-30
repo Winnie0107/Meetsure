@@ -16,17 +16,18 @@ import requests
 import firebase_admin
 from firebase_admin import credentials, firestore, initialize_app
 import dj_database_url
-import firebase_admin
-from firebase_admin import credentials, firestore, initialize_app
 
 
+from dotenv import load_dotenv
 
+load_dotenv()
+
+FIREBASE_CREDENTIALS_PATH = os.getenv('FIREBASE_CREDENTIALS_PATH')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 設定 Firebase JSON 憑證路徑
-FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "MeetSureBackEnd", "meetsure-new-firebase-adminsdk-fbsvc-b3b700a86d.json")
 
 if not firebase_admin._apps:
     cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
@@ -36,7 +37,7 @@ if not firebase_admin._apps:
 
     db = firestore.client()
 
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 
 try:
     import torch

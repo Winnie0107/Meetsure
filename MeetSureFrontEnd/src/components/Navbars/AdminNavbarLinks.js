@@ -11,14 +11,16 @@ import {
   useColorMode,
   useColorModeValue, Avatar
 } from "@chakra-ui/react";
-import { BellIcon,CheckIcon} from "@chakra-ui/icons";
+import { QuestionIcon,BellIcon,CheckIcon} from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
 import { ProfileIcon, SettingsIcon } from "components/Icons/Icons";
 import NotificationDropdown from "components/Navbars/NotificationDropdown";
 import MeetingNotification from "components/Navbars/MeetingNotification";
 import axios from "axios";
 import ToDoNotifications from "components/Navbars/ToDoNotifications";
+import HelpGuideButton from "components/Navbars/HelpGuideButton";
 import getAvatarUrl from "components/Icons/getAvatarUrl";
+
 
 
 export default function HeaderLinks(props) {
@@ -140,6 +142,8 @@ export default function HeaderLinks(props) {
       <NotificationDropdown userEmail={userEmail} />
         <MeetingNotification userEmail={userEmail} />
         <ToDoNotifications userEmail={userEmail} />
+        <HelpGuideButton /> {/* ✅ 問號 icon */}
+
       </Flex>
 
       {userEmail ? (

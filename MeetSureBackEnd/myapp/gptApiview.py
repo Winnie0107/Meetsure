@@ -5,7 +5,7 @@ import openai
 
 
 # 創建 OpenAI 客戶端
-openai_client = openai.OpenAI(api_key="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")
+openai_client = openai.OpenAI(api_key="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")
 
 @csrf_exempt
 def chatgpt_response(request):

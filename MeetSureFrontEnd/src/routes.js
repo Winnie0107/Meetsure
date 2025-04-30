@@ -27,6 +27,7 @@ import CompanyApply from "views/Pages/CompanyApply.js";
 import ErrorLogs from "views/Pages/ErrorLogs.js";
 import ProjectManagement from "views/Dashboard/ProjectManagement.js";
 import GanttChart from "views/Dashboard/GanttChart.js";
+import SideBarMeetSure from "views/Dashboard/SideBarMeetSurePage.js";
 
 
 import {
@@ -53,14 +54,6 @@ var dashRoutes = [
     rtlName: "لوحة القيادة",
     icon: <StatsIcon color='inherit' />,
     component: Project,
-    layout: "/admin",
-  },
-  {
-    path: "/meetsure",
-    name: "MeetSure",
-    rtlName: "MeetSure",
-    //icon: <DocumentIcon color='inherit' />,
-    component: MeetSure,
     layout: "/admin",
   },
   {
@@ -96,6 +89,22 @@ var dashRoutes = [
     name: "註冊",
     component: SignUp,
     layout: "/auth",
+  },
+  {
+    path: "/SideBarMeetSure",
+    name: "逐字稿分析",
+    rtlName: "SideBarMeetSure",
+    icon: <DocumentIcon color='inherit' />,
+    component: SideBarMeetSure,
+    layout: "/admin",
+  },
+  {
+    path: "/meetsure",
+    name: "meetsure",
+    rtlName: "MeetSure",
+    //icon: <DocumentIcon color='inherit' />,
+    component: MeetSure,
+    layout: "/admin",
   },
   {
     path: "/AIToolsPage",
