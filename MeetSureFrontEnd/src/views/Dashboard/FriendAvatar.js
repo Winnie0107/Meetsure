@@ -1,22 +1,18 @@
 import React from "react";
-import { Avatar } from "@chakra-ui/react";
 import MeetSureLogo from "assets/img/MeetSureLogo.jpg";
+import { Avatar } from "@chakra-ui/react";
 
 const FriendAvatar = ({ name, img }) => {
-  if (name === "Meetsure機器人") {
-    return <Avatar name={name} src={MeetSureLogo} bg="transparent" />;
-  }
+  // ✅ 只有 "Meetsure機器人" 才顯示 Logo，其他沒 img 就顯示字母頭像
+  const avatarSrc = name === "Meetsure機器人"
+    ? MeetSureLogo
+    : img?.startsWith("http") || img?.startsWith("data:image")
+    ? img
+    : img
+    ? `http://localhost:8000/media/${img}`
+    : undefined;
 
-  console.log("🧩 [FriendAvatar] img for", name, ":", img);
-
-  const formattedImg =
-    img?.startsWith("data:image")
-      ? img
-      : img
-      ? `http://localhost:8000/media/${img.replace(/\\/g, "/")}`
-      : undefined;
-
-  return <Avatar name={name} src={formattedImg} />;
+  return <Avatar name={name} src={avatarSrc} size="sm" />;
 };
 
 export default FriendAvatar;

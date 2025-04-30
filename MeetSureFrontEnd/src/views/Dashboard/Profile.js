@@ -24,7 +24,7 @@ import Card from "components/Card/Card";
 import CardHeader from "components/Card/CardHeader";
 import CardBody from "components/Card/CardBody";
 import axios from "axios";
-import { FaEdit } from "react-icons/fa"; 
+import { FaEdit } from "react-icons/fa";
 function Profile() {
   const { colorMode } = useColorMode();
   const toast = useToast();
@@ -35,17 +35,21 @@ function Profile() {
   const [name, setName] = useState("");
   const [level, setLevel] = useState("");
   const [img, setImg] = useState(""); // **目前的頭貼 URL**
-  
+
+
+
   // **AI 頭貼相關狀態**
   const [isOpen, setIsOpen] = useState(false); // 控制彈窗開關
   const [generatedImg, setGeneratedImg] = useState(""); // 存放 AI 生成的頭貼
   const userId = localStorage.getItem("user_id"); // 取得用戶 ID
+
 
   // Chakra UI 顏色設定
   const textColor = useColorModeValue("gray.700", "white");
   const bgProfile = useColorModeValue("hsla(0,0%,100%,.8)", "navy.800");
   const borderProfileColor = useColorModeValue("white", "transparent");
   const emailColor = useColorModeValue("gray.400", "gray.300");
+
 
   // **Modal 控制**
   const { isOpen: isNameOpen, onOpen: onNameOpen, onClose: onNameClose } = useDisclosure();
@@ -57,6 +61,7 @@ function Profile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+
   useEffect(() => {
     if (!userId) return;
     axios
@@ -66,7 +71,7 @@ function Profile() {
         setPassword(res.data.password || "");
         setName(res.data.name || "");
         setLevel(res.data.acco_level || "");
-        setImg(res.data.img || "default-profile.png");
+        setImg(res.data.img ||null);
       })
       .catch((err) => {
         console.error("Failed to fetch profile:", err);
@@ -86,16 +91,22 @@ function Profile() {
         console.error("❌ userId 未定義，請重新登入");
         return;
       }
-  
+
       const response = await fetch("http://localhost:8000/api/generate_avatar/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),  // ✅ 確保 user_id 被傳遞
+        body: JSON.stringify({
+          user_id: userId,
+          character: characterInput,
+          style: styleInput,
+          expression: expressionInput,
+        }),
+
       });
-  
+
       const data = await response.json();
       console.log("AI 頭貼回應:", data); // ✅ Debug 回應
-  
+
       if (data.base64_img) {
         setGeneratedImg(`data:image/png;base64,${data.base64_img}`); // ✅ 設定 Base64 圖片
       } else {
@@ -105,18 +116,18 @@ function Profile() {
       console.error("❌ 生成頭貼請求錯誤:", error);
     }
   };
-  
-  
+
+
   const handleConfirmAvatar = async () => {
     if (!generatedImg || !userId) return;
-  
+
     try {
       const response = await fetch("http://localhost:8000/api/update_avatar/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, img_base64: generatedImg }),
       });
-  
+
       const data = await response.json();
       if (data.success) {
         setImg(generatedImg); // ✅ 更新 UI 頭貼
@@ -128,8 +139,8 @@ function Profile() {
       console.error("❌ 請求錯誤:", error);
     }
   };
-  
-  
+
+
   // **更新名稱**
   const handleUpdateName = async () => {
     if (!newName.trim()) {
@@ -165,22 +176,22 @@ function Profile() {
       toast({ title: "錯誤", description: "密碼不匹配", status: "error" });
       return;
     }
-  
+
     axios.post("http://localhost:8000/api/update_password/", {
       user_id: userId,
       new_password: newPassword, // 這裡發送的是明文，後端會加密
     })
-    .then(() => { // ✅ 移除 `res`
-      toast({ title: "密碼修改成功", status: "success" });
-      onPasswordClose();
-    })
-    .catch((err) => {
-      console.error("密碼修改失敗:", err);
-      toast({ title: "錯誤", description: "無法修改密碼", status: "error" });
-    });
+      .then(() => { // ✅ 移除 `res`
+        toast({ title: "密碼修改成功", status: "success" });
+        onPasswordClose();
+      })
+      .catch((err) => {
+        console.error("密碼修改失敗:", err);
+        toast({ title: "錯誤", description: "無法修改密碼", status: "error" });
+      });
   };
-  
-  
+
+
 
   return (
     <Flex direction="column" pt={{ base: "120px", md: "75px", lg: "100px" }}>
@@ -242,22 +253,56 @@ function Profile() {
         {/* AI 頭貼選擇的 Modal 彈窗 */}
         <Modal isOpen={isOpen} onClose={handleCloseModal}>
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent
+            maxW="500px"
+            maxH="90vh"
+            overflow="auto"
+            display="flex"
+            flexDirection="column"
+          >
             <ModalHeader>選擇你的 AI 頭貼</ModalHeader>
-            <ModalBody>
+            <ModalBody flex="1" overflowY="auto">
+              <FormControl mb={3}>
+                <Text fontWeight="bold" mb={1}>角色</Text>
+                <Input
+                  placeholder="例如：男性、精靈、機器人"
+                  value={characterInput}
+                  onChange={(e) => setCharacterInput(e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl mb={3}>
+                <Text fontWeight="bold" mb={1}>風格</Text>
+                <Input
+                  placeholder="例如：可愛、帥氣、動漫風"
+                  value={styleInput}
+                  onChange={(e) => setStyleInput(e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl mb={4}>
+                <Text fontWeight="bold" mb={1}>表情</Text>
+                <Input
+                  placeholder="例如：微笑、思考、自信"
+                  value={expressionInput}
+                  onChange={(e) => setExpressionInput(e.target.value)}
+                />
+              </FormControl>
+
               {generatedImg ? (
-                <Avatar src={generatedImg} w="150px" h="150px" />
+                <Avatar src={generatedImg} w="150px" h="150px" mx="auto" />
               ) : (
-                <Text>點擊「生成頭貼」來試試！</Text>
+                <Text textAlign="center">點擊「生成頭貼」來試試！</Text>
               )}
             </ModalBody>
+
             <ModalFooter>
               <Button onClick={handleGenerateAvatar}>生成頭貼</Button>
               <Button onClick={handleConfirmAvatar} isDisabled={!generatedImg}>確認</Button>
-
             </ModalFooter>
           </ModalContent>
         </Modal>
+
 
 
         {/* 2) Profile Name 區塊 */}
@@ -329,37 +374,37 @@ function Profile() {
         </Card>
 
 
-        
-      {/* 修改名稱的 Modal */}
-      <Modal isOpen={isNameOpen} onClose={onNameClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>修改你的名稱</ModalHeader>
-          <ModalBody>
-            <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="輸入新名稱" />
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleUpdateName}>確認修改</Button>
-            <Button variant="ghost" onClick={onNameClose}>取消</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
 
-      {/* 修改密碼的 Modal */}
-      <Modal isOpen={isPasswordOpen} onClose={onPasswordClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>修改密碼</ModalHeader>
-          <ModalBody>
-            <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="輸入新密碼" mb="3" />
-            <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="確認新密碼" />
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleUpdatePassword}>提交</Button>
-            <Button variant="ghost" onClick={onPasswordClose}>取消</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        {/* 修改名稱的 Modal */}
+        <Modal isOpen={isNameOpen} onClose={onNameClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>修改你的名稱</ModalHeader>
+            <ModalBody>
+              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="輸入新名稱" />
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" onClick={handleUpdateName}>確認修改</Button>
+              <Button variant="ghost" onClick={onNameClose}>取消</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* 修改密碼的 Modal */}
+        <Modal isOpen={isPasswordOpen} onClose={onPasswordClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>修改密碼</ModalHeader>
+            <ModalBody>
+              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="輸入新密碼" mb="3" />
+              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="確認新密碼" />
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" onClick={handleUpdatePassword}>提交</Button>
+              <Button variant="ghost" onClick={onPasswordClose}>取消</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </Grid>
     </Flex>
   );
