@@ -556,7 +556,7 @@ def update_profile(request):
     return JsonResponse({"message": "Profile updated successfully"}, status=200)
 
 
-openai_client = openai.OpenAI(api_key="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")
+openai_client = openai.OpenAI(api_key="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")
 
 @csrf_exempt
 def generate_avatar(request):
@@ -570,11 +570,15 @@ def generate_avatar(request):
                 return JsonResponse({"error": "Missing user_id"}, status=400)
 
             # ✅ **Anime 風格 prompt**
+            character = data.get("character", "a person")
+            style = data.get("style", "friendly")
+
             prompt = (
-                "A highly detailed Pixar-style and Disney 3D animated avatar, character facing forward, happy face, "
-                "upper body only, soft vibrant colors, cinematic lighting, "
-                "high-resolution, friendly and warm expression, simple background , digital painting, Pixar character design"
+                f"A 3D cartoon-style portrait of a {character}, in a {style} style, with a smiling facial expression. "
+                "Highly detailed, Pixar and Disney-like rendering, ultra high-resolution, cinematic lighting, "
+                "soft pastel colors, symmetrical face, front-facing, upper body only, simple light background"
             )
+
 
 
 
@@ -731,42 +735,58 @@ def create_group(request):
 
     return JsonResponse({"error": "請使用 POST 方法"}, status=405)
 
-
 @csrf_exempt
 def send_message(request):
-    """處理用戶發送訊息"""
+    """處理發送訊息（支援個人與群組）"""
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             sender = data.get("sender")
-            receiver = data.get("receiver")
             message = data.get("message")
+            conversation_type = data.get("conversation_type", "individual")  # 預設為個人
+            conversation_id = data.get("conversation_id")  # 這裡是 email 或 group_id
 
-            if not sender or not receiver or not message:
+            if not sender or not message or not conversation_id:
                 return JsonResponse({"error": "缺少必要字段"}, status=400)
 
-            conversation_id = "_".join(sorted([sender, receiver]))  # 統一雙方順序
+            if conversation_type == "individual":
+                receiver = data.get("receiver")
+                if not receiver:
+                    return JsonResponse({"error": "個人對話需提供 receiver"}, status=400)
 
-            messages_ref = db.collection("meetsure")
+                participants = [sender, receiver]
+                conversation_id = "_".join(sorted([sender, receiver]))
+
+            elif conversation_type == "group":
+                from .models import GroupMembership, Group
+
+                group = Group.objects.filter(name=conversation_id).first()
+                if not group:
+                    return JsonResponse({"error": "群組不存在"}, status=404)
+
+                # 抓出所有成員的 email
+                members = GroupMembership.objects.filter(group=group).select_related("user")
+                participants = [member.user.email for member in members]
+
+            else:
+                return JsonResponse({"error": "無效的 conversation_type"}, status=400)
 
             new_message = {
                 "sender": sender,
-                "receiver": receiver,
                 "message": message,
                 "timestamp": datetime.utcnow(),
-                "participants": [sender, receiver],
-                "conversation_id": conversation_id,  # ✅ 新增欄位
+                "participants": participants,
+                "conversation_id": conversation_id,
+                "conversation_type": conversation_type,
             }
 
-            messages_ref.add(new_message)
-
+            db.collection("meetsure").add(new_message)
             return JsonResponse({"message": "訊息已發送"}, status=201)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "無效的 JSON 格式"}, status=400)
 
     return JsonResponse({"error": "請使用 POST 方法"}, status=405)
-
 
 def get_messages(request):
     """獲取與指定好友的聊天記錄"""

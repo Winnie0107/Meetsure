@@ -120,7 +120,7 @@ def get_friends_list(request):
             "id": friend.ID,
             "email": friend.email,
             "name": friend.name,
-            #"img": f"media/{friend.img.replace('\\', '/')}" if friend.img else None
+            "img": friend.img,  # ✅ 加這一行才會回傳頭像！
         }
         for friend in friends
     ]
