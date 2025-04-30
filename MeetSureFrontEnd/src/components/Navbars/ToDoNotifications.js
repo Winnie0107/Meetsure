@@ -17,7 +17,7 @@ export default function ToDoNotifications() {
 
     const fetchRecentTodos = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/todos/recent/", {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/todos/recent/`, {
           headers: {
             Authorization: `Token ${token}`,
           },

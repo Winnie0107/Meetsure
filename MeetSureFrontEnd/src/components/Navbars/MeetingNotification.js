@@ -29,7 +29,7 @@ const formatDate = (datetimeStr) => {
 const fetchRecentMeetings = async () => {
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`http://127.0.0.1:8000/api/meetings/get_user_related_meetings/`, {
+  const res = await fetch(`${process.env.REACT_APP_API_URL}/meetings/get_user_related_meetings/`, {
     headers: {
       Authorization: `Token ${token}`
     }

@@ -47,7 +47,7 @@ function AICheck() {
         setLoading(true);
 
         try {
-            const response = await axios.post("http://127.0.0.1:8000/chatgpt/", {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/chatgpt/`, {
                 message: `請幫我檢查這段文本的語法，並根據"${mode}"模式提供建議：「${inputText}」`
             });
 

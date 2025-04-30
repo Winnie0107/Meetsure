@@ -28,14 +28,14 @@ const GroupSection = () => {
     const token = localStorage.getItem("token");
     const userEmail = localStorage.getItem("user_email");
     const getAvatarUrl = (img) => {
-        return img ? `http://localhost:8000/${img}` : undefined;
+        return img ? `${process.env.REACT_APP_API_URL}/${img}` : undefined;
     };
 
 
     // ✅ 取得群組清單
     const fetchGroups = async () => {
         try {
-            const res = await axios.get("http://127.0.0.1:8000/api/groups/", {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/groups/`, {
                 headers: { Authorization: `Token ${token}` },
             });
             setGroupList(res.data);
@@ -47,7 +47,7 @@ const GroupSection = () => {
     // ✅ 取得好友列表
     const fetchUsers = async () => {
         try {
-            const res = await axios.get("http://127.0.0.1:8000/api/friends/", {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/friends/`, {
                 params: { user_email: userEmail },  // ⬅️ 加上這個
                 headers: { Authorization: `Token ${token}` },
             });
@@ -87,7 +87,7 @@ const GroupSection = () => {
 
         try {
             const res = await axios.post(
-                "http://127.0.0.1:8000/api/groups/create/",
+                `${process.env.REACT_APP_API_URL}/groups/create/`,
                 {
                     name: newGroupName,
                     members: selectedMembers,

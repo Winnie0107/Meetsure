@@ -30,7 +30,7 @@ export default function NotificationDropdown({ userEmail }) {
     console.log("📌 開始請求通知資料，使用 userEmail:", userEmail);
 
     // 取得好友邀請
-    fetch(`http://127.0.0.1:8000/api/friend_requests/list/?user_email=${userEmail}`, {
+    fetch(`${process.env.REACT_APP_API_URL}/friend_requests/list/?user_email=${userEmail}`, {
       headers: {
         Authorization: `Token ${token}`,
       },
@@ -45,7 +45,7 @@ export default function NotificationDropdown({ userEmail }) {
       .catch((err) => console.error("獲取好友邀請失敗", err));
 
     // 取得群組加入通知
-    fetch(`http://127.0.0.1:8000/api/group_join_notifications/?user_email=${userEmail}`, {
+    fetch(`${process.env.REACT_APP_API_URL}/group_join_notifications/?user_email=${userEmail}`, {
       headers: {
         Authorization: `Token ${token}`,
       },

@@ -67,7 +67,7 @@ function Project() {
         const token = localStorage.getItem("token");
 
         try {
-            const response = await axios.post("http://127.0.0.1:8000/api/projects/", formattedData, {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/projects/`, formattedData, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Token ${token}`,

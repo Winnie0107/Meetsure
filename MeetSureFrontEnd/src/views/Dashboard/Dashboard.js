@@ -120,7 +120,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!userId) return;
     axios
-      .get(`http://localhost:8000/api/profile?user_id=${userId}`)
+      .get(`${process.env.REACT_APP_API_URL}/profile?user_id=${userId}`)
       .then((res) => {
         setEmail(res.data.email || "");
         setName(res.data.name || "");
@@ -152,7 +152,7 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
     
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/meetings/add/",
+        `${process.env.REACT_APP_API_URL}/meetings/add/ `,
         {
           name: newMeeting.name,
           date: newMeeting.datetime.split("T")[0],     // yyyy-mm-dd
@@ -195,7 +195,7 @@ export default function Dashboard() {
         return;
       }
 
-      const response = await fetch("http://localhost:8000/api/generate_avatar/", {
+      const response = await fetch( `${process.env.REACT_APP_API_URL}/generate_avatar/ `, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId }),  // ✅ 確保 user_id 被傳遞
@@ -219,7 +219,7 @@ export default function Dashboard() {
     if (!generatedImg || !userId) return;
   
     try {
-      const response = await fetch("http://localhost:8000/api/update_avatar/", {
+      const response = await fetch( `${process.env.REACT_APP_API_URL}/update_avatar/ `, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, img_base64: generatedImg }), // 包含 base64 前綴
@@ -251,7 +251,7 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/api/update_name/", {
+      const response = await axios.post( `${process.env.REACT_APP_API_URL}/update_name/ `, {
         user_id: userId,
         new_name: newName,
       });
@@ -275,7 +275,7 @@ export default function Dashboard() {
       return;
     }
 
-    axios.post("http://localhost:8000/api/update_password/", {
+    axios.post( `${process.env.REACT_APP_API_URL}/update_password/ `, {
       user_id: userId,
       new_password: newPassword, // 這裡發送的是明文，後端會加密
     })
@@ -326,7 +326,7 @@ export default function Dashboard() {
     const checkLineBinding = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://127.0.0.1:8000/api/check-line-binding/", {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/check-line-binding/`, {
           headers: {
             Authorization: `Token ${token}`
           }

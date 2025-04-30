@@ -17,6 +17,7 @@ from myapp.views_meeting_record import save_meeting_record,get_meeting_records,d
 from myapp.views_search_friends import search_users
 from myapp.views_group import get_user_groups,create_custom_group,get_group_join_notifications
 from myapp.views_ganttask import get_gantt_tasks,create_gantt_task,update_gantt_task,delete_gantt_task
+from myapp.views_backstage import get_companies,create_user_by_company_admin,get_company_users,update_user,delete_user,get_in_progress_project_count,get_company_projects
 
 # API 路由
 urlpatterns = [
@@ -29,8 +30,8 @@ urlpatterns = [
     path('api/transcribe/', transcribe_audio, name='transcribe_audio'),  # 音檔轉文字
     path('api/login/', login_user, name='login_user'),  # 新增此行
     path("chatgpt/", chatgpt_response, name="chatgpt_response"), #gpt 
-    path('register_company/', register_company, name='register_company'),
-    path('register_representative/', register_representative, name='register_representative'),
+    path('api/register_company/', register_company, name='register_company'),
+    path('api/register_representative/', register_representative, name='register_representative'),
     path('get_companies/', get_companies, name='get_companies'),
     path('get_representatives/', get_representatives, name='get_representatives'),
     path("webhook/line/", LineWebhookView.as_view(), name="line-webhook"),  
@@ -55,8 +56,8 @@ urlpatterns = [
     path('api/update_avatar/', update_avatar, name='update_avatar'),
     path("api/update_name/", update_name, name="update_name"),
     path("api/update_password/", update_password, name="update_password"),
-    path("send_message/", send_message, name="send_message"),
-    path("get_messages/", get_messages, name="get_messages"),
+    path("api/send_message/", send_message, name="send_message"),
+    path("api/get_messages/", get_messages, name="get_messages"),
 
     #project
     path("api/projects/", create_project, name="create_project"),
@@ -108,6 +109,22 @@ urlpatterns = [
     path('api/gantt-tasks/<int:task_id>/update/', update_gantt_task, name='update_gantt_task'),
     path('api/gantt-tasks/<int:task_id>/delete/', delete_gantt_task, name='delete_gantt_task'),
     #
+    
+    #backstage
+    path('api/companies/', get_companies,name='get_companies'),
+    path('api/users/create/', create_user_by_company_admin,name='create_user_by_company_admin'),
+    path('api/users/company-users/', get_company_users,name='get_company_users'),
+    path('api/users/<int:user_id>/update/', update_user,name='update_user'),
+    path('api/users/<int:user_id>/delete/', delete_user, name='delete_user'),
+    path("api/projects/in-progress-count/", get_in_progress_project_count,name='get_in_progress_project_count'),
+    path('api/projects/company-projects/', get_company_projects, name='get_company_projects'),
+
+   
+   
+   
+    #
+    
+    
 ]
 
 # 靜態文件設置（開發模式下）

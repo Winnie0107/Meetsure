@@ -69,7 +69,7 @@ const MeetingDataList = ({ projectId }) => {
 
     useEffect(() => {
         if (projectId) {
-            axios.get(`http://127.0.0.1:8000/api/meeting-records/${projectId}/`)
+            axios.get(`${process.env.REACT_APP_API_URL}/meeting-records/${projectId}/`)
                 .then(res => {
                     setRecords(res.data);
                 })
@@ -83,7 +83,7 @@ const MeetingDataList = ({ projectId }) => {
         if (!selectedRecord) return;
         const token = localStorage.getItem("token");
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/meeting-records/delete/${selectedRecord.id}/`, {
+            await axios.delete(`${process.env.REACT_APP_API_URL}/meeting-records/delete/${selectedRecord.id}/`, {
                 headers: { Authorization: `Token ${token}` }
             });
             setRecords(prev => prev.filter(r => r.id !== selectedRecord.id));
@@ -108,7 +108,7 @@ const MeetingDataList = ({ projectId }) => {
             const localDate = new Date(datetime);
             const utcDatetime = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString();
 
-            await axios.put(`http://127.0.0.1:8000/api/meeting-records/update/${id}/`, {
+            await axios.put(`${process.env.REACT_APP_API_URL}/meeting-records/update/${id}/`, {
                 title,
                 datetime, // ⬅️ 原樣送出，如 '2025-03-23T23:00'
                 transcript,

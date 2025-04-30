@@ -46,7 +46,7 @@ const RightPanelWithCalendar = () => {
     try {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("user_id");
-      const response = await axios.get(`http://127.0.0.1:8000/api/meetings/all_user_meetings/?user_id=${userId}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/meetings/all_user_meetings/?user_id=${userId}`, {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -82,7 +82,7 @@ const RightPanelWithCalendar = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/update/`,
+        `${process.env.REACT_APP_API_URL}/meetings/${selectedMeeting.id}/update/`,
         selectedMeeting,
         {
           headers: {
@@ -105,7 +105,7 @@ const RightPanelWithCalendar = () => {
     setModalLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/meetings/${selectedMeeting.id}/delete/`, {
         headers: { Authorization: `Token ${token}` },
       });
       toast({ title: "已刪除會議", status: "info", duration: 2000, isClosable: true });

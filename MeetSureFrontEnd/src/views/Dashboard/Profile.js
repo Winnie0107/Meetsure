@@ -60,7 +60,7 @@ function Profile() {
   useEffect(() => {
     if (!userId) return;
     axios
-      .get(`http://localhost:8000/api/profile?user_id=${userId}`)
+      .get(`${process.env.REACT_APP_API_URL}/profile?user_id=${userId}`)
       .then((res) => {
         setEmail(res.data.email || "");
         setPassword(res.data.password || "");
@@ -87,7 +87,7 @@ function Profile() {
         return;
       }
   
-      const response = await fetch("http://localhost:8000/api/generate_avatar/", {
+      const response = await fetch( `${process.env.REACT_APP_API_URL}/generate_avatar/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId }),  // ✅ 確保 user_id 被傳遞
@@ -111,7 +111,7 @@ function Profile() {
     if (!generatedImg || !userId) return;
   
     try {
-      const response = await fetch("http://localhost:8000/api/update_avatar/", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/update_avatar/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, img_base64: generatedImg }),
@@ -142,7 +142,7 @@ function Profile() {
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/api/update_name/", {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/update_name/`, {
         user_id: userId,
         new_name: newName,
       });
@@ -166,7 +166,7 @@ function Profile() {
       return;
     }
   
-    axios.post("http://localhost:8000/api/update_password/", {
+    axios.post(`${process.env.REACT_APP_API_URL}/update_password/`, {
       user_id: userId,
       new_password: newPassword, // 這裡發送的是明文，後端會加密
     })

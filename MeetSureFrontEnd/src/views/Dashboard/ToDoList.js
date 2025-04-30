@@ -28,7 +28,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
 
         const token = localStorage.getItem("token");
         axios
-            .get(`http://127.0.0.1:8000/api/todos/?project_id=${projectId}`, {
+            .get(`${process.env.REACT_APP_API_URL}/todos/?project_id=${projectId}`, {
                 headers: { Authorization: `Token ${token}` },
             })
             .then((res) => {
@@ -43,7 +43,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
 
         const fetchMembers = async () => {
             try {
-                const res = await axios.get(`http://127.0.0.1:8000/api/project-members/?project_id=${projectId}`, {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL}/project-members/?project_id=${projectId}`, {
                     headers: { Authorization: `Token ${token}` },
                 });
                 setMembers(res.data);
@@ -68,7 +68,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
         const token = localStorage.getItem("token");
 
         axios
-            .post("http://127.0.0.1:8000/api/todos/", {
+            .post(`${process.env.REACT_APP_API_URL}/todos/`, {
                 name: newTaskName,
                 assigned_to: newAssignedTo,
                 project: projectId,
@@ -126,7 +126,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
     const deleteTask = async (id) => {
         const token = localStorage.getItem("token");
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/todos/${id}/`, {
+            await axios.delete(`${process.env.REACT_APP_API_URL}/todos/${id}/`, {
                 headers: { Authorization: `Token ${token}` },
             });
             setTasks(prev => prev.filter(task => task.id !== id));

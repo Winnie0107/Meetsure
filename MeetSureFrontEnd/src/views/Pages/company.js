@@ -54,7 +54,7 @@ function CompanyAccountApplication() {
     };
   
     try {
-      const response = await fetch("http://127.0.0.1:8000/register_company/", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/register_company/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +64,7 @@ function CompanyAccountApplication() {
   
       const data = await response.json();
       if (response.ok) {
-        alert("公司帳號註冊成功！");
+        alert("公司帳號購買成功！");
         setCompanyId(data.company_id);  // 確保 company_id 有被儲存
         setCurrentStep("representativeAccount"); // 進入下一步
       } else {
@@ -94,7 +94,7 @@ function CompanyAccountApplication() {
     };
   
     try {
-      const response = await fetch("http://127.0.0.1:8000/register_representative/", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/register_representative/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -106,6 +106,8 @@ function CompanyAccountApplication() {
   
       if (response.ok) {
         alert("公司代表帳號註冊成功！");
+        window.location.href = "/#/auth/homepage";  // ✅ 成功後直接跳轉
+
       } else {
         alert("註冊失敗：" + (data.error || "未知錯誤"));
       }

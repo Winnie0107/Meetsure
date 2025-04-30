@@ -58,7 +58,7 @@ const GanttChart = () => {
 
     const fetchTasks = async () => {
         try {
-            const res = await axios.get(`http://127.0.0.1:8000/api/projects/${projectId}/gantt-tasks/`, {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/projects/${projectId}/gantt-tasks/`, {
                 headers: { Authorization: `Token ${token}` },
             });
             const formatted = res.data.map((task) => ({
@@ -160,7 +160,7 @@ const GanttChart = () => {
                 : updates.dependencies || "",
         };
         try {
-            await axios.put(`http://127.0.0.1:8000/api/gantt-tasks/${taskId}/update/`, payload, {
+            await axios.put(`${process.env.REACT_APP_API_URL}/gantt-tasks/${taskId}/update/`, payload, {
                 headers: { Authorization: `Token ${token}` },
             });
             toast({ title: "更新成功", status: "success", isClosable: true });
@@ -195,7 +195,7 @@ const GanttChart = () => {
                 created_by: currentUserId,
                 dependencies: newTask.dependencies || "",
             };
-            await axios.post("http://127.0.0.1:8000/api/gantt-tasks/create/", payload, {
+            await axios.post( `${process.env.REACT_APP_API_URL}/gantt-tasks/create/ `, payload, {
                 headers: { Authorization: `Token ${token}` },
             });
             toast({ title: "新增成功", status: "success", isClosable: true });
@@ -209,7 +209,7 @@ const GanttChart = () => {
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/gantt-tasks/${selectedTask.id}/delete/`, {
+            await axios.delete(`${process.env.REACT_APP_API_URL}/gantt-tasks/${selectedTask.id}/delete/`, {
                 headers: { Authorization: `Token ${token}` },
             });
             toast({ title: "任務已刪除", status: "info", isClosable: true });
@@ -258,7 +258,7 @@ const GanttChart = () => {
                         </HStack>
                         <HStack spacing={1}>
                             <Box w="14px" h="14px" bg="#d4f7dc" borderRadius="md" />
-                            <Text> 進度 > 70%</Text>
+                            <Text> 進度 70%</Text>
                         </HStack>
                     </HStack>
                 </Box>

@@ -32,7 +32,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
     useEffect(() => {
         const fetchFriends = async () => {
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/friends/?user_email=${userEmail}`);
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/friends/?user_email=${userEmail}`);
                 console.log("🔥 來自 API 的好友列表:", response.data);
 
                 if (response.data.friends) {
@@ -40,7 +40,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
                 }
 
                 // ✅ **獲取自己的資料**
-                const responseUser = await axios.get(`http://127.0.0.1:8000/api/users/?email=${userEmail}`);
+                const responseUser = await axios.get(`${process.env.REACT_APP_API_URL}/users/?email=${userEmail}`);
                 const currentUser = responseUser.data;
 
                 if (currentUser && currentUser.id && currentUser.name) {
@@ -82,7 +82,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
 
     const fetchUser = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/user/?email=${userEmail}`);
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/user/?email=${userEmail}`);
             console.log("🔥 來自 API 的用戶資訊:", response.data);
 
             if (response.data.id && response.data.name) {

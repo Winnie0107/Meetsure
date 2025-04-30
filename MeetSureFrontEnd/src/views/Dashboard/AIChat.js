@@ -35,7 +35,7 @@ function AIChat() {
             console.log("Sending message to API:", message);
 
             const response = await axios.post(
-                "http://127.0.0.1:8000/chatgpt/",  // 改為 Django API
+                `${process.env.REACT_APP_API_URL}/chatgpt/`,  // 改為 Django API
                 { message },
                 {
                     headers: { "Content-Type": "application/json" },

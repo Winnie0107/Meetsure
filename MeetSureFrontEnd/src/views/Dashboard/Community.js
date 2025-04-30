@@ -84,7 +84,7 @@ function SocialPage() {
     // ✅ **獲取好友列表**
     const fetchFriends = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/friends/?user_email=${userEmail}`);
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/friends/?user_email=${userEmail}`);
             console.log("🔥 來自 API 的好友列表:", response.data);
 
             if (response.data.friends) {
@@ -106,7 +106,7 @@ function SocialPage() {
     // ✅ **獲取待確認的好友邀請**
     const fetchFriendRequests = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/friend_requests/list/?user_email=${userEmail}`);
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/friend_requests/list/?user_email=${userEmail}`);
             console.log("🔥 來自 API 的好友邀請:", response.data);
 
             const { sent_requests, received_requests } = response.data;
@@ -138,7 +138,7 @@ function SocialPage() {
     // ✅ **獲取用戶的群組清單**
     const fetchGroups = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/groups/?user_email=${userEmail}`);
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/groups/?user_email=${userEmail}`);
             console.log("🔥 來自 API 的群組列表:", response.data);
             setGroupsList(response.data.groups || []);
         } catch (error) {
@@ -149,7 +149,7 @@ function SocialPage() {
     // ✅ **獲取群組邀請**
     const fetchGroupInvites = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/group_invites/?user_email=${userEmail}`);
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/group_invites/?user_email=${userEmail}`);
             console.log("🔥 來自 API 的群組邀請:", response.data);
             setGroupInvites(response.data.received_invites || []);
         } catch (error) {
@@ -220,7 +220,7 @@ function SocialPage() {
         }
 
         try {
-            await axios.post("http://127.0.0.1:8000/api/friend_requests/", {
+            await axios.post("${process.env.REACT_APP_API_URL}/friend_requests/", {
                 sender_email: userEmail,
                 receiver_email: newFriendEmail
             });
@@ -248,7 +248,7 @@ function SocialPage() {
                 try {
                     const token = localStorage.getItem("token");
                     const response = await axios.get(
-                        `http://127.0.0.1:8000/api/search_users/?keyword=${newFriendEmail}&exclude=${userEmail}`,
+                        `${process.env.REACT_APP_API_URL}/search_users/?keyword=${newFriendEmail}&exclude=${userEmail}`,
                         {
                             headers: {
                                 Authorization: `Token ${token}`
@@ -283,7 +283,7 @@ function SocialPage() {
         }
 
         try {
-            await axios.post("http://127.0.0.1:8000/api/groups/", {
+            await axios.post( `${process.env.REACT_APP_API_URL}/groups/ `, {
                 group_name: newGroupName,
                 owner_email: userEmail,
                 members: selectedFriends.map(friend => friend.email),  // ✅ 確保 `selectedFriends` 被使用
@@ -305,7 +305,7 @@ function SocialPage() {
     // ✅ **接受/拒絕好友邀請**
     const handleRespondToRequest = async (requestId, status) => {
         try {
-            await axios.patch(`http://127.0.0.1:8000/api/friend_requests/${requestId}/`, { status });
+            await axios.patch(`${process.env.REACT_APP_API_URL}/friend_requests/${requestId}/`, { status });
 
             // ✅ **手動更新 UI，立即移除已處理的請求**
             setReceivedFriendRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
@@ -327,7 +327,7 @@ function SocialPage() {
     // ✅ **刪除好友**
     const handleDeleteFriend = async (friendEmail) => {
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/friends/`, {
+            await axios.delete(`${process.env.REACT_APP_API_URL}/friends/`, {
                 data: { user_email: userEmail, friend_email: friendEmail }
             });
 
@@ -403,7 +403,7 @@ function SocialPage() {
         if (!inputValue.trim() || !selectedFriend) return;
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/send_message/", {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/send_message/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

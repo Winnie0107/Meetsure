@@ -53,7 +53,7 @@ function SignUp() {
 
     try {
       // 發送註冊請求
-      const response = await axios.post("http://localhost:8000/api/register", {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/register`, {
         email,
         password,
         acco_level: "user", // 固定為 user

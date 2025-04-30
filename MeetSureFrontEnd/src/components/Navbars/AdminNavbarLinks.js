@@ -42,7 +42,7 @@ export default function HeaderLinks(props) {
 
     const token = localStorage.getItem("token");
     if (token) {
-      fetch("http://127.0.0.1:8000/api/check-line-binding/", {
+      fetch(`${process.env.REACT_APP_API_URL}/check-line-binding/`, {
         headers: {
           Authorization: `Token ${token}`
         }
@@ -56,7 +56,7 @@ export default function HeaderLinks(props) {
     
     const userId = localStorage.getItem("user_id");
     if (userId) {
-      axios.get(`http://localhost:8000/api/profile?user_id=${userId}`)
+      axios.get(`${process.env.REACT_APP_API_URL}/profile?user_id=${userId}`)
         .then((res) => {
           setUserName(res.data.name || "使用者");
           setUserImg(res.data.img || "black.png");
@@ -70,7 +70,7 @@ export default function HeaderLinks(props) {
   // ✅ 取得 ngrok URL
   const getNgrokUrl = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/get-ngrok-url/?t=${new Date().getTime()}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/get-ngrok-url/?t=${new Date().getTime()}`);
       const data = await response.json();
       return data.ngrok_url;
     } catch (error) {

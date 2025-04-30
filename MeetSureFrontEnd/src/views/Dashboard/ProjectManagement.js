@@ -55,7 +55,7 @@ function ProjectManagement() {
             }
 
             try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/projects/${id}/`, {
                     headers: {
                         Authorization: `Token ${token}`,
                     },

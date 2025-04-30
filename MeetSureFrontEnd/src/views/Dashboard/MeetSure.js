@@ -59,7 +59,7 @@ function MeetSure({ onCancel, onSuccess, projectId }) {
         formData.append("audio", selectedFile);
 
         try {
-            const response = await axios.post("http://127.0.0.1:8000/api/transcribe/", formData, {
+            const response = await axios.post( `${process.env.REACT_APP_API_URL}/transcribe/`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -98,7 +98,7 @@ function MeetSure({ onCancel, onSuccess, projectId }) {
     const pollProgress = (taskId) => {
         const interval = setInterval(async () => {
             try {
-                const res = await axios.get(`http://127.0.0.1:8000/api/progress/?task_id=${taskId}`);
+                const res = await axios.get(`${process.env.REACT_APP_API_URL}/progress/?task_id=${taskId}`);
                 setProgress(res.data);
 
                 if (res.data.current >= res.data.total) {
@@ -143,7 +143,7 @@ function MeetSure({ onCancel, onSuccess, projectId }) {
         try {
             console.log("📤 發送至 AI API:", allText); // 🛠️ 確保有內容送出
 
-            const response = await axios.post("http://127.0.0.1:8000/chatgpt/", {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/chatgpt/`, {
                 message: `
     以下是一段會議逐字稿，請幫我進行結構化分析，並以繁體中文回答。請依照以下格式輸出：
     會議記錄：
@@ -228,7 +228,7 @@ function MeetSure({ onCancel, onSuccess, projectId }) {
             const localDatetime = new Date(meetingDatetime);
             const utcDatetime = new Date(localDatetime.getTime() - localDatetime.getTimezoneOffset() * 60000).toISOString();
 
-            const res = await axios.post("http://127.0.0.1:8000/api/save-meeting-record/", {
+            const res = await axios.post(`${process.env.REACT_APP_API_URL}/save-meeting-record/`, {
                 title: meetingTitle,
                 datetime: utcDatetime,
                 transcript: fullTranscript,

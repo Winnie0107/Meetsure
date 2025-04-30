@@ -35,7 +35,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
             const token = localStorage.getItem("token");
           
             try {
-              const response = await axios.get(`http://127.0.0.1:8000/api/meetings/${projectId}/`, {
+              const response = await axios.get(`${process.env.REACT_APP_API_URL}/meetings/${projectId}/`, {
                 headers: {
                   Authorization: `Token ${token}`
                 }
@@ -60,7 +60,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
       
         try {
           const response = await axios.post(
-            "http://127.0.0.1:8000/api/meetings/create/",
+            `${process.env.REACT_APP_API_URL}/meetings/create/`,
             {
               project: projectId,
               name: newMeeting.name,
@@ -90,7 +90,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
       
         try {
           const response = await axios.put(
-            `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/update/`,
+            `${process.env.REACT_APP_API_URL}/meetings/${selectedMeeting.id}/update/`,
             selectedMeeting,
             {
               headers: {
@@ -114,7 +114,7 @@ const MeetingSchedule = ({ setTabIndex, limitMeetings = false, meetings, setMeet
       
         try {
           await axios.delete(
-            `http://127.0.0.1:8000/api/meetings/${selectedMeeting.id}/delete/`,
+            `${process.env.REACT_APP_API_URL}/meetings/${selectedMeeting.id}/delete/`,
             {
               headers: {
                 Authorization: `Token ${token}`,

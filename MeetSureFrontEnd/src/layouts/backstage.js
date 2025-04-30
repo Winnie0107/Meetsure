@@ -33,7 +33,7 @@ const Backstage = () => {
 
     const navItems = [
         { icon: AiOutlineHome, text: "基本營運狀況", link: "/backstage/admindashboard" },
-        { icon: AiOutlineGlobal, text: "用戶/權限管理", link: "/backstage/account-management" },
+        { icon: AiOutlineGlobal, text: "用戶帳號管理", link: "/backstage/account-management" },
       
         { icon: AiOutlineLogout, text: "登出", action: () => handleLogout() },
     ];

@@ -72,7 +72,7 @@ const MilestoneProgress = () => {
 
         const token = localStorage.getItem("token");
         try {
-            const res = await axios.get(`http://127.0.0.1:8000/api/projects/${projectId}/`, {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/projects/${projectId}/`, {
                 headers: {
                     Authorization: `Token ${token}`,
                 },
@@ -119,7 +119,7 @@ const MilestoneProgress = () => {
         }
 
         try {
-            await axios.put(`http://127.0.0.1:8000/api/tasks/${milestoneTask.id}/complete/`, {
+            await axios.put(`${process.env.REACT_APP_API_URL}/tasks/${milestoneTask.id}/complete/`, {
                 headers: {
                     Authorization: `Token ${token}`,
                 },

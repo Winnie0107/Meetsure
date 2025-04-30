@@ -108,7 +108,7 @@ export default function ToDoBoardModal({ isOpen, onClose }) {
     if (!isOpen) return;
 
     const token = localStorage.getItem("token");
-    fetch("http://127.0.0.1:8000/api/todos/all/", {
+    fetch(`${process.env.REACT_APP_API_URL}/todos/all/`, {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => res.json())
@@ -159,7 +159,7 @@ export default function ToDoBoardModal({ isOpen, onClose }) {
   const deleteTask = async (id) => {
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/todos/${id}/`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/todos/${id}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setTasks((prev) => prev.filter((task) => task.id !== id));

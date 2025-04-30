@@ -72,14 +72,7 @@ class LineBinding(models.Model):
 
     class Meta:
         db_table = 'linebinding' 
-class UserToken(models.Model):
-        user = models.OneToOneField("Users", on_delete=models.CASCADE)  # ✅ 讓 Token 直接綁定 `Users`
-        key = models.CharField(max_length=40, unique=True)
-class Meta:
-        db_table = 'usertoken' 
-@staticmethod
-def generate_token():
-    return get_random_string(40)
+
 
 # 📌 好友邀請表 (管理好友邀請)
 class FriendRequest(models.Model):

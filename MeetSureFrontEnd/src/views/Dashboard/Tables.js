@@ -59,7 +59,7 @@ function Tables() {
       }
 
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/projects/get/", {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/projects/get/`, {
           headers: {
             "Authorization": `Token ${token}`  // ✅ 加入 Authorization header
           }
@@ -113,7 +113,7 @@ function Tables() {
   const handleDeleteProject = async () => {
     if (!projectToDelete) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/projects/${projectToDelete}/delete/`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/projects/${projectToDelete}/delete/`, {
         headers: {
           Authorization: `Token ${token}`,
         },

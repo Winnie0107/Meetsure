@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password,check_password
 import json
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .models import User, Users, MeetingSchedule, UserToken,Company,CompanyRepresentative, Group, GroupMembership, Project,ProjectMember
+from .models import User, Users, MeetingSchedule,Company,CompanyRepresentative, Group, GroupMembership, Project,ProjectMember
 from .serializers import UserSerializer
 from datetime import datetime
 from pytz import timezone
@@ -468,9 +468,12 @@ def register_representative(request):
 
         user = Users.objects.create(
             email=email,
-            password=password,  
-            acco_level="representative",
-            company=company
+            password=make_password(password),  # ✅ 這裡加密
+            acco_level="adminC",
+            company=company,
+            name=account_name,  # ✅ 要加這行
+
+            
         )
 
         representative = CompanyRepresentative.objects.create(
@@ -809,32 +812,49 @@ def login_admin(request):
         email = data.get("email")
         password = data.get("password")
 
+        # 🔍 查詢帳號
         user = Users.objects.filter(email=email).first()
-
         if not user:
             return JsonResponse({"error": "User not found"}, status=401)
 
-        if not check_password(password, user.password):  # 建議使用這種方式驗證
+        if not check_password(password, user.password):
             return JsonResponse({"error": "Invalid credentials"}, status=401)
 
-        if user.acco_level == "adminS":
-            role = "system_admin"
-        elif user.acco_level == "adminC":
-            role = "company_admin"
-        else:
-            return JsonResponse({"error": "Unauthorized role"}, status=403)
+        # ✅ 限制角色
+        if user.acco_level not in ["adminS", "adminC"]:
+            return JsonResponse({"error": "Not allowed to login here"}, status=403)
 
-        return JsonResponse(
-            {
-                "message": "Login successful",
-                "user_id": user.ID,
-                "role": role,
-                "redirect_url": "/#/backstage/admindashboard",
-            },
-            status=200,
-        )
+        # ✅ 建立 auth_user（如無）
+        if not user.auth_user:
+            username = user.name or email
+            auth_user, created = User.objects.get_or_create(
+                email=email,
+                defaults={"username": username[:150]}
+            )
+            if created:
+                auth_user.set_password(password)
+                auth_user.save()
+            user.auth_user = auth_user
+            user.save()
+
+        # ✅ 建立 token
+        token, _ = Token.objects.get_or_create(user=user.auth_user)
+
+        # ✅ 角色 & 導向
+        role = "system_admin" if user.acco_level == "adminS" else "company_admin"
+        redirect_url = "/#/backstage/admindashboard"
+
+        return JsonResponse({
+            "success": True,
+            "user_id": user.ID,
+            "role": role,
+            "email": user.email,
+            "token": token.key,
+            "redirect_url": redirect_url
+        }, status=200)
 
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON format"}, status=400)
+
     except Exception as e:
         return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)

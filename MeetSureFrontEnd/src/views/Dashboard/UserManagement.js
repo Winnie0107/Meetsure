@@ -27,7 +27,7 @@ function UserManagement() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await axios.get('http://localhost:8000/api/users/');
+                const response = await axios.get('${process.env.REACT_APP_API_URL}/users/');
                 setUsers(response.data); // 設置用戶資料
             } catch (error) {
                 console.error('Error fetching user data:', error);

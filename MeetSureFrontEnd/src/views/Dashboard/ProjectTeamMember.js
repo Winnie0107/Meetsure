@@ -58,7 +58,7 @@ function ProjectTeamMember() {
             try {
                 const token = localStorage.getItem("token");
                 const response = await axios.get(
-                    `http://127.0.0.1:8000/api/project-members/?project_id=${projectId}`,
+                    `${process.env.REACT_APP_API_URL}/project-members/?project_id=${projectId}`,
                     { headers: { Authorization: `Token ${token}` } }
                 );
                 setMembers(response.data || []);
@@ -79,7 +79,7 @@ function ProjectTeamMember() {
         const fetchFriends = async () => {
             try {
                 const response = await axios.get(
-                    `http://127.0.0.1:8000/api/friends/?user_email=${localStorage.getItem("user_email")}`
+                    `${process.env.REACT_APP_API_URL}/friends/?user_email=${localStorage.getItem("user_email")}`
                 );
                 setFriendsList(response.data.friends || []);
             } catch (error) {
@@ -93,7 +93,7 @@ function ProjectTeamMember() {
         if (!selectedMemberToRemove) return;
         try {
             const token = localStorage.getItem("token");
-            await axios.delete(`http://127.0.0.1:8000/api/project-members/remove/`, {
+            await axios.delete(`${process.env.REACT_APP_API_URL}/project-members/remove/`, {
                 data: {
                     project_id: projectId,
                     user_email: selectedMemberToRemove.email,
@@ -112,7 +112,7 @@ function ProjectTeamMember() {
         try {
             const token = localStorage.getItem("token");
             await axios.post(
-                `http://127.0.0.1:8000/api/project-members/add/`,
+                `${process.env.REACT_APP_API_URL}/project-members/add/`,
                 {
                     project_id: projectId,
                     user_id: selectedFriendToAdd.id,
@@ -122,7 +122,7 @@ function ProjectTeamMember() {
                 }
             );
             const updatedMembers = await axios.get(
-                `http://127.0.0.1:8000/api/project-members/?project_id=${projectId}`,
+                `${process.env.REACT_APP_API_URL}/project-members/?project_id=${projectId}`,
                 { headers: { Authorization: `Token ${token}` } }
             );
             setMembers(updatedMembers.data || []);
