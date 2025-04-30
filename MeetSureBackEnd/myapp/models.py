@@ -148,7 +148,8 @@ class Project(models.Model):
     created_by = models.ForeignKey(
     "Users",
     on_delete=models.PROTECT,
-    related_name="created_projects"
+    related_name="created_projects",
+    null=True,
 )
 
     def __str__(self):
