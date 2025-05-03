@@ -29,8 +29,6 @@ import openai
 
 import uuid
 
-from firebase_admin import storage
-bucket = storage.bucket()
 
 import uuid
 from django.views.decorators.http import require_GET
@@ -39,10 +37,16 @@ from django.views.decorators.http import require_GET
 progress_dict = {}
 
 
-
-import firebase_admin
-from firebase_admin import firestore
-db = firestore.client()  # 不用再 initialize_app
+try:
+    from MeetSureBackEnd.firebase_config import db, bucket
+except ModuleNotFoundError:
+    try:
+        # Try alternative location
+        from firebase_config import db, bucket
+    except ModuleNotFoundError:
+        print("❌ Could not find firebase_config module in views.py")
+        db = None
+        bucket = None
 
 
 #顯示用戶列表

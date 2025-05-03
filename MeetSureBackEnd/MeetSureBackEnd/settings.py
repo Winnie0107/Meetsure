@@ -9,45 +9,35 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
-import os
-from pathlib import Path
-import requests
-import firebase_admin
-from firebase_admin import credentials, firestore, initialize_app
-import dj_database_url
-
-
+"""
+Django settings for MeetSureBackEnd project.
+"""
 from dotenv import load_dotenv
-
 load_dotenv()
 
-FIREBASE_CREDENTIALS_PATH = os.getenv('FIREBASE_CREDENTIALS_PATH')
+import os
+import base64
+import json
+from pathlib import Path
+import requests
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 設定 Firebase JSON 憑證路徑
+# Import Firebase configuration with correct module path
+try:
+    from MeetSureBackEnd.firebase_config import db, bucket
+except ModuleNotFoundError:
+    try:
+        from firebase_config import db, bucket
+    except ModuleNotFoundError:
+        print("❌ firebase_config 未正確導入")
+        db = None
+        bucket = None
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
-    firebase_app = initialize_app(cred, {
-    "storageBucket": "meetsure-new.firebasestorage.app"
-    })
-
-    db = firestore.client()
 
 OPENAI_API_KEY = "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"
 
-try:
-    import torch
-    print("✅ PyTorch is available!")
-except ImportError:
-    torch = None
-    print("❌ PyTorch is not installed.")
-
-
-# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
