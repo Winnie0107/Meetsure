@@ -13,6 +13,8 @@ import {
 import React, { useState } from "react";
 import BgSignUp from "assets/img/BgSignUp.png"; // 背景圖片
 import axios from "axios"; // API 請求
+import { useToast } from "@chakra-ui/react";
+
 
 function SignUp() {
   const bgForm = useColorModeValue("white", "navy.800");
@@ -24,6 +26,7 @@ function SignUp() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const toast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,8 +65,19 @@ function SignUp() {
         { withCredentials: true } // 允許跨域請求攜帶憑證
       );
       if (response.status === 201) {
-        alert("註冊成功！");
+        toast({
+          title: "註冊成功！",
+          description: "您現在可以登入帳號了",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
+        setTimeout(() => {
+          window.location.href = "/#/auth/signin";
+        }, 1500); // 1.5 秒後跳轉
       }
+      
     } catch (error) {
       setErrorMessage("註冊失敗，請稍後再試");
     }

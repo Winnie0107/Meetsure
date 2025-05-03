@@ -66,8 +66,9 @@ export default function NotificationDropdown({ userEmail }) {
   }, [userEmail, token]);
 
   const handleNotificationClick = () => {
-    window.location.href = "/#/admin/community#friends";
-  };
+    localStorage.setItem("selected_tab", "friends");
+    window.location.href = "/#/admin/community";
+      };
 
   return (
     <Menu>
@@ -154,7 +155,10 @@ export default function NotificationDropdown({ userEmail }) {
             {groupNotifications.map((notif) => (
  <MenuItem
  key={`group-${notif.id}`}
- onClick={() => (window.location.href = "/#/admin/community#groups")}
+ onClick={() => {
+  localStorage.setItem("selected_tab", "groups");
+  window.location.href = "/#/admin/community";
+}}
  px={4}
  py={3}
  bg="white"

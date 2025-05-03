@@ -9,7 +9,15 @@ import {
   MenuList,
   Text,
   useColorMode,
-  useColorModeValue, Avatar
+  useColorModeValue, Avatar, useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  Image,
+  ModalFooter
 } from "@chakra-ui/react";
 import { QuestionIcon,BellIcon,CheckIcon} from "@chakra-ui/icons";
 import { NavLink } from "react-router-dom";
@@ -20,6 +28,7 @@ import axios from "axios";
 import ToDoNotifications from "components/Navbars/ToDoNotifications";
 import HelpGuideButton from "components/Navbars/HelpGuideButton";
 import getAvatarUrl from "components/Icons/getAvatarUrl";
+import lineAddFriend from "assets/img/line-add-friend.png";
 
 
 
@@ -34,7 +43,11 @@ export default function HeaderLinks(props) {
   const LINE_ADD_FRIEND_URL = "https://line.me/R/ti/p/@459tzcgp"; // ✅ 替換成你的 LINE Bot ID
   const [userName, setUserName] = useState(null);
   const [userImg, setUserImg] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [verificationCode, setVerificationCode] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
+  
   // ✅ 檢查是否登入 + 檢查是否已綁定 LINE
   useEffect(() => {
     const email = localStorage.getItem("user_email");
@@ -82,48 +95,16 @@ export default function HeaderLinks(props) {
   };
 
   // ✅ 綁定 LINE 帳號流程
-  const bindLineAccount = async () => {
+  const bindLineAccount = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("請先登入！");
       window.location.href = "/#/auth/signin";
       return;
     }
-
-    const isFriend = confirm("請確認你已加入 LINE 好友，否則請先加入！");
-    if (!isFriend) {
-      window.location.href = LINE_ADD_FRIEND_URL;
-      return;
-    }
-
-    try {
-      const NGROK_URL = await getNgrokUrl();
-      if (!NGROK_URL) {
-        alert("無法取得 ngrok 連結，請稍後再試！");
-        return;
-      }
-
-      const response = await fetch(`${NGROK_URL}/api/generate-verification-code/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`
-        },
-        body: JSON.stringify({})
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(`請在 LINE 中輸入驗證碼: ${data.verification_code}`);
-      } else {
-        alert(`綁定失敗: ${data.error || "請稍後再試"}`);
-      }
-    } catch (error) {
-      console.error("綁定 LINE 失敗", error);
-      alert("綁定失敗，請稍後再試");
-    }
+    onOpen(); // 打開彈窗
   };
+  
 
   const handleLogout = () => {
     localStorage.removeItem("user_email");
@@ -145,6 +126,79 @@ export default function HeaderLinks(props) {
         <HelpGuideButton /> {/* ✅ 問號 icon */}
 
       </Flex>
+
+      <Modal isOpen={isOpen} onClose={onClose} isCentered size="sm">
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader textAlign="center">綁定 LINE 帳號</ModalHeader>
+    <ModalCloseButton />
+
+    <ModalBody>
+      <Flex direction="column" align="center" gap={4}>
+        <Text fontWeight="semibold">請先加入我們的 LINE 好友</Text>
+        <a href={LINE_ADD_FRIEND_URL} target="_blank" rel="noopener noreferrer">
+        <Image
+  src={lineAddFriend}
+  alt="加入 LINE 好友"
+  borderRadius="md"
+  maxW="200px"
+  w="100%"
+  h="auto"
+/>
+        </a>
+
+        <Button
+          colorScheme="green"
+          mt={4}
+          isLoading={isGenerating}
+          onClick={async () => {
+            try {
+              setIsGenerating(true);
+              const token = localStorage.getItem("token");
+              const NGROK_URL = await getNgrokUrl();
+              if (!NGROK_URL) {
+                alert("無法取得 ngrok 連結，請稍後再試！");
+                return;
+              }
+              const response = await fetch(`${NGROK_URL}/api/generate-verification-code/`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Token ${token}`
+                },
+                body: JSON.stringify({})
+              });
+              const data = await response.json();
+              if (response.ok) {
+                setVerificationCode(data.verification_code);
+              } else {
+                alert(`綁定失敗: ${data.error || "請稍後再試"}`);
+              }
+            } catch (error) {
+              console.error("綁定 LINE 失敗", error);
+              alert("綁定失敗，請稍後再試");
+            } finally {
+              setIsGenerating(false);
+            }
+          }}
+        >
+          我已加入好友，產生驗證碼
+        </Button>
+
+        {verificationCode && (
+          <Box textAlign="center" mt={4}>
+            <Text fontWeight="bold">請至 LINE 輸入以下驗證碼：</Text>
+            <Text fontSize="2xl" color="green.500">{verificationCode}</Text>
+          </Box>
+        )}
+      </Flex>
+    </ModalBody>
+
+    <ModalFooter>
+      <Button onClick={onClose}>關閉</Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
 
       {userEmail ? (
         <Menu>
@@ -187,5 +241,5 @@ export default function HeaderLinks(props) {
         </NavLink>
       )}
     </Flex>
-  );
+  ); 
 }

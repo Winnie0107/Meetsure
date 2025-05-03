@@ -78,14 +78,19 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
             })
             .then((res) => {
                 const task = res.data;
-                const assignedUser = members.find((m) => String(m.ID) === String(task.assigned_to));
+                const assignedUser = members.find((m) => String(m.id) === String(task.assigned_to));
                 task.assigned_to_name = assignedUser?.name || "未知";
 
                 setTasks((prev) => [...prev, task]);
                 setNewTaskName("");
                 setNewAssignedTo("");
                 onClose();
-            });
+            
+            })
+            .catch((err) => {
+                console.error("❌ 新增待辦失敗：", err.response?.data || err);
+                alert(`新增失敗：${err.response?.data?.error || "請確認輸入內容"}`);
+              });
     };
 
     // ✅ 勾選切換與 3 秒後刪除
@@ -177,7 +182,7 @@ const ToDoList = ({ projectId, setTabIndex, limit = false, tasks, setTasks }) =>
                                     onChange={(e) => setNewAssignedTo(e.target.value)}
                                 >
                                     {members.map((member) => (
-                                        <option key={member.ID} value={String(member.ID)}>
+                                        <option key={member.ID} value={String(member.id)}>
                                             {member.name}
                                         </option>
                                     ))}
