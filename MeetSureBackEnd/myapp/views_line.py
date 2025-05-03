@@ -196,38 +196,41 @@ def generate_verification_code(request):
     
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_id = event.source.user_id  # 取得 LINE 用戶 ID
-    text = event.message.text.strip()  # 取得使用者輸入的驗證碼
+    user_id = event.source.user_id
+    text = event.message.text.strip()
 
     if not user_id:
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="發生錯誤，請稍後再試！"))
         return
 
     try:
+        # ✅ 如果已經綁定，不回覆任何訊息
+        if LineUser.objects.filter(line_user_id=user_id).exists():
+            return
+
         line_binding = LineBinding.objects.filter(verification_code=text).first()
 
         if not line_binding:
-            raise LineBinding.DoesNotExist  # 讓 except 處理錯誤訊息
+            raise LineBinding.DoesNotExist
 
-        # 綁定 LINE 帳號
+        # ✅ 執行綁定
         line_user, created = LineUser.objects.update_or_create(
             user=line_binding.user, defaults={"line_user_id": user_id}
         )
 
-        line_binding.is_linked = True  # 記錄此用戶已綁定
-        line_binding.verification_code = None  # ✅ 改成空字串
-        line_binding.save(update_fields=["verification_code", "is_linked"])  # 只更新這兩個欄位
-
+        line_binding.is_linked = True
+        line_binding.verification_code = None
+        line_binding.save(update_fields=["verification_code", "is_linked"])
 
         reply_text = "綁定成功！"
+
     except LineBinding.DoesNotExist:
         reply_text = "驗證碼錯誤，請確認後再輸入。"
     except Exception as e:
-        print(f"❌ 發生錯誤: {e}")  # ✅ Debug 用
+        print(f"❌ 發生錯誤: {e}")
         reply_text = "發生錯誤，請稍後再試。"
 
     line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
-    
 
 
 
