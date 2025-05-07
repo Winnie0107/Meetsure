@@ -462,7 +462,7 @@ function SocialPage() {
                     {chatTargets.map((friend) => (
                         <HStack
                             key={friend.name}
-                            p="10px"
+                            p={2}
                             bg="gray.100"
                             borderRadius="lg"
                             _hover={{ bg: "gray.200" }}

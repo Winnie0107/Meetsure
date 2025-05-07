@@ -19,18 +19,20 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model  # ✅ 確保使用 Django 內建 User
 User = get_user_model()  # ✅ 正確獲取 User
 import traceback  # 🔥 這行讓我們能夠捕捉完整錯誤訊息
-
+import time
+import random
+from google.api_core.exceptions import GoogleAPICallError
 import base64
 from django.core.files.base import ContentFile
 from PIL import Image
 from django.conf import settings
 import os
 import openai
-
+from MeetSureBackEnd.firebase_config import db, bucket
 import uuid
 
 
-import uuid
+import uuid 
 from django.views.decorators.http import require_GET
 
 # 用來暫存進度資訊：task_id -> {current: x, total: y}
@@ -560,7 +562,7 @@ def update_profile(request):
     return JsonResponse({"message": "Profile updated successfully"}, status=200)
 
 
-openai_client = openai.OpenAI(api_key="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")
+openai_client = openai.OpenAI(api_key="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")
 
 @csrf_exempt
 def generate_avatar(request):
@@ -578,7 +580,7 @@ def generate_avatar(request):
             style = data.get("style", "friendly")
 
             prompt = (
-                f"A 3D cartoon-style portrait of a {character}, in a {style} style, with a smiling facial expression. "
+                f"A 3D cartoon-style {character} portrait , in a {style} style, with a smiling facial expression. "
                 "Highly detailed, Pixar and Disney-like rendering, ultra high-resolution, cinematic lighting, "
                 "soft pastel colors, symmetrical face, front-facing, upper body only, simple light background"
             )
@@ -633,7 +635,6 @@ def update_avatar(request):
 
             # 上傳到 Firebase Storage
             filename = f"avatars/avatar_{user_id}_{uuid.uuid4().hex[:8]}.png"
-            bucket = storage.bucket()
             blob = bucket.blob(filename)
             blob.upload_from_string(img_data, content_type="image/png")
             blob.make_public()
@@ -748,7 +749,7 @@ def send_message(request):
             sender = data.get("sender")
             message = data.get("message")
             conversation_type = data.get("conversation_type", "individual")  # 預設為個人
-            conversation_id = data.get("conversation_id")  # 這裡是 email 或 group_id
+            conversation_id = data.get("conversation_id")  # email 或 group_id
 
             if not sender or not message or not conversation_id:
                 return JsonResponse({"error": "缺少必要字段"}, status=400)
@@ -763,12 +764,10 @@ def send_message(request):
 
             elif conversation_type == "group":
                 from .models import GroupMembership, Group
-
                 group = Group.objects.filter(name=conversation_id).first()
                 if not group:
                     return JsonResponse({"error": "群組不存在"}, status=404)
 
-                # 抓出所有成員的 email
                 members = GroupMembership.objects.filter(group=group).select_related("user")
                 participants = [member.user.email for member in members]
 
@@ -784,11 +783,25 @@ def send_message(request):
                 "conversation_type": conversation_type,
             }
 
-            db.collection("meetsure").add(new_message)
-            return JsonResponse({"message": "訊息已發送"}, status=201)
+            # ✅ 加入 retry with exponential backoff（最多 5 次）
+            for attempt in range(5):
+                try:
+                    db.collection("meetsure").add(new_message)
+                    return JsonResponse({"message": "訊息已發送"}, status=201)
+                except GoogleAPICallError as e:
+                    wait = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"❌ 發送失敗，第 {attempt + 1} 次嘗試後等待 {wait:.2f} 秒重試...：{e}")
+                    time.sleep(wait)
+
+            # 如果重試失敗，回傳錯誤
+            return JsonResponse({"error": "訊息發送失敗，請稍後再試"}, status=500)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "無效的 JSON 格式"}, status=400)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({"error": f"伺服器錯誤: {e}"}, status=500)
 
     return JsonResponse({"error": "請使用 POST 方法"}, status=405)
 
