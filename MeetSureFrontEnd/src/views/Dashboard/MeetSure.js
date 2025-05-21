@@ -308,7 +308,7 @@ function MeetSure({ onCancel, onSuccess, projectId, mode = "full" }) {
                     <CardHeader p="6px 0px 22px 0px">
                         <Flex justify="space-between" alignItems="center">
                             <Text fontSize="xl" color={textColor} fontWeight="bold">
-                                上傳會議音檔 (接收格式：.wav)
+                                上傳會議音檔 (接收格式：mp3, mp4, m4a, wav)
                             </Text>
                         </Flex>
                     </CardHeader>
