@@ -16,16 +16,19 @@ import CardBody from "components/Card/CardBody.js";
 import CardHeader from "components/Card/CardHeader.js";
 import React, { useState } from "react";
 import axios from 'axios'; // 引入 Axios
+import gpt4Img from "assets/img/gpt-4.png";
+import gpt35Img from "assets/img/gpt-3.5.png";
+
 
 function AIChat() {
     const textColor = useColorModeValue("gray.800", "white");
     const borderColor = useColorModeValue("gray.200", "gray.600");
 
     const [selectedChat, setSelectedChat] = useState("ChatGpt-4o");
-    const chatOptions = ["ChatGpt-4o", "ChatGpt-4o mini"];
+    const chatOptions = ["ChatGpt-4o", "ChatGpt-3.5"];
     const [chatMessages, setChatMessages] = useState({
-        "ChatGpt-4o": [{ sender: "AI", text: "歡迎來到 ChatGpt-4o 聊天室！" }],
-        "ChatGpt-4o mini": [{ sender: "AI", text: "歡迎來到 ChatGpt-4o mini 聊天室！" }],
+        "ChatGpt-4o": [{ sender: "AI", text: "歡迎來到 ChatGpt-4o 聊天室！可以向我詢問即時資訊喔 " }],
+        "ChatGpt-3.5": [{ sender: "AI", text: "歡迎來到 ChatGpt-3.5 聊天室！" }],
     });
     const [inputValue, setInputValue] = useState("");
 
@@ -72,13 +75,11 @@ function AIChat() {
     };
 
     const getIconForChat = (option) => {
-        if (option === "ChatGpt-4o") {
-            return "/gpt-4.png";
-        } else if (option === "ChatGpt-4o mini") {
-            return "/gpt-3.5.png";
-        }
+        if (option === "ChatGpt-4o") return gpt4Img;
+        if (option === "ChatGpt-3.5") return gpt35Img;
         return "";
     };
+
 
     return (
         <Flex direction="row" pt={{ base: "120px", md: "75px" }} gap="24px" mt="6">
@@ -111,7 +112,7 @@ function AIChat() {
                 </CardBody>
             </Card>
 
-            <Card w="80%" overflowX={{ sm: "scroll", xl: "hidden" }} h="80vh">
+            <Card w="80%" overflowX={{ sm: "scroll", xl: "hidden" }} h="85vh">
                 <CardHeader p="6px 0px 22px 0px">
                     <HStack>
                         <Image
@@ -147,7 +148,17 @@ function AIChat() {
                                         maxW="70%"
                                     >
                                         <Text fontWeight="bold">{message.sender}</Text>
-                                        <Text>{message.text}</Text>
+                                        <Text whiteSpace="pre-wrap">
+                                            {message.text.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
+                                                part.match(/https?:\/\/[^\s]+/) ? (
+                                                    <a key={index} href={part} target="_blank" rel="noopener noreferrer" style={{ color: "#3182ce", textDecoration: "underline" }}>
+                                                        {part}
+                                                    </a>
+                                                ) : (
+                                                    part
+                                                )
+                                            )}
+                                        </Text>
                                     </Box>
                                 ))}
                             </VStack>

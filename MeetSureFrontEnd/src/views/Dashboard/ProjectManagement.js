@@ -71,7 +71,7 @@ function ProjectManagement() {
 
         fetchProject();
     }, [id]);
-    
+
 
     return (
         <Flex direction="column" pt={{ base: "120px", md: "75px" }} mx="auto">
@@ -104,7 +104,6 @@ function ProjectManagement() {
                         <Tab><FaCalendarAlt size={22} /></Tab>
                         <Tab><FaTasks size={24} /></Tab>
                         <Tab><FaUsers size={26} /></Tab>
-                        <Tab><FaFileAlt size={22} /></Tab>
 
                     </TabList>
 
@@ -155,7 +154,7 @@ function ProjectManagement() {
                             </HStack>
                         </TabPanel>
 
-                        {/* ✅ 任務管理 */}
+                        {/* ✅ 任務管理
                         <TabPanel>
                             <HStack spacing="6" mt="6" align="stretch">
                                 <Box flex="3" maxW="25%" minW="250px">
@@ -170,7 +169,7 @@ function ProjectManagement() {
                                     <GanttChart />
                                 </Box>
                             </HStack>
-                        </TabPanel>
+                        </TabPanel> */}
 
 
                         {/* 🚀 組員管理頁面 */}
