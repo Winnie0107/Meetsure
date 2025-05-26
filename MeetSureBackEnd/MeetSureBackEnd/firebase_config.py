@@ -26,9 +26,9 @@ else:
         cred = credentials.Certificate(firebase_json)
 
         if not firebase_admin._apps:
-            firebase_app = firebase_admin.initialize_app(cred, {
-                "storageBucket": "meetsure-new.appspot.com"  # ✅ 修正 domain
-            })
+          firebase_admin.initialize_app(cred, {
+    "storageBucket": "meetsure-new.firebasestorage.app"
+})
 
         db = firestore.client()
         bucket = storage.bucket()

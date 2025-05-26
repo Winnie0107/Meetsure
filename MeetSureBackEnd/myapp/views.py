@@ -19,7 +19,9 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model  # ✅ 確保使用 Django 內建 User
 User = get_user_model()  # ✅ 正確獲取 User
 import traceback  # 🔥 這行讓我們能夠捕捉完整錯誤訊息
-
+import time
+import random
+from google.api_core.exceptions import GoogleAPICallError
 import base64
 from django.core.files.base import ContentFile
 from PIL import Image
@@ -34,6 +36,7 @@ bucket = storage.bucket()
 
 import uuid
 from django.views.decorators.http import require_GET
+import requests
 
 # 用來暫存進度資訊：task_id -> {current: x, total: y}
 progress_dict = {}
@@ -43,7 +46,10 @@ progress_dict = {}
 import firebase_admin
 from firebase_admin import firestore
 db = firestore.client()  # 不用再 initialize_app
+from django.utils.timezone import now
+import threading
 
+from google.api_core.exceptions import DeadlineExceeded
 
 #顯示用戶列表
 def user_list(request):
@@ -559,7 +565,7 @@ def update_profile(request):
     return JsonResponse({"message": "Profile updated successfully"}, status=200)
 
 
-openai_client = openai.OpenAI(api_key="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")
+openai_client = openai.OpenAI(api_key="")
 
 @csrf_exempt
 def generate_avatar(request):
@@ -737,7 +743,6 @@ def create_group(request):
         return JsonResponse({"message": "群組建立成功", "group_id": group.id}, status=201)
 
     return JsonResponse({"error": "請使用 POST 方法"}, status=405)
-
 @csrf_exempt
 def send_message(request):
     """處理發送訊息（支援個人與群組）"""
@@ -747,7 +752,7 @@ def send_message(request):
             sender = data.get("sender")
             message = data.get("message")
             conversation_type = data.get("conversation_type", "individual")  # 預設為個人
-            conversation_id = data.get("conversation_id")  # 這裡是 email 或 group_id
+            conversation_id = data.get("conversation_id")  # email 或 group_id
 
             if not sender or not message or not conversation_id:
                 return JsonResponse({"error": "缺少必要字段"}, status=400)
@@ -762,12 +767,10 @@ def send_message(request):
 
             elif conversation_type == "group":
                 from .models import GroupMembership, Group
-
                 group = Group.objects.filter(name=conversation_id).first()
                 if not group:
                     return JsonResponse({"error": "群組不存在"}, status=404)
 
-                # 抓出所有成員的 email
                 members = GroupMembership.objects.filter(group=group).select_related("user")
                 participants = [member.user.email for member in members]
 
@@ -783,14 +786,28 @@ def send_message(request):
                 "conversation_type": conversation_type,
             }
 
-            db.collection("meetsure").add(new_message)
-            return JsonResponse({"message": "訊息已發送"}, status=201)
+            # ✅ 加入 retry with exponential backoff（最多 5 次）
+            for attempt in range(5):
+                try:
+                    db.collection("meetsure").add(new_message)
+                    return JsonResponse({"message": "訊息已發送"}, status=201)
+                except GoogleAPICallError as e:
+                    wait = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"❌ 發送失敗，第 {attempt + 1} 次嘗試後等待 {wait:.2f} 秒重試...：{e}")
+                    time.sleep(wait)
+
+            # 如果重試失敗，回傳錯誤
+            return JsonResponse({"error": "訊息發送失敗，請稍後再試"}, status=500)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "無效的 JSON 格式"}, status=400)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({"error": f"伺服器錯誤: {e}"}, status=500)
 
     return JsonResponse({"error": "請使用 POST 方法"}, status=405)
-
+@csrf_exempt
 def get_messages(request):
     """獲取與指定好友的聊天記錄"""
     sender = request.GET.get("sender")
@@ -878,3 +895,17 @@ def login_admin(request):
 
     except Exception as e:
         return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+    
+@csrf_exempt
+def llm_proxy(request):
+    if request.method == "POST":
+        try:
+            llm_url = "http://localhost:3001/api/v1/workspace/meetsure/chat"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer JV1YW65-5ZMMQQZ-PDZT80Z-1ENW7YE"
+            }
+            response = requests.post(llm_url, headers=headers, data=request.body)
+            return JsonResponse(response.json(), status=response.status_code)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)

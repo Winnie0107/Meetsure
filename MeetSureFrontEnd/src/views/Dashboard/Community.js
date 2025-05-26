@@ -1,4 +1,3 @@
-
 import {
     Flex,
     Box,
@@ -20,6 +19,8 @@ import {
     useDisclosure,
     Icon,
     Checkbox,
+    useToast,
+    ChakraProvider,
 
 } from "@chakra-ui/react";
 import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, } from "@chakra-ui/icons";
@@ -67,6 +68,7 @@ function SocialPage() {
     const userEmail = localStorage.getItem("user_email");
     const [sentFriendRequests, setSentFriendRequests] = useState([]);
     const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
+    const toast = useToast();
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [groupsList, setGroupsList] = useState([]);  // ✅ 存儲群組清單
@@ -179,32 +181,33 @@ function SocialPage() {
         // 這是用戶原本輸入的訊息（UI 顯示）
         const userMessage = { sender: "You", content: inputValue };
 
-        // 如果是傳送給 "Meetsure機器人"，則在訊息後面加上 "用中文回答"
-        const botMessageText = selectedFriend === "Meetsure機器人"
-            ? `${inputValue} 用中文回答`
-            : inputValue;
+       // 新的 prompt 包裝：讓 bot 準確理解
+       const botMessageText = selectedFriend === "Meetsure機器人"
+       ? `詳細回覆，並且請用中文回答以下問題：${inputValue}`
+       : inputValue;
 
-        setChatMessages((prevMessages) => ({
-            ...prevMessages,
-            [selectedFriend || "general"]: [...prevMessages[selectedFriend || "general"], userMessage],
-        }));
-
+   setChatMessages((prevMessages) => ({
+       ...prevMessages,
+       [selectedFriend || "general"]: [
+           ...(prevMessages[selectedFriend || "general"] || []),
+           userMessage,
+       ],
+   }));
         if (selectedFriend === "Meetsure機器人") {
             try {
-                const response = await fetch("http://localhost:3001/api/v1/workspace/zhi-workspace/chat", {
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/llm/chat/`, {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer 06JBKJC-TPJ46K5-KCRNVPS-M66G24D",
-                        "accept": "application/json"
+                      "Content-Type": "application/json",
+                      "accept": "application/json"
                     },
                     body: JSON.stringify({
-                        message: botMessageText, // 這裡的 message 會帶 "用中文回答"
-                        mode: "chat",
-                        sessionId: "same-session-id",
-                    }),
-                });
-
+                      message: botMessageText, // 例如 "幫我解釋這段程式碼 用中文回答"
+                      mode: "chat",
+                      sessionId: "same-session-id"
+                    })
+                  });
+                  
                 const data = await response.json();
                 const botMessage = { sender: "Meetsure機器人", content: data.textResponse };
 
@@ -228,28 +231,46 @@ function SocialPage() {
 
 
     // ✅ **發送好友邀請**
-    const handleSendFriendRequest = async () => {
-        if (!newFriendEmail.trim()) {
-            alert("請輸入好友 Email");
-            return;
-        }
+const handleSendFriendRequest = async () => {
+    if (!newFriendEmail.trim()) {
+        toast({
+            title: "請輸入好友 Email",
+            status: "warning",
+            position: "top",
+            duration: 3000,
+            isClosable: true,
+        });
+        return;
+    }
 
-        try {
-            await axios.post("${process.env.REACT_APP_API_URL}/friend_requests/", {
-                sender_email: userEmail,
-                receiver_email: newFriendEmail
-            });
+    try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/friend_requests/`, {
+            sender_email: userEmail,
+            receiver_email: newFriendEmail,
+        });
 
-            alert("好友邀請已發送！");
-            setNewFriendEmail("");
+        toast({
+            title: "好友邀請已發送！",
+            status: "success",
+            position: "top",
+            duration: 3000,
+            isClosable: true,
+        });
 
-            // ✅ 立即更新 UI
-            await fetchFriendRequests();
-        } catch (error) {
-            console.error("❌ 發送好友邀請失敗:", error.response?.data);
-            alert(error.response?.data?.error || "發送好友邀請失敗");
-        }
-    };
+        setNewFriendEmail("");
+        await fetchFriendRequests();
+    } catch (error) {
+        console.error("❌ 發送好友邀請失敗:", error.response?.data);
+        toast({
+            title: error.response?.data?.error || "發送好友邀請失敗",
+            status: "error",
+            position: "top",
+            duration: 3000,
+            isClosable: true,
+        });
+    }
+};
+
 
     const [searchResults, setSearchResults] = useState([]);
     // ✅ **好友模糊搜索**
@@ -446,23 +467,29 @@ function SocialPage() {
     const renderFriendsSidebar = () => {
         return (
             <Box
-                w="250px"
-                bg={sidebarBg}
-                p="10px"
-                borderRight="1px solid"
-                borderColor={borderColor}
-                display="flex"
-                flexDirection="column"
-                justifyContent="flex-start"
-                alignItems="flex-start"
-            >
+            w="250px"
+            minW="250px"
+            maxW="250px"
+            bg={sidebarBg}
+            p="10px"
+            borderRight="1px solid"
+            borderColor={borderColor}
+            display="flex"
+            flexDirection="column"
+            justifyContent="flex-start"
+            alignItems="flex-start"
+            overflowY="auto"
+            maxHeight="calc(100vh - 100px)"  // 可以調整這個高度
+        >
+        
+          
 
 
                 <VStack spacing={4} align="stretch">
                     {chatTargets.map((friend) => (
                         <HStack
                             key={friend.name}
-                            p="10px"
+                            p="2"
                             bg="gray.100"
                             borderRadius="lg"
                             _hover={{ bg: "gray.200" }}
@@ -477,8 +504,8 @@ function SocialPage() {
 
                                 <Box>
                                     {/* 顯示名稱為黑色 */}
-                                    <Text fontWeight="bold" color="black" noOfLines={1} whiteSpace="nowrap">
-                                        {friend.name}
+                                    <Text fontWeight="bold" color="black" noOfLines={1} whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis"maxW="150px">
+                                    {friend.name}
                                     </Text>
                                     {/* 根據名稱顯示不同狀態 */}
                                     {friend.status === "group" ? (
@@ -937,11 +964,27 @@ function SocialPage() {
 
 
     return (
-        <Flex h="100vh" bg={backgroundColor} paddingTop="0px" overflow="hidden" position="relative"
-            zIndex="10" borderRadius="20px" >
+        <Flex
+        h="90vh"
+        w="100%"
+        maxW="100%"
+        overflow="hidden"
+        bg={backgroundColor}
+        paddingTop="0px"
+        position="relative"
+        zIndex="10"
+        borderRadius="20px"
+      >
+      
             {renderFriendsSidebar()}
 
-            <Flex flex="1" direction="column" zIndex="1">
+            <Flex
+  flex="1"
+  direction="column"
+  overflow="hidden"
+  minW="0"
+  zIndex="1"
+>
                 <HStack
                     spacing={4}
                     bg="gray.100"

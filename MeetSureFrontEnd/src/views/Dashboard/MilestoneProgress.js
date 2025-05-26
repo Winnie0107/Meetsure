@@ -11,10 +11,13 @@ import {
     ModalOverlay,
     ModalContent,
     ModalHeader,
+    ModalFooter,
     ModalBody,
     ModalCloseButton,
     useDisclosure,
     Icon,
+    Input,
+    Textarea,
 } from "@chakra-ui/react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { MdSend } from "react-icons/md";
@@ -63,6 +66,54 @@ const MilestoneProgress = () => {
     const [progressStats, setProgressStats] = useState({ done: 0, doing: 0, todo: 0 });
     const [milestoneTask, setMilestoneTask] = useState(null);
 
+    const {
+        isOpen: isAIOpen,
+        onOpen: onAIOpen,
+        onClose: onAIClose
+    } = useDisclosure();
+
+    const {
+        isOpen: isConfirmOpen,
+        onOpen: onConfirmOpen,
+        onClose: onConfirmClose
+    } = useDisclosure();
+
+    const [userQuestion, setUserQuestion] = useState("");
+    const [aiMessage, setAIMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+
+    const openAIModal = () => {
+        setAIMessage("");          // 清空前一次回答
+        setUserQuestion("");       // 清空前一次輸入
+        onAIOpen();                // ✅ 打開 Modal
+    };
+
+    const handleAIAssist = async () => {
+        if (!userQuestion.trim()) {
+            setAIMessage("請先輸入問題！");
+            return;
+        }
+
+        setIsLoading(true);
+        setAIMessage("正在取得建議...");
+
+        try {
+            const res = await axios.post(`${process.env.REACT_APP_API_URL}/chatgpt/`, {
+                message: `請針對這個任務「${milestoneTask.name}」並回覆以下問題：「${userQuestion}」，提供相關建議與技巧。`
+            });
+            setAIMessage(res.data.response);
+        } catch (err) {
+            console.error("❌ AI 回覆失敗：", err);
+            setAIMessage("無法取得建議，請稍後再試。");
+        }
+
+        setIsLoading(false);
+    };
+
+
+
+
     // **取得專案任務**
     useEffect(() => {
         fetchTasks();
@@ -79,7 +130,7 @@ const MilestoneProgress = () => {
             });
             let projectTasks = res.data.tasks || [];
 
-            // **按照 `taskOrder` 來排序**
+            // **按照 taskOrder 來排序**
             projectTasks = projectTasks.sort((a, b) => taskOrder.indexOf(a.name) - taskOrder.indexOf(b.name));
 
             // **計算進度**
@@ -177,19 +228,23 @@ const MilestoneProgress = () => {
                                 color="black"
                                 _hover={{ bg: "#E2E8F0" }}
                                 width="100%"
+                                onClick={openAIModal}
                             >
                                 AI 輔助
                             </Button>
+
+
                             <Button
                                 bg="#EDF2F7"
                                 color="black"
                                 _hover={{ bg: "#E2E8F0" }}
                                 width="100%"
-                                onClick={handleCompleteTask} // 🔥 點擊時更新任務狀態
+                                onClick={onConfirmOpen} // ⬅️ 打開確認 Modal
                             >
                                 完成任務
                             </Button>
                         </VStack>
+
                     </HStack>
                 ) : (
                     <Text fontSize="sm" color="gray.500">所有任務皆已完成！</Text>
@@ -234,6 +289,82 @@ const MilestoneProgress = () => {
                     </ModalBody>
                 </ModalContent>
             </Modal>
+
+            {/* 🔹 AI 輔助 Modal */}
+            <Modal isOpen={isAIOpen} onClose={onAIClose} size="2xl">
+                <ModalOverlay />
+                <ModalContent p={6} borderRadius="20px">
+                    <ModalHeader fontSize="xl" fontWeight="bold">AI 輔助建議</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Box
+                            w="100%"            // 滿寬但不超過最大寬
+                            maxW="350px"
+                            flex="3"
+                            p="5"
+                            mb="5"
+                            bg={categoryColors[taskCategoryMap[milestoneTask?.name]] || "gray.300"}
+                            borderRadius="lg"
+                            boxShadow="md"
+                        >
+                            <Text fontSize="lg" color="white" fontWeight="bold">
+                                {milestoneTask?.name || "無任務"}
+                            </Text>
+                            <Text fontSize="md" color="white" mt="2">
+                                Step: {taskCategoryMap[milestoneTask?.name] || "未分類"}
+                            </Text>
+                        </Box>
+
+                        <Divider mb={4} />
+
+                        <Text fontWeight="bold" mt={2} mb={1}>請輸入你的疑問，我來幫你解答：</Text>
+                        <VStack align="stretch" mb={4}>
+                            <Textarea
+                                rows={3}
+                                value={userQuestion}
+                                onChange={(e) => setUserQuestion(e.target.value)}
+                                placeholder="例如：有什麼技巧可以更有效率？"
+                            />
+                            <Button colorScheme="teal" onClick={handleAIAssist} isLoading={isLoading} alignSelf="flex-end">
+                                發問
+                            </Button>
+                        </VStack>
+
+
+                        <Divider mb={4} />
+
+                        <Text fontWeight="bold" mb={2}>AI 回覆：</Text>
+                        <Box whiteSpace="pre-wrap" maxHeight="300px" overflowY="auto" bg="gray.50" p="3" borderRadius="md">
+                            {aiMessage || "請輸入問題以獲取建議。"}
+                        </Box>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
+
+
+            {/* 🔹 確認完成任務 Modal */}
+            <Modal isOpen={isConfirmOpen} onClose={onConfirmClose} isCentered>
+                <ModalOverlay />
+                <ModalContent p={6} borderRadius="20px">
+                    <ModalHeader fontSize="xl" fontWeight="bold">確認完成任務</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <Text>要標記任務「{milestoneTask?.name}」為完成嗎？
+                            <br /><br />
+                            恭喜你！離完成專案又更進一步了
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button colorScheme="teal" mr={3} onClick={() => {
+                            handleCompleteTask();
+                            onConfirmClose();
+                        }}>
+                            確認完成
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
         </VStack>
 
     );

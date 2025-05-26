@@ -49,6 +49,14 @@ var dashRoutes = [
     layout: "/admin",
   },
   {
+    path: "/community",
+    name: "我的社群",
+    rtlName: "لوحة القيادة",
+    icon: <StatsIcon color='inherit' />,
+    component: Community,
+    layout: "/admin",
+  },
+  {
     path: "/project",
     name: "建立專案",
     rtlName: "لوحة القيادة",
@@ -64,14 +72,7 @@ var dashRoutes = [
     component: Tables,
     layout: "/admin",
   },
-  {
-    path: "/community",
-    name: "我的社群",
-    rtlName: "لوحة القيادة",
-    icon: <StatsIcon color='inherit' />,
-    component: Community,
-    layout: "/admin",
-  },
+  
   {
     path: "/GanttChart",
     name: "甘特圖",
@@ -108,7 +109,7 @@ var dashRoutes = [
   },
   {
     path: "/AIToolsPage",
-    name: "AI TOOLS",
+    name: "AI 輔助工具",
     icon: <PenIcon color='inherit' />,
     component: AIToolsPage,
     layout: "/admin",
@@ -151,7 +152,7 @@ var dashRoutes = [
     component: HomePage,
     name: "主頁",
     layout: "/auth",
-    icon: <HomeIcon color='inherit' />,
+    //icon: <HomeIcon color='inherit' />,
   },
   {
     path: "/company",

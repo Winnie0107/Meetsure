@@ -165,7 +165,7 @@ const RightPanelWithCalendar = () => {
               </ListItem>
             ))
           ) : (
-            <Text color="gray.500">No meetings scheduled</Text>
+            <Text color="gray.500">目前尚無行程</Text>
           )}
         </List>
       )}

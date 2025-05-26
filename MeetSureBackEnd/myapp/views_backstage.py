@@ -2,10 +2,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .models import Company,Users, CompanyRepresentative,Project
+from .models import Company,Users, CompanyRepresentative,Project, Friend
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from .serializers import UserSerializer,ProjectSerializer
+from django.db import transaction
 
 
 
@@ -19,13 +20,12 @@ def get_companies(request):
 @permission_classes([IsAuthenticated])
 def create_user_by_company_admin(request):
     try:
-        # 抓登入者對應的 Users
         current_user = request.user
         creator = Users.objects.get(auth_user=current_user)
 
         # 取得該管理員對應的公司代表資訊
         representative = CompanyRepresentative.objects.get(user=creator)
-        company_instance = representative.company  # ✅ 直接取得 Company 實例
+        company_instance = representative.company
 
         # 從前端取得帳號資料
         data = request.data
@@ -40,21 +40,33 @@ def create_user_by_company_admin(request):
         if Users.objects.filter(email=email).exists():
             return Response({"error": "此 Email 已被使用"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 建立新使用者（公司使用 Company 實例！）
-        user = Users.objects.create(
-            name=name,
-            email=email,
-            password=make_password(password),
-            acco_level="user",
-            company=company_instance,  # ✅ 正確：ForeignKey 應給實例
-        )
+        with transaction.atomic():
+            # 建立新使用者
+            user = Users.objects.create(
+                name=name,
+                email=email,
+                password=make_password(password),
+                acco_level="user",
+                company=company_instance,
+            )
 
-        return Response({"message": "使用者建立成功", "user_id": user.ID}, status=status.HTTP_201_CREATED)
+            # 建立好友關係
+            company_users = Users.objects.filter(company=company_instance, acco_level="user").exclude(ID=user.ID)
+
+            # 遍歷同公司的現有用戶，建立好友關係
+            for existing_user in company_users:
+        # 檢查是否已存在雙向好友關係
+                if not Friend.objects.filter(user1=user, user2=existing_user).exists() and \
+                    not Friend.objects.filter(user1=existing_user, user2=user).exists():
+                    Friend.objects.create(user1=user, user2=existing_user)
+
+        return Response({"message": "使用者建立成功，並建立好友關係", "user_id": user.ID}, status=status.HTTP_201_CREATED)
 
     except CompanyRepresentative.DoesNotExist:
         return Response({"error": "目前使用者不是公司管理員"}, status=status.HTTP_403_FORBIDDEN)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
     
 @api_view(['GET'])

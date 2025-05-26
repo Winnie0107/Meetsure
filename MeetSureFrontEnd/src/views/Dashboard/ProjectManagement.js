@@ -104,7 +104,6 @@ function ProjectManagement() {
                         <Tab><FaCalendarAlt size={22} /></Tab>
                         <Tab><FaTasks size={24} /></Tab>
                         <Tab><FaUsers size={26} /></Tab>
-                        <Tab><FaFileAlt size={22} /></Tab>
 
                     </TabList>
 

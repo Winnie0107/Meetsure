@@ -12,9 +12,9 @@ class Users(models.Model):
     ID = models.AutoField(primary_key=True)  # 手動指定主鍵名稱為 ID
     email = models.CharField(max_length=255, unique=True)  # 使用 CharField，並設為唯一
     password = models.CharField(max_length=128)
-    acco_level = models.CharField(max_length=100)
-    company = models.CharField(max_length=255, null=True, blank=True) 
-    name = models.CharField(max_length=100, null=True, blank=True, default="")
+    acco_level = models.CharField(max_length=10)
+    company = models.CharField(max_length=30, null=True, blank=True) 
+    name = models.CharField(max_length=30, null=True, blank=True, default="")
     img = models.CharField(max_length=255, null=True, blank=True, default="")
     auth_user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     
@@ -24,8 +24,8 @@ class Users(models.Model):
 
 class Company(models.Model):
     ID = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, unique=True)
-    owner = models.CharField(max_length=255)
+    name = models.CharField(max_length=50, unique=True)
+    owner = models.CharField(max_length=50)
     description = models.TextField()
     plan = models.CharField(max_length=50)
     approval_status = models.CharField(max_length=20, default='pending')
@@ -114,7 +114,7 @@ class Group(models.Model):
         ('custom', '自創群組'),
     )
 
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=30, unique=True)
     owner = models.ForeignKey(Users, on_delete=models.CASCADE)
     type = models.CharField(max_length=20, choices=GROUP_TYPE_CHOICES, default='custom')  # ✅ 新增群組類型欄位
     created_at = models.DateTimeField(auto_now_add=True)
@@ -134,7 +134,7 @@ class GroupMembership(models.Model):
 
 # 📌 專案管理基本資訊
 class Project(models.Model):
-    name = models.CharField(max_length=255, unique=True)  # 專案名稱
+    name = models.CharField(max_length=30, unique=True)  # 專案名稱
     description = models.TextField(blank=True, null=True)  # 專案描述
     created_at = models.DateTimeField(auto_now_add=True)  # 建立時間
 
@@ -160,7 +160,7 @@ class ProjectMember(models.Model):
 
 class ProjectTask(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="tasks")
-    name = models.CharField(max_length=255)  # 任務名稱
+    name = models.CharField(max_length=30)  # 任務名稱
     completed = models.BooleanField(default=False)  # 是否已完成
 
     def __str__(self):
@@ -176,7 +176,7 @@ class MeetingSchedule(models.Model):
         null=True,  # 允許為 NULL
         blank=True  # 表單中允許為空
     )
-    name = models.CharField(max_length=255)  # 會議名稱
+    name = models.CharField(max_length=30)  # 會議名稱
     datetime = models.DateTimeField()  # 會議時間
     location = models.CharField(max_length=255, blank=True, null=True)  # 會議地點
     details = models.TextField(blank=True, null=True)  # 其他資訊
@@ -228,7 +228,7 @@ class MeetingRecord(models.Model):
 
 # 待辦事項
 class ToDoList(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=30)
     assigned_to = models.ForeignKey(Users, on_delete=models.CASCADE)  # 假設用戶模型是預設的 User
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     completed = models.BooleanField(default=False)
@@ -236,7 +236,7 @@ class ToDoList(models.Model):
 
 #甘特圖
 class GanttTask(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=30)
     start = models.DateField()
     end = models.DateField()
     progress = models.IntegerField(default=0)

@@ -2,7 +2,7 @@ import React, { useState,useEffect } from "react";
 import {
   Box, Flex, Text, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Checkbox,
   Modal, ModalOverlay, ModalContent, ModalHeader,
-  ModalCloseButton, ModalBody, ModalFooter, FormControl, FormLabel, Divider,VStack,Icon
+  ModalCloseButton, ModalBody, ModalFooter, FormControl, FormLabel, Divider,VStack,Icon,useToast
 } from "@chakra-ui/react";
 import axios from "axios"; // ← 確保你已經有這行
 import { Search2Icon } from "@chakra-ui/icons";  // 🔥 加這行
@@ -30,6 +30,8 @@ const AccountManagement = () => {
     setSelectedRow({ account: "", email: "", password: "" });  // ✅ 空表單資料
     setIsEditMode(false);     // ✅ 設定為新增模式
     setModalOpen(true);
+    setSearchTerm("");
+
   };
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -61,11 +63,11 @@ const usersPerPage = 5;
         console.log("✔️ 編輯保存的資料:", selectedRow);
   
         const res = await axios.put(
-          `${process.env.REACT_APP_API_URL}/users/${selectedRow.id}/update/`,  // ✅ 假設後端有這個路由
+          `${process.env.REACT_APP_API_URL}/users/${selectedRow.id}/update/`,  
           {
             name: selectedRow.name,
             email: selectedRow.email,
-            password: selectedRow.password,  // ✅ 如果密碼不變可考慮留空處理
+            password: selectedRow.password,
 
           },
           {
@@ -159,9 +161,10 @@ const usersPerPage = 5;
         <Input 
   placeholder="請輸入帳號或 Email" 
   size="md" 
-  value={searchTerm}
+  value={isModalOpen ? "" : searchTerm}  // 當 Modal 開啟時，清空搜尋欄位
   onChange={(e) => setSearchTerm(e.target.value)} 
 />
+
 <Button colorScheme="blue" onClick={() => { /* 暫時可以不用特別 onClick，靠輸入即時篩選 */ }}>
   搜尋
 </Button>

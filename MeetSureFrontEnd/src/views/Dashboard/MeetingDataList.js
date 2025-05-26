@@ -84,7 +84,9 @@ const MeetingDataList = ({ projectId }) => {
         const token = localStorage.getItem("token");
         try {
             await axios.delete(`${process.env.REACT_APP_API_URL}/meeting-records/delete/${selectedRecord.id}/`, {
-                headers: { Authorization: `Token ${token}` }
+                headers: {
+                    Authorization: `Token ${token}`
+                  }
             });
             setRecords(prev => prev.filter(r => r.id !== selectedRecord.id));
             onDeleteModalClose();
@@ -94,11 +96,34 @@ const MeetingDataList = ({ projectId }) => {
         }
     };
 
-    const filteredRecords = records.filter(record =>
-        record.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.transcript?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.analysis?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const [titleSearch, setTitleSearch] = useState("");
+    const [keywordSearch, setKeywordSearch] = useState("");
+
+    const filteredRecords = records
+        .map(record => {
+            const matchFields = [];
+            const keyword = keywordSearch.toLowerCase();
+
+            if (record.transcript?.toLowerCase().includes(keyword)) {
+                matchFields.push("逐字稿");
+            }
+            if (record.analysis?.toLowerCase().includes(keyword)) {
+                matchFields.push("AI 分析");
+            }
+            if (record.notes?.toLowerCase().includes(keyword)) {
+                matchFields.push("相關連結");
+            }
+
+            return {
+                ...record,
+                matchFields,
+            };
+        })
+        .filter(record =>
+            record.title.toLowerCase().includes(titleSearch.toLowerCase()) &&
+            (keywordSearch === "" || record.matchFields.length > 0)
+        );
+
 
     const handleUpdateRecord = async () => {
         try {
@@ -114,7 +139,9 @@ const MeetingDataList = ({ projectId }) => {
                 transcript,
                 analysis,
             }, {
-                headers: { Authorization: `Token ${token}` }
+                headers: {
+                    Authorization: `Token ${token}`
+                  }
             });
 
             setRecords(prevRecords =>
@@ -155,30 +182,41 @@ const MeetingDataList = ({ projectId }) => {
             <CardHeader pb="4" display="flex" justifyContent="space-between" alignItems="center">
                 <Text fontSize="lg" fontWeight="bold" ml="2">專案會議記錄</Text>
                 <Flex alignItems="center" gap="12px">
-                    {/* 搜尋框 */}
-                    <InputGroup width="300px" borderRadius="full" boxShadow="sm" mr="15px">
+                    {/* 會議名稱搜尋 */}
+                    <InputGroup width="220px" borderRadius="full" boxShadow="sm">
                         <InputLeftElement pointerEvents="none">
                             <Icon as={FiSearch} color="gray.400" />
                         </InputLeftElement>
                         <Input
-                            placeholder="搜尋專案名稱或關鍵字..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="搜尋會議名稱..."
+                            value={titleSearch}
+                            onChange={(e) => setTitleSearch(e.target.value)}
                             size="md"
-                            borderRadius="full" // ✅ 圓角
+                            borderRadius="full"
                             borderColor="gray.300"
-                            boxShadow="sm"
-                            _focus={{
-                                borderColor: "teal.500",
-                                boxShadow: "0 0 0 1px teal.500",
-                            }}
                         />
                     </InputGroup>
 
-                    <Button size="md" colorScheme="teal" onClick={onOpen} mr="4">
+                    {/* 關鍵字搜尋 */}
+                    <InputGroup width="220px" borderRadius="full" boxShadow="sm">
+                        <InputLeftElement pointerEvents="none">
+                            <Icon as={FiSearch} color="gray.400" />
+                        </InputLeftElement>
+                        <Input
+                            placeholder="搜尋關鍵詞..."
+                            value={keywordSearch}
+                            onChange={(e) => setKeywordSearch(e.target.value)}
+                            size="md"
+                            borderRadius="full"
+                            borderColor="gray.300"
+                        />
+                    </InputGroup>
+
+                    <Button size="md" colorScheme="teal" onClick={onOpen}>
                         上傳會議紀錄
                     </Button>
                 </Flex>
+
             </CardHeader>
             <Divider my="2" />
 
@@ -194,60 +232,71 @@ const MeetingDataList = ({ projectId }) => {
                 </Thead>
                 <Tbody>
                     {filteredRecords.map(record => (
-                        <Tr key={record.id}>
-                            <Td width="30%">
-                                {new Date(record.datetime).toLocaleString('zh-TW', {
-                                    timeZone: 'Asia/Taipei',
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    hour12: false,
-                                })}
-                            </Td>
+                        <React.Fragment key={record.id}>
+                            <Tr>
+                                <Td width="30%">
+                                    {new Date(record.datetime).toLocaleString('zh-TW', {
+                                        timeZone: 'Asia/Taipei',
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false,
+                                    })}
+                                </Td>
+                                <Td width="30%">{record.title}</Td>
+                                <Td width="15%">
+                                    <Button
+                                        size="sm"
+                                        colorScheme="gray"
+                                        onClick={() => {
+                                            setSelectedRecord(record);
+                                            onViewOpen();
+                                        }}
+                                    >
+                                        查看
+                                    </Button>
+                                </Td>
+                                <Td width="15%">
+                                    <Button
+                                        size="sm"
+                                        colorScheme="gray"
+                                        onClick={() => {
+                                            setSelectedNoteRecord(record);
+                                            onNoteOpen();
+                                        }}
+                                    >
+                                        查看
+                                    </Button>
+                                </Td>
+                                <Td width="10%">
+                                    <Button
+                                        size="md"
+                                        colorScheme="red"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setSelectedRecord(record);onDeleteModalOpen();
+                                        }}
+                                    >
+                                        <Icon as={HiOutlineTrash} boxSize={6} />
+                                    </Button>
+                                </Td>
+                            </Tr>
 
-                            <Td width="30%">{record.title}</Td>
-                            <Td width="15%">
-                                <Button
-                                    size="sm"
-                                    colorScheme="gray"
-                                    onClick={() => {
-                                        setSelectedRecord(record);
-                                        onViewOpen();
-                                    }}
-                                >
-                                    查看
-                                </Button>
-                            </Td>
-                            <Td width="15%">
-                                <Button
-                                    size="sm"
-                                    colorScheme="gray"
-                                    onClick={() => {
-                                        setSelectedNoteRecord(record);
-                                        onNoteOpen();
-                                    }}
-                                >
-                                    查看
-                                </Button>
-                            </Td>
-                            <Td width="10%">
-                                <Button
-                                    size="md"
-                                    colorScheme="red"
-                                    variant="ghost"
-                                    onClick={() => {
-                                        setSelectedRecord(record);
-                                        onDeleteModalOpen();
-                                    }}
-                                >
-                                    <Icon as={HiOutlineTrash} boxSize={6} />
-                                </Button>
-                            </Td>
-
-                        </Tr>
+                            {/* 顯示關鍵字提示（獨立一行） */}
+                            {keywordSearch && record.matchFields?.length > 0 && (
+                                <Tr>
+                                    <Td colSpan={5}>
+                                        <Text fontSize="sm" color="gray.500" mt="1">
+                                            🔍 關鍵詞位於：{record.matchFields.join("、")}
+                                        </Text>
+                                    </Td>
+                                </Tr>
+                            )}
+                        </React.Fragment>
                     ))}
+
                 </Tbody>
             </Table>
 
@@ -408,7 +457,7 @@ const MeetingDataList = ({ projectId }) => {
                         <Button colorScheme="teal" onClick={handleUpdateRecord}>
                             儲存
                         </Button>
-                        <Button ml={3} onClick={onViewClose}>
+                        <Button ml={3} onClick={onViewClose}></Button><Button ml={3} onClick={onViewClose}>
                             取消
                         </Button>
                     </ModalFooter>

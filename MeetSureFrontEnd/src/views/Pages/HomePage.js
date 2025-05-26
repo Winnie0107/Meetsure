@@ -256,12 +256,12 @@ const HomePage = () => {
                 {
                   icon: AiOutlineGlobal,
                   title: "同步行事曆",
-                  description: "快速整合會議日程到 Google 或 Outlook。",
+                  description: "快速整合會議日程至平台。",
                 },
                 {
                   icon: AiOutlineArrowRight,
                   title: "智能提醒",
-                  description: "會議即將開始時，系統將自動通知。",
+                  description: "會議資訊更新時，系統將自動通知。",
                 },
                 {
                   icon: AiOutlineCheckCircle,

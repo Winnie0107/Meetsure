@@ -25,9 +25,9 @@ const getPriority = (createdAt) => {
   const created = new Date(createdAt);
   const diff = now - created;
   const oneDay = 24 * 60 * 60 * 1000;
-  if (diff < oneDay) return "High";
-  if (diff < 3 * oneDay) return "Medium";
-  return "Low";
+  if (diff < oneDay) return "前";
+  if (diff < 3 * oneDay) return "中";
+  return "後";
 };
 
 const PriorityBadge = ({ priority }) => {

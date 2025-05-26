@@ -19,11 +19,18 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// ✅ 正確使用 import 匯入圖片檔案（這些會是圖片的「路徑字串」）
+// ✅ 匯入圖片
 import teach1 from "assets/img/teach1.png";
 import teach2 from "assets/img/teach2.png";
 import teach3 from "assets/img/teach3.png";
 import teach4 from "assets/img/teach4.png";
+import teach5 from "assets/img/teach5.png";
+import teach6 from "assets/img/teach6.png";
+import teach7 from "assets/img/teach7.png";
+import teach8 from "assets/img/teach8.png";
+import teach9 from "assets/img/teach9.png";
+import teach10 from "assets/img/teach10.png";
+import teach11 from "assets/img/teach11.png";
 
 export default function InfoGuideModal({ isOpen, onClose }) {
   const [selectedGoal, setSelectedGoal] = useState(null);
@@ -43,16 +50,16 @@ export default function InfoGuideModal({ isOpen, onClose }) {
     },
     "boost-writing": {
       title: "推薦：AI 工具",
-      description: "使用 AI 寫作、翻譯、語法修正功能，加速文件處理與溝通。",
+      description: "使用 GPT聊天室、AI 寫作、翻譯、語法修正功能，加速文件處理與溝通。",
     },
     "ask-for-help": {
       title: "推薦：MeetSure 聊天機器人",
-      description: "有問題？直接問 MeetSure 機器人，獲得即時協助與操作引導。",
+      description: "有問題？直接詢問 MeetSure 機器人或是選擇你所遇到的問題，獲得即時協助與操作引導。",
     },
   };
 
-  // ✅ 改為存圖片的「路徑」，不是 <Image />
   const boostImages = [teach1, teach2, teach3, teach4];
+  const progressImages = [teach6, teach7, teach8, teach9];
 
   const sliderSettings = {
     dots: true,
@@ -69,6 +76,23 @@ export default function InfoGuideModal({ isOpen, onClose }) {
     setSelectedGoal(null);
   };
 
+  const renderImageSection = (img, title, description, height = "400px") => (
+    <Box w="100%" maxW="700px" mb={8} textAlign="center" p={4}>
+      <Text fontSize="2xl" fontWeight="bold" mb={2}>{title}</Text>
+      <Image
+        src={img}
+        alt={title}
+        borderRadius="lg"
+        w="100%"
+        h={height}
+        objectFit="contain"
+        boxShadow="md"
+        mb={4}
+      />
+      <Text fontSize="md" color="gray.600">{description}</Text>
+    </Box>
+  );
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered size="6xl" motionPreset="scale">
       <ModalOverlay />
@@ -77,14 +101,12 @@ export default function InfoGuideModal({ isOpen, onClose }) {
           {selectedGoal ? "" : "歡迎使用 MeetSure"}
         </ModalHeader>
         <ModalCloseButton />
-
         <ModalBody>
           {!selectedGoal ? (
             <Flex direction="column" align="center" textAlign="center">
               <Text fontSize="lg" fontWeight="medium" mb={8} color="gray.700">
                 選擇你目前想解決的問題，讓我們推薦您最適合的功能模組！
               </Text>
-
               <Flex direction="row" justify="center" align="center" gap={8} wrap="nowrap">
                 {[
                   { key: "manage-project", label: "管理專案", icon: FaTasks },
@@ -115,35 +137,88 @@ export default function InfoGuideModal({ isOpen, onClose }) {
             </Flex>
           ) : (
             <Flex direction="column" align="center" textAlign="center">
-              {selectedGoal === "boost-writing" && (
-                <Box w="100%" maxW="600px" mb={6}>
+              {/* 單張模組：管理專案 */}
+              {selectedGoal === "manage-project" &&
+                renderImageSection(
+                  teach11,
+                  recommendations[selectedGoal].title,
+                  recommendations[selectedGoal].description,
+                  "550px"
+                )}
+
+              {/* 單張模組：整理會議 */}
+              {selectedGoal === "get-meeting-summary" &&
+                renderImageSection(
+                  teach10,
+                  recommendations[selectedGoal].title,
+                  recommendations[selectedGoal].description,
+                  "700px"
+                )}
+
+              {/* 幻燈片模組：掌握進度 */}
+              {selectedGoal === "stay-updated" && (
+                <Box w="100%" maxW="800px" mb={8}>
                   <Slider {...sliderSettings}>
-                    {boostImages.map((img, idx) => (
-                      <div key={idx}>
+                    {progressImages.map((img, idx) => (
+                      <Box key={idx} textAlign="center" p={4}>
+                        <Text fontSize="2xl" fontWeight="bold" mb={2}>
+                          {recommendations[selectedGoal].title}
+                        </Text>
                         <Image
                           src={img}
-                          alt={`boost-slide-${idx}`}
+                          alt={`progress-slide-${idx}`}
                           borderRadius="lg"
-                          objectFit="cover"
-                          maxH="300px"
-                          mx="auto"
+                          w="100%"
+                          h="400px"
+                          objectFit="contain"
+                          boxShadow="md"
+                          mb={4}
                         />
-                      </div>
+                        <Text fontSize="md" color="gray.600">
+                          {recommendations[selectedGoal].description}
+                        </Text>
+                      </Box>
                     ))}
                   </Slider>
                 </Box>
               )}
 
-              {recommendations[selectedGoal] && (
-                <>
-                  <Text fontSize="2xl" fontWeight="bold" mb={2}>
-                    {recommendations[selectedGoal].title}
-                  </Text>
-                  <Text fontSize="md" color="gray.600" mb={6}>
-                    {recommendations[selectedGoal].description}
-                  </Text>
-                </>
+              {/* 幻燈片模組：AI 工具 */}
+              {selectedGoal === "boost-writing" && (
+                <Box w="100%" maxW="800px" mb={8}>
+                  <Slider {...sliderSettings}>
+                    {boostImages.map((img, idx) => (
+                      <Box key={idx} textAlign="center" p={4}>
+                        <Text fontSize="2xl" fontWeight="bold" mb={2}>
+                          {recommendations[selectedGoal].title}
+                        </Text>
+                        <Image
+                          src={img}
+                          alt={`boost-slide-${idx}`}
+                          borderRadius="lg"
+                          w="100%"
+                          h="500px"
+                          objectFit="cover"
+                          boxShadow="md"
+                          mb={4}
+                        />
+                        <Text fontSize="md" color="gray.600">
+                          {recommendations[selectedGoal].description}
+                        </Text>
+                      </Box>
+                    ))}
+                  </Slider>
+                </Box>
               )}
+
+              {/* 單張模組：操作協助 */}
+              {selectedGoal === "ask-for-help" &&
+                renderImageSection(
+                  teach5,
+                  recommendations[selectedGoal].title,
+                  recommendations[selectedGoal].description,
+                  "320px"
+                )}
 
               <Button
                 onClick={handleBack}
@@ -157,7 +232,6 @@ export default function InfoGuideModal({ isOpen, onClose }) {
             </Flex>
           )}
         </ModalBody>
-
         <ModalFooter justifyContent="center" />
       </ModalContent>
     </Modal>

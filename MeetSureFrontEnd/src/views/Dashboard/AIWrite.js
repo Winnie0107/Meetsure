@@ -36,21 +36,21 @@ function AIWrite() {
             return;
         }
 
-        let prompt = `請用 "${language}" 撰寫一篇內容，基於 "${emailContent}"，要求格式為 "${format}"，語氣為 "${tone}"，長度為 "${length}"。`;
+        let prompt = `請用 "${language}" 撰寫一篇內容，基於 "${emailContent}"，要求格式為 "${format}"，語氣為 "${tone}"，長度為 "${length}，用繁體字"。`;
 
         // 根據選擇的格式提供不同的請求內容
         switch (format) {
             case "訊息":
-                prompt = `請用 "${language}" 撰寫一則可於聊天室傳送的訊息，內容圍繞 "${emailContent}，語氣為 "${tone}"，長度為 "${length}"。`;
+                prompt = `請用 "${language}" 撰寫一則可於聊天室傳送的訊息，內容圍繞 "${emailContent}，語氣為 "${tone}"，長度為 "${length}，用繁體字"。`;
                 break;
             case "評論":
-                prompt = `請用 "${language}" 根據 "${emailContent}" 提供一段評論，直接表達個人意見，不需過多背景敘述，適合發表在社群媒體或討論區，語氣為 "${tone}"，長度為 "${length}"。`;
+                prompt = `請用 "${language}" 根據 "${emailContent}" 提供一段評論，直接表達個人意見，不需過多背景敘述，適合發表在社群媒體或討論區，語氣為 "${tone}"，長度為 "${length}，用繁體字"。`;
                 break;
             case "文章":
-                prompt = `請用 "${language}" 根據 "${emailContent}" 撰寫一篇文章，並按照起承轉合的結構來安排段落，確保內容有條理並且富有說服力，語氣為 "${tone}"，長度為 "${length}"。`;
+                prompt = `請用 "${language}" 根據 "${emailContent}" 撰寫一篇文章，並按照起承轉合的結構來安排段落，確保內容有條理並且富有說服力，語氣為 "${tone}"，長度為 "${length}，用繁體字"。`;
                 break;
             case "想法":
-                prompt = `請用 "${language}" 撰寫一段關於 "${emailContent}" 的想法，請以 "我認為" 開頭，確保內容具有個人觀點且自然流暢，語氣為 "${tone}"，長度為 "${length}"。`;
+                prompt = `請用 "${language}" 撰寫一段關於 "${emailContent}" 的想法，請以 "我認為" 開頭，確保內容具有個人觀點且自然流暢，語氣為 "${tone}"，長度為 "${length}，用繁體字"。`;
                 break;
             default:
                 break;

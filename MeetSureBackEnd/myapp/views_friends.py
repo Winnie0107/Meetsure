@@ -109,10 +109,10 @@ def get_friends_list(request):
     if not user:
         return JsonResponse({"error": "用戶不存在"}, status=404)
 
-    # 找到 user 的朋友
+    # 基於 Friend 表查詢好友關係
     friends = Users.objects.filter(
-        Q(ID__in=FriendRequest.objects.filter(receiver=user, status="accepted").values_list("sender", flat=True)) |
-        Q(ID__in=FriendRequest.objects.filter(sender=user, status="accepted").values_list("receiver", flat=True))
+        Q(ID__in=Friend.objects.filter(user1=user).values_list("user2_id", flat=True)) |
+        Q(ID__in=Friend.objects.filter(user2=user).values_list("user1_id", flat=True))
     )
 
     friends_data = [
@@ -120,7 +120,7 @@ def get_friends_list(request):
             "id": friend.ID,
             "email": friend.email,
             "name": friend.name,
-            "img": friend.img,  # ✅ 加這一行才會回傳頭像！
+            "img": friend.img,
         }
         for friend in friends
     ]

@@ -118,7 +118,7 @@ export default function Dashboard() {
       if (!token) return;
 
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/projects/get/", {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/projects/get/`, {
           headers: { Authorization: `Token ${token}` }
         });
         setProjects(response.data);
@@ -446,7 +446,7 @@ export default function Dashboard() {
             <Flex justify="space-between" align="center" w="100%">
               <Box>
                 <Text fontSize="lg" color={textColor} fontWeight="bold">
-                  Projects
+                  專案列表
                 </Text>
                 <Text fontSize="sm" color="gray.400" fontWeight="400">
                   正在進行中的專案
@@ -462,7 +462,7 @@ export default function Dashboard() {
                 opacity="0.9"
                 onClick={() => history.push("/admin/tables")}
               >
-                View All Projects
+                查看所有專案
               </Button>
 
 
@@ -488,7 +488,7 @@ export default function Dashboard() {
                 <Flex direction="column" justifyContent="center" align="center">
                   <Icon as={FaPlus} color={textColor} fontSize="sm" mb="8px" />
                   <Text fontSize="md" color={textColor} fontWeight="bold">
-                    Create New Project
+                    創建新專案
                   </Text>
                 </Flex>
               </Button>
@@ -554,7 +554,7 @@ export default function Dashboard() {
 
                     {/* 專案名稱與描述 */}
                     <Text fontSize="sm" color="gray.400" fontWeight="600" mb="6px">
-                      {`Project #${project.id}`}
+                      {`專案 #${project.id}`}
                     </Text>
                     <Text fontSize="lg" color={textColor} fontWeight="bold" mb="6px">
                       {project.name}
@@ -590,14 +590,14 @@ export default function Dashboard() {
             <Flex justify="space-between" align="center" w="100%">
               <Box>
                 <Text fontSize="lg" color={textColor} fontWeight="bold">
-                  Calendar
+                  個人行事曆
                 </Text>
                 <Text fontSize="sm" color="gray.400" fontWeight="400">
                   您的會議安排行事曆
                 </Text>
               </Box>
               <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9" onClick={meetingModal.onOpen}>
-                + New Meeting
+                新增會議
               </Button>
             </Flex>
           </CardHeader>
