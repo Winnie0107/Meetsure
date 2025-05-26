@@ -1,5 +1,9 @@
+import MeetSureLogo from "assets/img/MeetSureLogo.jpg";
 
-export default function getAvatarUrl(userImg) {
+export default function getAvatarUrl(userImg, userName = "") {
+  if (userName === "Meetsure機器人") {
+    return MeetSureLogo;
+  }
     if (!userImg) {
       return "/default-profile.png"; // fallback 預設圖
     }

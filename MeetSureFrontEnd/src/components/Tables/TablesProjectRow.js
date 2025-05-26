@@ -14,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import MeetSureLogo from "assets/img/MeetSureLogo.png";
 import { HiOutlineTrash } from "react-icons/hi";
+import getAvatarUrl from "components/Icons/getAvatarUrl";
 
 
 
@@ -76,10 +77,16 @@ function TablesProjectRow(props) {
       <Td width="10%" borderBottom={isLast ? "none" : null} borderColor={borderColor}>
         <AvatarGroup size="sm" max={3}>
           {participants.map((participant, index) => (
-            <Avatar key={index} name={participant.name} />
+            <Avatar
+              key={index}
+              name={participant.name}
+              src={getAvatarUrl(participant.img, participant.name)}
+              title={participant.email}
+            />
           ))}
         </AvatarGroup>
       </Td>
+
 
       <Td width="15%" borderBottom={isLast ? "none" : null} borderColor={borderColor}>
         <Flex direction="column">

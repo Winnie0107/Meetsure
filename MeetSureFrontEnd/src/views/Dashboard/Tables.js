@@ -254,7 +254,12 @@ function Tables() {
                       logo={project.logo || ""}
                       description={project.description}
                       budget={project.created_at}
-                      participants={project.members_name || []}
+                      participants={(project.members_name || []).map(member => ({
+                        name: member.name,
+                        email: member.email,
+                        img: member.img // ❗ 確保從後端已拿到
+                      }))}
+
                       progression={progression} // ✅ 傳入計算好的進度百分比
                       isLast={index === arr.length - 1}
                       onClick={() => history.push(`/admin/projectmanagement/${project.id}`)}
