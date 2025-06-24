@@ -2,6 +2,7 @@ import {
     Flex,
     Box,
     Input,
+    InputGroup, InputLeftElement,
     Button,
     Text,
     VStack,
@@ -23,7 +24,7 @@ import {
     ChakraProvider,
 
 } from "@chakra-ui/react";
-import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, } from "@chakra-ui/icons";
+import { ChatIcon, StarIcon, DeleteIcon, ViewIcon, SearchIcon } from "@chakra-ui/icons";
 import React, { useState, useEffect } from "react";
 import MeetSureLogo from "assets/img/MeetSureLogo.jpg"; // 匯入你的圖片
 import axios from "axios";
@@ -69,6 +70,7 @@ function SocialPage() {
     const [sentFriendRequests, setSentFriendRequests] = useState([]);
     const [receivedFriendRequests, setReceivedFriendRequests] = useState([]);
     const toast = useToast();
+    const [searchKeyword, setSearchKeyword] = useState("");
 
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [groupsList, setGroupsList] = useState([]);  // ✅ 存儲群組清單
@@ -112,10 +114,10 @@ function SocialPage() {
             setFriendsList(formattedFriends);
           }
         } catch (error) {
-          console.error("❌ 獲取好友列表失敗:", error);
+            console.error("❌ 獲取好友列表失敗:", error);
         }
-      };
-      
+    };
+
     // ✅ **獲取待確認的好友邀請**
     const fetchFriendRequests = async () => {
         try {
@@ -226,6 +228,23 @@ function SocialPage() {
 
         setInputValue("");
     };
+
+    const highlightKeyword = (text, keyword) => {
+        if (!keyword) return text;
+
+        const parts = text.split(new RegExp(`(${keyword})`, "gi"));
+        return parts.map((part, index) =>
+            part.toLowerCase() === keyword.toLowerCase() ? (
+                <mark key={index} style={{ backgroundColor: "yellow", padding: "0 2px" }}>
+                    {part}
+                </mark>
+            ) : (
+                part
+            )
+        );
+    };
+
+
 
 
 
@@ -409,6 +428,16 @@ const handleSendFriendRequest = async () => {
         fetchGroupInvites();
     }, [userEmail]);
 
+    useEffect(() => {
+        const handleGroupChat = (e) => {
+            setSelectedTab("chat");
+            setSelectedFriend(e.detail.friendName);
+        };
+        window.addEventListener("start-group-chat", handleGroupChat);
+        return () => {
+            window.removeEventListener("start-group-chat", handleGroupChat);
+        };
+    }, []);
 
     const handleSendMessage_F = async () => {
         if (!inputValue.trim() || !selectedFriend) return;
@@ -446,14 +475,15 @@ const handleSendFriendRequest = async () => {
 
 
     const chatTargets = [
-        ...friendsList,  // friendsList 已經有 { name: "Meetsure機器人", email: "Meetsure機器人", img: null }
+        ...friendsList,
         ...groupsList.map(group => ({
             name: group.name,
             email: group.name,
-            status: "group",
-            img: group.owner?.img || null
+            status: "group"
+            // 不提供 img，讓 Avatar 自動用 name fallback 出首字
         }))
     ];
+
 
 
     const getUserNameByEmail = (email) => {
@@ -489,7 +519,7 @@ const handleSendFriendRequest = async () => {
                     {chatTargets.map((friend) => (
                         <HStack
                             key={friend.name}
-                            p="2"
+                            p="10px"
                             bg="gray.100"
                             borderRadius="lg"
                             _hover={{ bg: "gray.200" }}
@@ -758,6 +788,25 @@ const handleSendFriendRequest = async () => {
 
     const renderChatContent = () => {
         const currentMessages = chatMessages[selectedFriend] || [];
+
+        // 找到第一筆符合搜尋條件的位置
+        const matchIndex = currentMessages.findIndex(
+            msg =>
+                msg.message?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                msg.content?.toLowerCase().includes(searchKeyword.toLowerCase())
+        );
+
+
+        let filteredMessages = currentMessages;
+
+        // 如果有搜尋關鍵字且找到符合的訊息，顯示該訊息與前後文
+        if (searchKeyword.trim() !== "" && matchIndex !== -1) {
+            const contextRange = 3;
+            const start = Math.max(0, matchIndex - contextRange);
+            const end = Math.min(currentMessages.length, matchIndex + contextRange + 1);
+            filteredMessages = currentMessages;
+        }
+
         const isGroupChat = chatTargets.find(f => f.email === selectedFriend)?.status === "group";
 
         return (
@@ -772,7 +821,13 @@ const handleSendFriendRequest = async () => {
                     </Box>
                 ) : (
                     <VStack spacing={4} align="stretch">
-                        {currentMessages.map((msg, index) => {
+                        {filteredMessages.length === 0 && searchKeyword.trim() !== "" && (
+                            <Text textAlign="center" color="gray.500" mt="50px">
+                                找不到包含「{searchKeyword}」的訊息
+                            </Text>
+                        )}
+
+                        {filteredMessages.map((msg, index) => {
                             const isMe = msg.sender === "You" || msg.sender === userEmail;
                             const getUserAvatarByEmail = (email) => {
                                 const found = chatTargets.find(user => user.email === email || user.name === email);
@@ -790,7 +845,13 @@ const handleSendFriendRequest = async () => {
                                     align={isMe ? "flex-end" : "flex-start"}
                                     spacing={1}
                                     w="100%"
+                                    ref={el => {
+                                        if (index === matchIndex && searchKeyword.trim() !== "") {
+                                            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                        }
+                                    }}
                                 >
+
                                     {/* ✅ 顯示發話者名稱（非自己才顯示） */}
                                     {isGroupChat && !isMe && (
                                         <HStack align="center" pl="5px">
@@ -816,7 +877,13 @@ const handleSendFriendRequest = async () => {
                                             borderTopRightRadius={isMe ? "0" : "md"}
                                             borderTopLeftRadius={isMe ? "md" : "0"}
                                         >
-                                            <Text fontSize="sm">{msg.message || msg.content}</Text>
+                                            <Text fontSize="sm">
+                                                {index === matchIndex && searchKeyword.trim() !== ""
+                                                    ? highlightKeyword(msg.message || msg.content, searchKeyword)
+                                                    : msg.message || msg.content}
+                                            </Text>
+
+
                                         </Box>
                                     </Flex>
 
@@ -1051,12 +1118,20 @@ const handleSendFriendRequest = async () => {
 
 
                                 </HStack>
-                                <IconButton
-                                    size="md"
-                                    colorScheme="gray"
-                                    icon={<ViewIcon />}
-                                    aria-label="檢視詳細資料"
-                                />
+                                <InputGroup width="400px" size="md">
+                                    <InputLeftElement pointerEvents="none">
+                                        <SearchIcon color="gray.400" />
+                                    </InputLeftElement>
+                                    <Input
+                                        placeholder="搜尋訊息..."
+                                        value={searchKeyword}
+                                        onChange={(e) => setSearchKeyword(e.target.value)}
+                                        borderColor="blue.400"
+                                        focusBorderColor="blue.500"
+                                    />
+                                </InputGroup>
+
+
                             </Flex>
                         ) : null}
                         {renderChatContent()}

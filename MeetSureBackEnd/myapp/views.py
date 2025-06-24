@@ -28,13 +28,16 @@ from PIL import Image
 from django.conf import settings
 import os
 import openai
-
+from MeetSureBackEnd.firebase_config import db, bucket
 import uuid
+import ffmpeg
+import tempfile
+
 
 from firebase_admin import storage
 bucket = storage.bucket()
 
-import uuid
+import uuid 
 from django.views.decorators.http import require_GET
 import requests
 
@@ -286,7 +289,7 @@ except ImportError:
 
 # 使用 Hugging Face API 而不依賴 TensorFlow/PyTorch
 print("🔄 Loading Whisper model...")
-whisper = pipeline("automatic-speech-recognition", model="openai/whisper-tiny", device=-1)  # 強制使用 CPU
+whisper = pipeline("automatic-speech-recognition", model="openai/whisper-base", device=-1)  # 強制使用 CPU
 print("✅ Whisper model loaded successfully!")
 
 def split_audio(audio_data, samplerate, segment_length=30):
@@ -298,6 +301,7 @@ def split_audio(audio_data, samplerate, segment_length=30):
     segments = [audio_data[i * samples_per_segment:(i + 1) * samples_per_segment] for i in range(num_segments)]
     return segments
 
+
 @csrf_exempt
 def transcribe_audio(request):
     if request.method != 'POST':
@@ -306,39 +310,60 @@ def transcribe_audio(request):
     if 'audio' not in request.FILES:
         return JsonResponse({"error": "No audio file uploaded"}, status=400)
 
-    # 處理音檔上傳
     audio_file = request.FILES['audio']
+    audio_bytes = audio_file.read()
+
     try:
-        # 讀取音檔為 numpy.ndarray 格式
-        audio_data, samplerate = sf.read(io.BytesIO(audio_file.read()))
+        # Step 1: 儲存原始上傳檔為 .m4a 或其他副檔名（用副檔名可提升 ffmpeg 準確率）
+        ext = audio_file.name.split('.')[-1].lower()
+        with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as temp_input:
+            temp_input.write(audio_bytes)
+            temp_input_path = temp_input.name
+
+        # Step 2: 轉檔為 .wav（16kHz / mono）
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_output:
+            temp_output_path = temp_output.name
+
+        # 使用 ffmpeg 將音訊轉為 whisper 建議格式
+        ffmpeg.input(temp_input_path)\
+              .output(temp_output_path, format="wav", ac=1, ar="16000")\
+              .overwrite_output()\
+              .run(quiet=True)
+
+        # Step 3: 讀 wav 為 numpy array
+        samples, samplerate = sf.read(temp_output_path)
+
+        # 清除暫存檔案
+        os.remove(temp_input_path)
+        os.remove(temp_output_path)
+
     except Exception as e:
-        return JsonResponse({"error": f"Failed to read audio file: {str(e)}"}, status=500)
+        return JsonResponse({"error": f"Failed to convert audio: {str(e)}"}, status=500)
 
     try:
-        # 分段處理音檔
-        segments = split_audio(audio_data, samplerate, segment_length=30)
+        # Step 4: 切段（每段 30 秒）處理
+        segments = split_audio(samples, samplerate, segment_length=30)
+        task_id = str(uuid.uuid4())[:8]
+        progress_dict[task_id] = {"current": 0, "total": len(segments)}
+
         transcription_result = []
-
-        task_id = str(uuid.uuid4())[:8]  # 短 task id
-        progress_dict[task_id] = {"current": 0, "total": len(segments)}  # 初始化進度
-
         for i, segment in enumerate(segments):
-            print(f"🌀 正在處理第 {i+1}/{len(segments)} 段...")
             transcription = whisper({
                 "raw": segment,
                 "sampling_rate": samplerate
             })
             transcription_result.append(transcription["text"])
-            # ✅ 更新進度
             progress_dict[task_id]["current"] = i + 1
 
-        # 合併所有片段的結果，並以換行符分隔每個段落
         full_transcription = "\n\n".join(transcription_result)
 
-        return JsonResponse({"task_id": task_id,"text": full_transcription}, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse({
+            "task_id": task_id,
+            "text": full_transcription
+        }, json_dumps_params={'ensure_ascii': False})
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
 #進度資訊
 @require_GET
 def get_progress(request):
@@ -565,7 +590,7 @@ def update_profile(request):
     return JsonResponse({"message": "Profile updated successfully"}, status=200)
 
 
-openai_client = openai.OpenAI(api_key="")
+openai_client = openai.OpenAI(api_key="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")
 
 @csrf_exempt
 def generate_avatar(request):
@@ -583,7 +608,7 @@ def generate_avatar(request):
             style = data.get("style", "friendly")
 
             prompt = (
-                f"A 3D cartoon-style portrait of a {character}, in a {style} style, with a smiling facial expression. "
+                f"A 3D cartoon-style {character} portrait , in a {style} style, with a smiling facial expression. "
                 "Highly detailed, Pixar and Disney-like rendering, ultra high-resolution, cinematic lighting, "
                 "soft pastel colors, symmetrical face, front-facing, upper body only, simple light background"
             )
@@ -638,7 +663,6 @@ def update_avatar(request):
 
             # 上傳到 Firebase Storage
             filename = f"avatars/avatar_{user_id}_{uuid.uuid4().hex[:8]}.png"
-            bucket = storage.bucket()
             blob = bucket.blob(filename)
             blob.upload_from_string(img_data, content_type="image/png")
             blob.make_public()

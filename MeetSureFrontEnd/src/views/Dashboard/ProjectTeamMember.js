@@ -29,6 +29,7 @@ import { FaComments, FaTasks, FaCommentDots, FaFolderOpen, FaCheckCircle } from 
 import { MdGraphicEq } from "react-icons/md";
 import { ChatIcon } from "@chakra-ui/icons";
 import { useHistory } from "react-router-dom";
+import getAvatarUrl from "components/Icons/getAvatarUrl";
 
 
 
@@ -183,7 +184,7 @@ function ProjectTeamMember() {
                                             boxShadow="md"
                                         >
                                             <HStack spacing={4}>
-                                                <Avatar name={owner.name} src={owner.img || undefined} size="md" />
+                                                <Avatar name={owner.name} src={getAvatarUrl(owner.img)} size="md" />
                                                 <Box>
                                                     <Text fontWeight="bold">
                                                         {owner.name} <Badge ml={2} colorScheme="teal">組長</Badge>
@@ -208,7 +209,8 @@ function ProjectTeamMember() {
                                         >
                                             <HStack spacing={4} justify="space-between">
                                                 <HStack spacing={4}>
-                                                    <Avatar name={member.name} src={member.img || undefined} size="md" />
+                                                    <Avatar name={member.name} src={getAvatarUrl(member.img)} size="md" />
+
                                                     <Box>
                                                         <Text fontWeight="bold">{member.name || "未命名用戶"}</Text>
                                                         <Text fontSize="sm" color="gray.500">{member.email}</Text>

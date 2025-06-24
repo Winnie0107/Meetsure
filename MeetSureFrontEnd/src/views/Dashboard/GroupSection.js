@@ -8,6 +8,8 @@ import {
 import { ChatIcon, AddIcon } from "@chakra-ui/icons";
 import { FaSitemap, FaUserFriends } from "react-icons/fa";
 import { WarningIcon } from "@chakra-ui/icons";
+import getAvatarUrl from "../../components/Icons/getAvatarUrl";
+
 
 
 const GroupSection = () => {
@@ -27,9 +29,7 @@ const GroupSection = () => {
 
     const token = localStorage.getItem("token");
     const userEmail = localStorage.getItem("user_email");
-    const getAvatarUrl = (img) => {
-        return img ? `${process.env.REACT_APP_API_URL}/${img}` : undefined;
-    };
+
 
 
     // ✅ 取得群組清單
@@ -139,22 +139,38 @@ const GroupSection = () => {
                         aria-label="聊天"
                         onClick={(e) => {
                             e.stopPropagation();
-                            // ✅ 將群組名稱寫入 localStorage，讓 Community.js 載入時抓到
-                            localStorage.setItem("selected_tab", "chat");
-                            localStorage.setItem("selected_friend", group.name);
-
-                            // ✅ 觸發網址 hash 變更，強制 SocialPage 重設為 chat 模式
-                            window.location.hash = "#chat";
+                            // ❗ 這段只有當 GroupSection 是嵌在 Community.js 中才有效
+                            const setChat = new CustomEvent("start-group-chat", {
+                                detail: { friendName: group.name }
+                            });
+                            window.dispatchEvent(setChat);
                         }}
+
                     />
                 </HStack>
 
                 <HStack justify="space-between" align="center">
                     <AvatarGroup size="sm" max={3}>
-                        {group.members.map((member, index) => (
-                            <Avatar key={index} name={member.name} title={member.email} />
-                        ))}
+                        {group.members.map((member, index) => {
+                            console.log("👤 群組成員頭貼檢查：", {
+                                name: member.name,
+                                email: member.email,
+                                img: member.img,
+                                resolvedUrl: getAvatarUrl(member.img),
+                            });
+
+                            return (
+                                <Avatar
+                                    key={index}
+                                    name={member.name}
+                                    title={member.email}
+                                    src={getAvatarUrl(member.img)}
+                                />
+                            );
+                        })}
                     </AvatarGroup>
+
+
                     <Badge colorScheme={colorScheme} fontSize="sm" px="2" py="1">
                         {label}
                     </Badge>

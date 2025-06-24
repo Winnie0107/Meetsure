@@ -24,6 +24,7 @@ import CardBody from "components/Card/CardBody.js";
 import BuildProjectImage from "assets/img/buildproject.png";
 import getAvatarUrl from "components/Icons/getAvatarUrl";
 
+
 function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectData, setProjectData, userEmail }) {
     const textColor = useColorModeValue("gray.700", "white");
     const [friendsList, setFriendsList] = useState([]); // 🆕 從後端獲取好友
@@ -47,7 +48,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
                 if (currentUser && currentUser.id && currentUser.name) {
                     setProjectData(prevData => ({
                         ...prevData,
-                        members: [{ id: currentUser.id, name: currentUser.name }, ...prevData.members]
+                        members: [{ id: currentUser.id, name: currentUser.name,img: localStorage.getItem("user_img") || null }, ...prevData.members]
                     }));
                 } else {
                     console.warn("⚠️ 無法獲取登入用戶資料:", currentUser);
@@ -77,7 +78,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
 
         setProjectData(prevData => ({
             ...prevData,
-            members: [{ id: parseInt(userId), name: userName }, ...prevData.members]
+            members: [{ id: parseInt(userId), name: userName,img: localStorage.getItem("user_img") || null }, ...prevData.members]
         }));
     }, []);
 
@@ -89,7 +90,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
             if (response.data.id && response.data.name) {
                 setProjectData(prevData => ({
                     ...prevData,
-                    members: [{ id: response.data.id, name: response.data.name }]
+                    members: [{ id: response.data.id, name: response.data.name ,img: localStorage.getItem("user_img") || null}]
                 }));
             } else {
                 console.warn("⚠️ API 回傳用戶資訊不完整:", response.data);
@@ -111,7 +112,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
     const handleAddMember = (friend) => {
         setProjectData(prevData => {
             // 確保 `members` 陣列內沒有重複的 `user.id`
-            const alreadyExists = prevData.members.some(member => member.id === friend.id);
+            const alreadyExists = prevData.members.some(member => member.id === friend.id,);
 
             if (alreadyExists) {
                 console.warn("⚠️ 該成員已經在 members 陣列內:", friend);
@@ -119,7 +120,12 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
             }
 
             // **更新 members**
-            const updatedMembers = [...prevData.members, { id: friend.id, name: friend.name }];
+            const updatedMembers = [...prevData.members, {
+                id: friend.id,
+                name: friend.name,
+                img: friend.img || null
+            }];
+
 
             console.log("🔥 更新後的 members:", updatedMembers);
 
@@ -227,7 +233,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
                                             {projectData.members.map((member, index) => (
                                                 <ListItem key={index} display="flex" justifyContent="space-between" alignItems="center" p={3} borderRadius="md" bg="gray.100">
                                                     <HStack>
-                                                        <Avatar name={member.name || "未知"} size="sm" />
+                                                        <Avatar name={member.name || "未知"} src={getAvatarUrl(member.img, member.name)} size="sm" />
                                                         <Text>{member.name || "未知用戶"}</Text>
                                                     </HStack>
                                                     {member !== "自己" && (
@@ -261,7 +267,7 @@ function ProjectSelectMembers({ onNext, handleStepClick, currentStep, projectDat
                                         {friendsList.map((friend, index) => (
                                             <ListItem key={index} display="flex" alignItems="center" justifyContent="space-between" p={3} borderRadius="md" bg="gray.100">
                                                 <HStack>
-                                                    <Avatar name={friend.name} size="sm" />
+                                                    <Avatar name={friend.name} src={getAvatarUrl(friend.img, friend.name)} size="sm" />
                                                     <Text>{friend.name}</Text>
                                                 </HStack>
                                                 <IconButton

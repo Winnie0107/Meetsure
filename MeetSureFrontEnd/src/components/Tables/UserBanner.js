@@ -90,7 +90,20 @@ function UserBanner({
           修改頭貼
         </Button>
       </Flex>
-
+      {/* 修改名稱的 Modal */}
+      <Modal isOpen={isNameOpen} onClose={onNameClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>修改你的名稱</ModalHeader>
+          <ModalBody>
+            <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="輸入新名稱" />
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={handleUpdateName}>確認修改</Button>
+            <Button variant="ghost" onClick={onNameClose}>取消</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       {/* AI 頭貼選擇的 Modal 彈窗 */}
       <Modal isOpen={isOpen} onClose={handleCloseModal}>
         <ModalOverlay />
