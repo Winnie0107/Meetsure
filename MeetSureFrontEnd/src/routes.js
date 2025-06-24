@@ -49,6 +49,14 @@ var dashRoutes = [
     layout: "/admin",
   },
   {
+    path: "/SideBarMeetSure",
+    name: "逐字稿分析",
+    rtlName: "SideBarMeetSure",
+    icon: <DocumentIcon color='inherit' />,
+    component: SideBarMeetSure,
+    layout: "/admin",
+  },
+  {
     path: "/community",
     name: "我的社群",
     rtlName: "لوحة القيادة",
@@ -90,14 +98,6 @@ var dashRoutes = [
     name: "註冊",
     component: SignUp,
     layout: "/auth",
-  },
-  {
-    path: "/SideBarMeetSure",
-    name: "逐字稿分析",
-    rtlName: "SideBarMeetSure",
-    icon: <DocumentIcon color='inherit' />,
-    component: SideBarMeetSure,
-    layout: "/admin",
   },
   {
     path: "/meetsure",

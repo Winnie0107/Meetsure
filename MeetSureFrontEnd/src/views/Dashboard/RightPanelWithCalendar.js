@@ -140,13 +140,13 @@ const RightPanelWithCalendar = () => {
           {meetings.length > 0 ? (
             meetings.map((meeting, index) => (
               <ListItem key={index} onClick={() => handleMeetingClick(meeting)} cursor="pointer">
-                <Box
-                  bg="#D1E4E2" // ✅ 柔綠背景
-                  borderRadius="15px"
-                  px="25px"
-                  py="10px"
-                  _hover={{ bg: "#cbe0de" }}
-                >
+               <Box
+  bg={meeting.project_name ? "#D1E4E2" : "#D6ECFF"}  // 綠色（有專案）vs 淺藍色（非專案）
+  borderRadius="15px"
+  px="25px"
+  py="10px"
+  _hover={{ bg: meeting.project_name ? "#cbe0de" : "#cde6fb" }}
+>
 
                   <Flex justify="space-between" wrap="wrap">
                     <Text fontSize="md" fontWeight="bold">

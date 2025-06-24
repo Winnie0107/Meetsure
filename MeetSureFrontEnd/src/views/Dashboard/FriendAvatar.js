@@ -9,7 +9,7 @@ const FriendAvatar = ({ name, img }) => {
     : img?.startsWith("http") || img?.startsWith("data:image")
     ? img
     : img
-    ? `http://localhost:8000/media/${img}`
+    ? `${process.env.REACT_APP_API_URL}/media/${img}`
     : undefined;
 
   return <Avatar name={name} src={avatarSrc} size="sm" />;

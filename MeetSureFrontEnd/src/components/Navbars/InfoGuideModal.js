@@ -31,7 +31,7 @@ import teach8 from "assets/img/teach8.png";
 import teach9 from "assets/img/teach9.png";
 import teach10 from "assets/img/teach10.png";
 import teach11 from "assets/img/teach11.png";
-
+import lineaddfriend from "assets/img/line-add-friend.png";
 export default function InfoGuideModal({ isOpen, onClose }) {
   const [selectedGoal, setSelectedGoal] = useState(null);
 
@@ -158,7 +158,29 @@ export default function InfoGuideModal({ isOpen, onClose }) {
               {/* 幻燈片模組：掌握進度 */}
               {selectedGoal === "stay-updated" && (
                 <Box w="100%" maxW="800px" mb={8}>
+                 
+
                   <Slider {...sliderSettings}>
+                  <Box textAlign="center" p={4}>
+        <Text fontSize="2xl" fontWeight="bold" mb={2}>
+          加入 LINE 好友接收通知！
+        </Text>
+        <a href="https://line.me/R/ti/p/你的LINE_ID" target="_blank" rel="noopener noreferrer">
+          <Image
+            src={lineaddfriend}
+            alt="line-add-friend"
+            borderRadius="lg"
+            w="100%"
+            h="400px"
+            objectFit="contain"
+            boxShadow="md"
+            mb={4}
+          />
+        </a>
+        <Text fontSize="md" color="gray.600">
+          掃描 QR code 或點擊加入好友，接收任務與會議提醒通知。
+        </Text>
+      </Box>
                     {progressImages.map((img, idx) => (
                       <Box key={idx} textAlign="center" p={4}>
                         <Text fontSize="2xl" fontWeight="bold" mb={2}>

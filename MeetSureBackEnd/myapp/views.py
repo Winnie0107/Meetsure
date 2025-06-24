@@ -289,7 +289,7 @@ except ImportError:
 
 # 使用 Hugging Face API 而不依賴 TensorFlow/PyTorch
 print("🔄 Loading Whisper model...")
-whisper = pipeline("automatic-speech-recognition", model="openai/whisper-base", device=-1)  # 強制使用 CPU
+whisper = pipeline("automatic-speech-recognition", model="openai/whisper-tiny", device=-1)  # 強制使用 CPU
 print("✅ Whisper model loaded successfully!")
 
 def split_audio(audio_data, samplerate, segment_length=30):
@@ -590,8 +590,7 @@ def update_profile(request):
     return JsonResponse({"message": "Profile updated successfully"}, status=200)
 
 
-openai_client = openai.OpenAI(api_key="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")
-
+openai_client = openai.OpenAI(api_key="")
 @csrf_exempt
 def generate_avatar(request):
     """ 生成 AI 頭貼 (Base64 回傳，不存檔) """

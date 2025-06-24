@@ -5,7 +5,7 @@ export default function getAvatarUrl(userImg, userName = "") {
     return MeetSureLogo;
   }
     if (!userImg) {
-      return "/default-profile.png"; // fallback 預設圖
+      return "assets/img//default-profile.png"; // fallback 預設圖
     }
   
     // Firebase or base64 image
@@ -14,6 +14,6 @@ export default function getAvatarUrl(userImg, userName = "") {
     }
   
     // 本地 media 圖片
-    return `http://localhost:8000/media/${userImg}`;
+    return `${process.env.REACT_APP_API_URL}/media/${userImg}`;
   }
   

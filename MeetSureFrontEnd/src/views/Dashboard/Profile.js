@@ -177,7 +177,7 @@ function Profile() {
       return;
     }
   
-    axios.post("http://localhost:8000/api/update_password/", {
+    axios.post(`${process.env.REACT_APP_API_URL}/update_password/`, {
       user_id: userId,
       new_password: newPassword, // 這裡發送的是明文，後端會加密
     })
@@ -211,7 +211,7 @@ function Profile() {
         borderRadius="20px"
       >
         <Flex align="center">
-          <Avatar src={img?.startsWith("data:image") ? img : `http://localhost:8000/media/${img}`} w="120px" h="120px" borderRadius="full" mb="20px" />
+          <Avatar src={img?.startsWith("data:image") ? img : `${process.env.REACT_APP_API_URL}/media/${img}`} w="120px" h="120px" borderRadius="full" mb="20px" />
           <Flex direction="column" ml="20px">
             <Text fontSize="23px" fontWeight="bold" color={textColor}>{name || "Name"}</Text>
             <Text fontSize="18px" color={emailColor}>{email}</Text>
@@ -242,7 +242,7 @@ function Profile() {
           </CardHeader>
           <CardBody px="5px">
             <Flex direction="column" align="center">
-              <Avatar src={img?.startsWith("data:image") ? img : `http://localhost:8000/media/${img}`} w="120px" h="120px" mb="10px" />
+              <Avatar src={img?.startsWith("data:image") ? img : `/media/${img}`} w="120px" h="120px" mb="10px" />
               <Button onClick={handleOpenModal} mt="10px">
                 修改頭貼
               </Button>

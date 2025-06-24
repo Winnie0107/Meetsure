@@ -597,7 +597,7 @@ export default function Dashboard() {
                 </Text>
               </Box>
               <Button bg="teal.500" color="white" variant="solid" p="10px" margin="7px" _hover={{ bg: "teal.400" }} opacity="0.9" onClick={meetingModal.onOpen}>
-                新增會議
+                新增行程
               </Button>
             </Flex>
           </CardHeader>

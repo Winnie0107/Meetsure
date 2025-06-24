@@ -173,7 +173,7 @@ def get_project_members(request):
             "id": user.ID,
             "name": user.name,
             "email": user.email,
-            "img": getattr(user.img, 'url', None),
+            "img":  user.img,
            "is_owner": user.ID == project.created_by_id,
         })
 

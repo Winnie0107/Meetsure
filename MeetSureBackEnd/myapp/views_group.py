@@ -16,28 +16,13 @@ def get_user_groups(request):
     user = request.user
     custom_user = Users.objects.get(email=user.email)
 
-    memberships = GroupMembership.objects.filter(user=custom_user).select_related("group")
-    group_ids = memberships.values_list("group_id", flat=True)
+    # 找出該使用者參與的所有群組
+    group_ids = GroupMembership.objects.filter(user=custom_user).values_list("group_id", flat=True)
+    groups = Group.objects.filter(id__in=group_ids)
 
-    groups = Group.objects.filter(id__in=group_ids).prefetch_related("groupmembership_set__user")
-    result = []
-
-    for group in groups:
-        members = group.groupmembership_set.all().select_related("user")
-        result.append({
-            "id": group.id,
-            "name": group.name,
-            "type": group.type,
-            "owner": {
-                "name": group.owner.name,
-                "email": group.owner.email
-            },
-            "members": [
-                {"name": m.user.name, "email": m.user.email} for m in members
-            ]
-        })
-
-    return Response(result)
+    # ✅ 使用 GroupSerializer 正確串接 get_members()
+    serializer = GroupSerializer(groups, many=True)
+    return Response(serializer.data)
 
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])

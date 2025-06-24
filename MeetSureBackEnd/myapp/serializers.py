@@ -25,12 +25,15 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
 
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
-    user_id = serializers.PrimaryKeyRelatedField(queryset=Users.objects.all(), source="user")  # ✅ **改成 `source="user"`**
-    name = serializers.CharField(source="user.name", read_only=True)  # ✅ **確保 `name` 來自 `user.name`**
+    user_id = serializers.IntegerField(source="user.ID", read_only=True)
+    name = serializers.CharField(source="user.name", read_only=True)
+    email = serializers.CharField(source="user.email", read_only=True)
+    img = serializers.CharField(source="user.img", allow_null=True, read_only=True)
 
     class Meta:
         model = ProjectMember
-        fields = ["user_id", "name"]  # ✅ **包含 `user_id` 和 `name`，讓前端能顯示**
+        fields = ["user_id", "name", "email", "img"]
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     members_name = ProjectMemberSerializer(source="members", many=True, read_only=True)
@@ -39,7 +42,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "created_at", "members", "members_name", "tasks"]  # ✅ **確保 `members_name` 被包含**
+        fields = ["id", "name", "description", "created_at", "members", "members_name", "tasks"]  # ✅ **確保 members_name 被包含**
 
     def create(self, validated_data):
         members_data = validated_data.pop("members", [])  # ✅ **正確處理 `members`**
@@ -93,11 +96,18 @@ class MeetingReminderSerializer(serializers.ModelSerializer):
         return obj.created_by.name if obj.created_by and obj.created_by.name else obj.created_by.email if obj.created_by else "系統"
 
 class GroupSerializer(serializers.ModelSerializer):
-    owner = UserSerializer(read_only=True)  # 這樣 owner 的 name、email 也會回傳
+    owner = UserSerializer(read_only=True)
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
         fields = "__all__"
+
+    def get_members(self, obj):
+        from .models import GroupMembership  # 確保引入
+        memberships = GroupMembership.objects.filter(group=obj).select_related("user")
+        return UserSerializer([m.user for m in memberships], many=True).data
+
 class GanttTaskSerializer(serializers.ModelSerializer):
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
 

@@ -7,7 +7,6 @@ from serpapi import GoogleSearch
 
 # 創建 OpenAI 客戶端
 openai_client = openai.OpenAI(api_key="")
-
 # SERP 金鑰
 SERP_API_KEY = "6564ca2c86a33a1052d8e8619d12e99ecd481affef00fecd90d6e06bad3300e7"
 
@@ -59,7 +58,7 @@ def chatgpt_response(request):
 
             # ✅ 如果訊息中包含搜尋關鍵字，就觸發 SerpAPI
             #keywords = ["搜尋", "google",  "找", "新聞", "天氣", "今天","現在"]
-            keywords = [ "google"]
+            keywords = [ "新聞"]
 
             if any(kw in user_message.lower() for kw in keywords):
                 print("🔍 觸發 SerpAPI 查詢：", user_message)
