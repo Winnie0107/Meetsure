@@ -25,17 +25,16 @@
 
 ## 系統運作流程 System Workflow
 
-Processing Flow：
-
+```text
 1.使用者透過 React 前端介面進行會議相關操作
 2.前端以 HTTP Request 呼叫 Django REST API
 3.Django 後端接收請求並進行資料處理與商業邏輯運算
 4.處理結果以 JSON 格式回傳前端
 5.前端即時更新畫面並呈現結果
 6.語音檔案可作為後端分析與處理的輸入資料來源
-
+```
 ## 系統架構 System Architecture
-
+```text
 **前端 (Front-End)**：React / JavaScript / HTML / CSS
 **後端 (Back-End)**：Django（REST API）
 **資料傳遞**：RESTful API / JSON
@@ -43,7 +42,7 @@ Processing Flow：
 **即時通訊**：LINE Messaging API 
 **Ai輔助功能**:OpenAi Api
 **版本控制**：Git / GitHub
-
+```
 ---
 
 ## 如何執行（本地開發）
