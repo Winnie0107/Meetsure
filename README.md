@@ -36,13 +36,13 @@ Processing Flow：
 
 ##系統架構 System Architecture
 
-前端 (Front-End)：React / JavaScript / HTML / CSS
-後端 (Back-End)：Django（REST API）
-資料傳遞：RESTful API / JSON
-語音處理：Speech-to-Text API  
-即時通訊：LINE Messaging API 
-Ai輔助功能:OpenAi Api
-版本控制：Git / GitHub
+**前端 (Front-End)**：React / JavaScript / HTML / CSS
+**後端 (Back-End)**：Django（REST API）
+**資料傳遞**：RESTful API / JSON
+**語音處理**：Speech-to-Text API  
+**即時通訊**：LINE Messaging API 
+**Ai輔助功能**:OpenAi Api
+**版本控制**：Git / GitHub
 
 ---
 
@@ -71,13 +71,16 @@ pip install -r requirements.txt
 python manage.py runserver
 ```
 
-##檔案結構 Project Structure
+## 檔案結構 Project Structure
+
+```text
 /
-├─ MeetSureFrontEnd        # 前端程式碼
-├─ MeetSureBackEnd         # 後端 API
-├─ sample1.wav             # 測試語音檔
-├─ README.md               # 專案說明
-├─ package.json            # 前端套件設定
+├── MeetSureFrontEnd      # 前端程式碼
+├── MeetSureBackEnd       # 後端 API
+├── sample1.wav           # 測試語音檔
+├── README.md             # 專案說明
+└── package.json          # 前端套件設定
+```
 
 
 
