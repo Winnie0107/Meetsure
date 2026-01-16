@@ -23,7 +23,7 @@
 
 ---
 
-##系統運作流程 System Workflow
+## 系統運作流程 System Workflow
 
 Processing Flow：
 
@@ -34,7 +34,7 @@ Processing Flow：
 5.前端即時更新畫面並呈現結果
 6.語音檔案可作為後端分析與處理的輸入資料來源
 
-##系統架構 System Architecture
+## 系統架構 System Architecture
 
 **前端 (Front-End)**：React / JavaScript / HTML / CSS
 **後端 (Back-End)**：Django（REST API）
