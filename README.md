@@ -35,13 +35,13 @@
 ```
 ## 系統架構 System Architecture
 ```text
-**前端 (Front-End)**：React / JavaScript / HTML / CSS
-**後端 (Back-End)**：Django（REST API）
-**資料傳遞**：RESTful API / JSON
-**語音處理**：Speech-to-Text API  
-**即時通訊**：LINE Messaging API 
-**Ai輔助功能**:OpenAi Api
-**版本控制**：Git / GitHub
+前端 (Front-End)：React / JavaScript / HTML / CSS
+後端 (Back-End)：Django（REST API）
+資料傳遞：RESTful API / JSON
+語音處理：Speech-to-Text API  
+即時通訊：LINE Messaging API 
+Ai輔助功能:OpenAi Api
+版本控制：Git / GitHub
 ```
 ---
 
